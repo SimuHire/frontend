@@ -1,28 +1,32 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import LoginPage from './page';
+
+const pushMock = jest.fn();
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    prefetch: () => Promise.resolve(),
+    push: pushMock,
   }),
 }));
 
 describe('LoginPage', () => {
-  it('renders login heading and form fields', () => {
+  beforeEach(() => {
+    pushMock.mockClear();
+  });
+
+  it('renders recruiter login heading and Auth0 button', () => {
     render(<LoginPage />);
 
-    expect(
-      screen.getByRole('heading', { name: /recruiter login/i })
-    ).toBeInTheDocument();
+    expect(screen.getByText('Recruiter login')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue with Auth0' })).toBeInTheDocument();
+  });
 
-    expect(
-      screen.getByLabelText(/work email/i)
-    ).toBeInTheDocument();
+  it('navigates to Auth0 login when button is clicked', () => {
+    render(<LoginPage />);
 
-    expect(
-      screen.getByLabelText(/password/i)
-    ).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: 'Continue with Auth0' });
+    fireEvent.click(button);
+
+    expect(pushMock).toHaveBeenCalledWith('/auth/login');
   });
 });
