@@ -1,9 +1,10 @@
-import { getAuthToken } from './auth';
+import { getAuthToken } from "./auth";
 
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export interface ApiClientOptions {
-  baseUrl?: string;
+  basePath?: string;
+  authToken?: string | null;
 }
 
 export interface ApiErrorShape {
@@ -12,29 +13,46 @@ export interface ApiErrorShape {
   details?: unknown;
 }
 
-const DEFAULT_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const DEFAULT_BASE_PATH = "/api";
+
+function normalizeUrl(basePath: string, path: string): string {
+  const base = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
+}
 
 function extractErrorMessage(errorBody: unknown, status: number): string {
-  if (
-    typeof errorBody === 'object' &&
-    errorBody !== null
-  ) {
-    const candidate = errorBody as {
-      message?: unknown;
-      detail?: unknown;
-    };
+  if (typeof errorBody === "object" && errorBody !== null) {
+    const candidate = errorBody as { message?: unknown; detail?: unknown };
 
-    if (typeof candidate.message === 'string') {
-      return candidate.message;
-    }
+    if (typeof candidate.message === "string") return candidate.message;
 
-    if (typeof candidate.detail === 'string') {
-      return candidate.detail;
+    if (typeof candidate.detail === "string") return candidate.detail;
+
+    if (Array.isArray(candidate.detail) && candidate.detail.length > 0) {
+      const first = candidate.detail[0] as { msg?: unknown };
+      if (first && typeof first.msg === "string") return first.msg;
     }
   }
 
   return `Request failed with status ${status}`;
+}
+
+async function parseResponseBody(response: Response): Promise<unknown> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    try {
+      return (await response.json()) as unknown;
+    } catch {
+      return undefined;
+    }
+  }
+
+  try {
+    return await response.text();
+  } catch {
+    return undefined;
+  }
 }
 
 async function request<TResponse = unknown>(
@@ -46,51 +64,52 @@ async function request<TResponse = unknown>(
   } = {},
   clientOptions: ApiClientOptions = {}
 ): Promise<TResponse> {
-  const baseUrl = clientOptions.baseUrl ?? DEFAULT_BASE_URL;
+  const basePath = clientOptions.basePath ?? DEFAULT_BASE_PATH;
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(options.headers ?? {}),
   };
 
-  const token =
-    typeof window !== 'undefined' ? getAuthToken() : null;
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (options.body !== undefined && !isFormData) {
+    headers["Content-Type"] = headers["Content-Type"] ?? "application/json";
   }
 
-  const response = await fetch(`${baseUrl}${path}`, {
-    method: options.method ?? 'GET',
+  const token =
+    clientOptions.authToken ??
+    (typeof window !== "undefined" ? getAuthToken() : null);
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(normalizeUrl(basePath, path), {
+    method: options.method ?? "GET",
     headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-    credentials: 'include',
+    body:
+      options.body === undefined
+        ? undefined
+        : isFormData
+        ? (options.body as FormData)
+        : JSON.stringify(options.body),
+    credentials: "include",
   });
 
   if (!response.ok) {
-    let errorBody: unknown;
-
-    try {
-      errorBody = (await response.json()) as unknown;
-    } catch {
-      errorBody = undefined;
-    }
-
+    const errorBody = await parseResponseBody(response);
     const error: ApiErrorShape = {
       message: extractErrorMessage(errorBody, response.status),
       status: response.status,
       details: errorBody,
     };
-
     throw error;
   }
 
-  if (response.status === 204) {
-    return undefined as TResponse;
-  }
+  if (response.status === 204) return undefined as TResponse;
 
-  const data = (await response.json()) as TResponse;
-  return data;
+  return (await parseResponseBody(response)) as TResponse;
 }
 
 export interface LoginResponseUser {
@@ -101,7 +120,7 @@ export interface LoginResponseUser {
 
 export interface LoginResponse {
   access_token: string;
-  token_type: 'bearer' | string;
+  token_type: "bearer" | string;
   user?: LoginResponseUser;
 }
 
@@ -110,24 +129,35 @@ export interface LoginPayload {
   password: string;
 }
 
-export async function login(
-  payload: LoginPayload
-): Promise<LoginResponse> {
-  return request<LoginResponse>('/auth/login', {
-    method: 'POST',
+export async function login(payload: LoginPayload): Promise<LoginResponse> {
+  return request<LoginResponse>("/auth/login", {
+    method: "POST",
     body: payload,
   });
 }
 
 export const apiClient = {
-  get: <T = unknown>(path: string) =>
-    request<T>(path, { method: 'GET' }),
-  post: <T = unknown>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'POST', body }),
-  put: <T = unknown>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'PUT', body }),
-  patch: <T = unknown>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'PATCH', body }),
-  delete: <T = unknown>(path: string) =>
-    request<T>(path, { method: 'DELETE' }),
+  get: <T = unknown>(path: string, clientOptions?: ApiClientOptions) =>
+    request<T>(path, { method: "GET" }, clientOptions),
+
+  post: <T = unknown>(
+    path: string,
+    body?: unknown,
+    clientOptions?: ApiClientOptions
+  ) => request<T>(path, { method: "POST", body }, clientOptions),
+
+  put: <T = unknown>(
+    path: string,
+    body?: unknown,
+    clientOptions?: ApiClientOptions
+  ) => request<T>(path, { method: "PUT", body }, clientOptions),
+
+  patch: <T = unknown>(
+    path: string,
+    body?: unknown,
+    clientOptions?: ApiClientOptions
+  ) => request<T>(path, { method: "PATCH", body }, clientOptions),
+
+  delete: <T = unknown>(path: string, clientOptions?: ApiClientOptions) =>
+    request<T>(path, { method: "DELETE" }, clientOptions),
 };

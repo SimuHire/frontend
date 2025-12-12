@@ -1,42 +1,83 @@
 name: Frontend CI
 
 on:
-  push:
-    branches:
-      - main
-      - develop
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NEXT_PUBLIC_API_BASE_URL: "http://localhost:8000"
+  NEXT_TELEMETRY_DISABLED: "1"
+  CI: "true"
+
+  AUTH0_SECRET: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  AUTH0_BASE_URL: "http://localhost:3000"
+  AUTH0_ISSUER_BASE_URL: "https://example.auth0.com"
+  AUTH0_CLIENT_ID: "dummy_client_id"
+  AUTH0_CLIENT_SECRET: "dummy_client_secret"
 
 jobs:
-  lint-test-build:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-
-    env:
-      # Safe defaults for build-time envs
-      NEXT_PUBLIC_API_BASE_URL: "http://localhost:8000"
-      NEXT_TELEMETRY_DISABLED: "1"
-
+    timeout-minutes: 10
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
-      - name: Install dependencies
+      - name: Install deps
         run: npm ci
 
       - name: Lint
         run: npm run lint
 
-      - name: Run unit tests
-        run: npm test
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test:ci
+
+  build:
+    name: Typecheck + Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: Build
         run: npm run build
