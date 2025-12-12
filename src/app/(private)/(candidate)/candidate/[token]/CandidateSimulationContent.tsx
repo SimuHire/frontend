@@ -1,16 +1,10 @@
-import { notFound } from 'next/navigation';
+type CandidateSimulationContentProps = {
+  token: string;
+};
 
-interface CandidatePageProps {
-  params: { token: string };
-}
-
-export default function CandidatePage({ params }: CandidatePageProps) {
-  const { token } = params;
-
-  if (!token) {
-    notFound();
-  }
-
+export default function CandidateSimulationContent({
+  token,
+}: CandidateSimulationContentProps) {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-900">
