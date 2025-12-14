@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useReducer } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
 
 type SimulationSummary = {
   title: string;
@@ -69,9 +69,11 @@ const initialState: CandidateSessionState = {
 function reducer(state: CandidateSessionState, action: Action): CandidateSessionState {
   switch (action.type) {
     case "SET_TOKEN":
+      if (state.token === action.token) return state;
       return { ...state, token: action.token };
 
     case "SET_BOOTSTRAP":
+      if (state.bootstrap === action.bootstrap) return state;
       return { ...state, bootstrap: action.bootstrap };
 
     case "SET_STARTED":
@@ -141,6 +143,23 @@ type PersistedState = {
 export function CandidateSessionProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  const setToken = useCallback((token: string) => dispatch({ type: "SET_TOKEN", token }), []);
+  const setBootstrap = useCallback(
+    (bootstrap: CandidateBootstrap) => dispatch({ type: "SET_BOOTSTRAP", bootstrap }),
+    []
+  );
+  const setStarted = useCallback((started: boolean) => dispatch({ type: "SET_STARTED", started }), []);
+  const reset = useCallback(() => dispatch({ type: "RESET" }), []);
+
+  const setTaskLoading = useCallback(() => dispatch({ type: "TASK_LOADING" }), []);
+  const setTaskLoaded = useCallback(
+    (payload: { isComplete: boolean; completedTaskIds: number[]; currentTask: CandidateTask | null }) =>
+      dispatch({ type: "TASK_LOADED", payload }),
+    []
+  );
+  const setTaskError = useCallback((error: string) => dispatch({ type: "TASK_ERROR", error }), []);
+  const clearTaskError = useCallback(() => dispatch({ type: "TASK_CLEAR_ERROR" }), []);
+
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
@@ -175,17 +194,17 @@ export function CandidateSessionProvider({ children }: { children: React.ReactNo
   const value = useMemo<Ctx>(
     () => ({
       state,
-      setToken: (token) => dispatch({ type: "SET_TOKEN", token }),
-      setBootstrap: (bootstrap) => dispatch({ type: "SET_BOOTSTRAP", bootstrap }),
-      setStarted: (started) => dispatch({ type: "SET_STARTED", started }),
-      reset: () => dispatch({ type: "RESET" }),
+      setToken,
+      setBootstrap,
+      setStarted,
+      reset,
 
-      setTaskLoading: () => dispatch({ type: "TASK_LOADING" }),
-      setTaskLoaded: (payload) => dispatch({ type: "TASK_LOADED", payload }),
-      setTaskError: (error) => dispatch({ type: "TASK_ERROR", error }),
-      clearTaskError: () => dispatch({ type: "TASK_CLEAR_ERROR" }),
+      setTaskLoading,
+      setTaskLoaded,
+      setTaskError,
+      clearTaskError,
     }),
-    [state]
+    [clearTaskError, reset, setBootstrap, setStarted, setTaskError, setTaskLoaded, setTaskLoading, setToken, state]
   );
 
   return <CandidateSessionContext.Provider value={value}>{children}</CandidateSessionContext.Provider>;

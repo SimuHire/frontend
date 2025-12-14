@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Button from "@/components/common/Button";
 import TaskView from "@/components/candidate/TaskView";
 import TaskProgress from "@/components/candidate/TaskProgress";
@@ -99,6 +99,8 @@ export default function CandidateSimulationContent({ token }: { token: string })
   const role = useMemo(() => bootstrap?.simulation.role ?? "", [bootstrap]);
 
   const candidateSessionId = bootstrap?.candidateSessionId ?? null;
+  const bootstrapInFlightRef = useRef(false);
+  const bootstrapTokenRef = useRef<string | null>(null);
 
   const fetchCurrentTask = useCallback(async () => {
     if (!state.token || !candidateSessionId) return;
@@ -141,6 +143,10 @@ export default function CandidateSimulationContent({ token }: { token: string })
   ]);
 
   const loadBootstrap = useCallback(async () => {
+    if (bootstrapTokenRef.current === token && bootstrapInFlightRef.current) return;
+
+    bootstrapInFlightRef.current = true;
+    bootstrapTokenRef.current = token;
     setView("loading");
     setErrorMessage(null);
 
@@ -154,6 +160,8 @@ export default function CandidateSimulationContent({ token }: { token: string })
     } catch (err) {
       setErrorMessage(friendlyBootstrapError(err));
       setView("error");
+    } finally {
+      bootstrapInFlightRef.current = false;
     }
   }, [setBootstrap, setToken, token]);
 

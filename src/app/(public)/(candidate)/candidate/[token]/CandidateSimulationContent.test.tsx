@@ -153,7 +153,7 @@ describe("CandidateSimulationContent", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: /start simulation/i }));
 
-    expect(await screen.findByText("Day 1")).toBeInTheDocument();
+    expect(await screen.findAllByText("Day 1")).not.toHaveLength(0);
 
     fireEvent.click(screen.getByRole("button", { name: /submit & continue/i }));
 
@@ -206,7 +206,7 @@ describe("CandidateSimulationContent", () => {
 
     renderWithProvider(<CandidateSimulationContent token="VALID_TOKEN" />);
 
-    expect(await screen.findByText("Day 3")).toBeInTheDocument();
+    expect(await screen.findAllByText("Day 3")).not.toHaveLength(0);
     expect(screen.queryByRole("button", { name: /start simulation/i })).not.toBeInTheDocument();
   });
 });
