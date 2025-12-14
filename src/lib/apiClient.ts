@@ -5,6 +5,7 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export interface ApiClientOptions {
   basePath?: string;
   authToken?: string | null;
+  skipAuth?: boolean;
 }
 
 export interface ApiErrorShape {
@@ -13,7 +14,11 @@ export interface ApiErrorShape {
   details?: unknown;
 }
 
-const DEFAULT_BASE_PATH = "/api";
+type RequestOptions = {
+  headers?: Record<string, string>;
+};
+
+const DEFAULT_BASE_PATH = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 
 function normalizeUrl(basePath: string, path: string): string {
   const base = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
@@ -55,6 +60,12 @@ async function parseResponseBody(response: Response): Promise<unknown> {
   }
 }
 
+function isApiClientOptions(value: unknown): value is ApiClientOptions {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return "basePath" in v || "authToken" in v || "skipAuth" in v;
+}
+
 async function request<TResponse = unknown>(
   path: string,
   options: {
@@ -77,11 +88,18 @@ async function request<TResponse = unknown>(
     headers["Content-Type"] = headers["Content-Type"] ?? "application/json";
   }
 
-  const token =
-    clientOptions.authToken ??
-    (typeof window !== "undefined" ? getAuthToken() : null);
+  const hasAuthToken = Object.prototype.hasOwnProperty.call(
+    clientOptions,
+    "authToken"
+  );
 
-  if (token) {
+  const token = hasAuthToken
+    ? clientOptions.authToken
+    : typeof window !== "undefined"
+    ? getAuthToken()
+    : null;
+
+  if (!clientOptions.skipAuth && token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
@@ -137,27 +155,106 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
 }
 
 export const apiClient = {
-  get: <T = unknown>(path: string, clientOptions?: ApiClientOptions) =>
-    request<T>(path, { method: "GET" }, clientOptions),
+  get: async <T = unknown>(
+    path: string,
+    arg2?: ApiClientOptions | RequestOptions,
+    arg3?: ApiClientOptions
+  ) => {
+    const requestOptions: RequestOptions | undefined = isApiClientOptions(arg2)
+      ? undefined
+      : (arg2 as RequestOptions | undefined);
 
-  post: <T = unknown>(
+    const clientOptions: ApiClientOptions | undefined = isApiClientOptions(arg2)
+      ? (arg2 as ApiClientOptions)
+      : arg3;
+
+    return request<T>(
+      path,
+      { method: "GET", ...(requestOptions ?? {}) },
+      clientOptions
+    );
+  },
+
+  post: async <T = unknown>(
     path: string,
     body?: unknown,
-    clientOptions?: ApiClientOptions
-  ) => request<T>(path, { method: "POST", body }, clientOptions),
+    arg3?: ApiClientOptions | RequestOptions,
+    arg4?: ApiClientOptions
+  ) => {
+    const requestOptions: RequestOptions | undefined = isApiClientOptions(arg3)
+      ? undefined
+      : (arg3 as RequestOptions | undefined);
 
-  put: <T = unknown>(
+    const clientOptions: ApiClientOptions | undefined = isApiClientOptions(arg3)
+      ? (arg3 as ApiClientOptions)
+      : arg4;
+
+    return request<T>(
+      path,
+      { method: "POST", body, ...(requestOptions ?? {}) },
+      clientOptions
+    );
+  },
+
+  put: async <T = unknown>(
     path: string,
     body?: unknown,
-    clientOptions?: ApiClientOptions
-  ) => request<T>(path, { method: "PUT", body }, clientOptions),
+    arg3?: ApiClientOptions | RequestOptions,
+    arg4?: ApiClientOptions
+  ) => {
+    const requestOptions: RequestOptions | undefined = isApiClientOptions(arg3)
+      ? undefined
+      : (arg3 as RequestOptions | undefined);
 
-  patch: <T = unknown>(
+    const clientOptions: ApiClientOptions | undefined = isApiClientOptions(arg3)
+      ? (arg3 as ApiClientOptions)
+      : arg4;
+
+    return request<T>(
+      path,
+      { method: "PUT", body, ...(requestOptions ?? {}) },
+      clientOptions
+    );
+  },
+
+  patch: async <T = unknown>(
     path: string,
     body?: unknown,
-    clientOptions?: ApiClientOptions
-  ) => request<T>(path, { method: "PATCH", body }, clientOptions),
+    arg3?: ApiClientOptions | RequestOptions,
+    arg4?: ApiClientOptions
+  ) => {
+    const requestOptions: RequestOptions | undefined = isApiClientOptions(arg3)
+      ? undefined
+      : (arg3 as RequestOptions | undefined);
 
-  delete: <T = unknown>(path: string, clientOptions?: ApiClientOptions) =>
-    request<T>(path, { method: "DELETE" }, clientOptions),
+    const clientOptions: ApiClientOptions | undefined = isApiClientOptions(arg3)
+      ? (arg3 as ApiClientOptions)
+      : arg4;
+
+    return request<T>(
+      path,
+      { method: "PATCH", body, ...(requestOptions ?? {}) },
+      clientOptions
+    );
+  },
+
+  delete: async <T = unknown>(
+    path: string,
+    arg2?: ApiClientOptions | RequestOptions,
+    arg3?: ApiClientOptions
+  ) => {
+    const requestOptions: RequestOptions | undefined = isApiClientOptions(arg2)
+      ? undefined
+      : (arg2 as RequestOptions | undefined);
+
+    const clientOptions: ApiClientOptions | undefined = isApiClientOptions(arg2)
+      ? (arg2 as ApiClientOptions)
+      : arg3;
+
+    return request<T>(
+      path,
+      { method: "DELETE", ...(requestOptions ?? {}) },
+      clientOptions
+    );
+  },
 };
