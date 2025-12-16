@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   inviteCandidate,
   listSimulations,
@@ -32,6 +32,10 @@ type InviteModalState = {
   simulationTitle: string;
 };
 
+type ToastState =
+  | { open: false }
+  | { open: true; kind: "success" | "error"; message: string };
+
 function formatCreatedDate(iso: string): string {
   if (typeof iso !== "string") return "";
   return iso.length >= 10 ? iso.slice(0, 10) : iso;
@@ -61,6 +65,9 @@ function InviteCandidateModal(props: {
 
   const [candidateName, setCandidateName] = useState(props.initialName ?? "");
   const [inviteEmail, setInviteEmail] = useState(props.initialEmail ?? "");
+
+  const nameInputId = "invite-candidate-name";
+  const emailInputId = "invite-candidate-email";
 
   useEffect(() => {
     if (open) {
@@ -109,10 +116,14 @@ function InviteCandidateModal(props: {
 
         <div className="mt-4 space-y-3">
           <div>
-            <label className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            <label
+              htmlFor={nameInputId}
+              className="text-xs font-medium uppercase tracking-wide text-gray-500"
+            >
               Candidate name
             </label>
             <input
+              id={nameInputId}
               className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm"
               value={candidateName}
               onChange={(e) => setCandidateName(e.target.value)}
@@ -122,10 +133,14 @@ function InviteCandidateModal(props: {
           </div>
 
           <div>
-            <label className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            <label
+              htmlFor={emailInputId}
+              className="text-xs font-medium uppercase tracking-wide text-gray-500"
+            >
               Candidate email
             </label>
             <input
+              id={emailInputId}
               className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
@@ -144,30 +159,6 @@ function InviteCandidateModal(props: {
             <div className="rounded border border-red-200 bg-red-50 p-3">
               <p className="text-sm font-medium text-red-700">Invite failed</p>
               <p className="text-sm text-red-700">{state.message}</p>
-            </div>
-          ) : null}
-
-          {state.status === "success" ? (
-            <div className="rounded border border-gray-200 bg-white p-3">
-              <p className="text-sm font-medium">Invite created</p>
-              <div className="mt-2 space-y-2">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                    Invite URL
-                  </p>
-                  <p className="break-all rounded bg-gray-50 p-2 font-mono text-xs">
-                    {state.inviteUrl}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                    Token
-                  </p>
-                  <p className="break-all rounded bg-gray-50 p-2 font-mono text-xs">
-                    {state.token}
-                  </p>
-                </div>
-              </div>
             </div>
           ) : null}
         </div>
@@ -209,6 +200,24 @@ export default function RecruiterDashboardContent({
     status: "idle",
   });
 
+  const [toast, setToast] = useState<ToastState>({ open: false });
+  const toastTimerRef = useRef<number | null>(null);
+
+  function showToast(kind: "success" | "error", message: string) {
+    setToast({ open: true, kind, message });
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast({ open: false });
+      toastTimerRef.current = null;
+    }, 3500);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -217,7 +226,7 @@ export default function RecruiterDashboardContent({
         setLoading(true);
         setSimError(null);
         const sims = await listSimulations();
-        if (!cancelled) setSimulations(sims);
+        if (!cancelled) setSimulations(Array.isArray(sims) ? sims : []);
       } catch (e: unknown) {
         const message = errorToMessage(e, "Failed to load simulations.");
         if (!cancelled) setSimError(message);
@@ -249,12 +258,16 @@ export default function RecruiterDashboardContent({
     setInviteState({ status: "loading" });
 
     try {
-      const res = await inviteCandidate(modal.simulationId, candidateName, inviteEmail);
-      setInviteState({
-        status: "success",
-        inviteUrl: res.inviteUrl,
-        token: res.token,
-      });
+      await inviteCandidate(modal.simulationId, candidateName, inviteEmail);
+
+      closeInviteModal();
+      showToast("success", `Invite sent to ${inviteEmail}.`);
+
+      try {
+        const sims = await listSimulations();
+        setSimulations(Array.isArray(sims) ? sims : []);
+      } catch {
+      }
     } catch (e: unknown) {
       const message = errorToMessage(e, "Failed to invite candidate.");
       setInviteState({ status: "error", message });
@@ -264,6 +277,37 @@ export default function RecruiterDashboardContent({
   return (
     <main className="flex flex-col gap-4 py-8">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
+
+      {toast.open ? (
+        <div
+          className={
+            toast.kind === "success"
+              ? "rounded border border-green-200 bg-green-50 p-3"
+              : "rounded border border-red-200 bg-red-50 p-3"
+          }
+          role="status"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <p
+              className={
+                toast.kind === "success"
+                  ? "text-sm text-green-800"
+                  : "text-sm text-red-800"
+              }
+            >
+              {toast.message}
+            </p>
+            <button
+              type="button"
+              className="rounded px-2 py-1 text-sm text-gray-600 hover:bg-black/5"
+              onClick={() => setToast({ open: false })}
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {profile ? (
         <div className="rounded border border-gray-200 p-4">
@@ -280,9 +324,7 @@ export default function RecruiterDashboardContent({
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Simulations</h2>
 
-        {loading ? (
-          <p className="text-sm text-gray-600">Loading simulations…</p>
-        ) : null}
+        {loading ? <p className="text-sm text-gray-600">Loading simulations…</p> : null}
 
         {!loading && simError ? (
           <div className="rounded border border-red-200 bg-red-50 p-3">
