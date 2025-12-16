@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import CandidateSimulationContent from "./CandidateSimulationContent";
 import { CandidateSessionProvider } from "../CandidateSessionProvider";
 import {
@@ -23,23 +23,50 @@ jest.mock("@/lib/candidateApi", () => {
 type MockTask = { id: number; dayIndex: number; type: string; title: string; description: string };
 type MockTaskViewProps = {
   task: MockTask;
+  candidateSessionId: number;
   submitting: boolean;
   submitError?: string | null;
-  onSubmit: (payload: { contentText?: string; codeBlob?: string }) => void | Promise<void>;
+  onSubmit: (payload: { contentText?: string; codeBlob?: string }) => unknown | Promise<unknown>;
 };
+
+function isSubmitResp(x: unknown): x is { progress: { completed: number; total: number } } {
+  if (typeof x !== "object" || x === null) return false;
+  const rec = x as Record<string, unknown>;
+  const progress = rec["progress"];
+  if (typeof progress !== "object" || progress === null) return false;
+  const p = progress as Record<string, unknown>;
+  return typeof p["completed"] === "number" && typeof p["total"] === "number";
+}
 
 jest.mock("@/components/candidate/TaskView", () => ({
   __esModule: true,
   default: function MockTaskView({ task, submitting, onSubmit }: MockTaskViewProps) {
+    const [statusLine, setStatusLine] = React.useState<string>("");
+
+    async function doSubmit(payload: { contentText?: string; codeBlob?: string }) {
+      setStatusLine("");
+      try {
+        const resp = await onSubmit(payload);
+        if (isSubmitResp(resp)) {
+          setStatusLine(`Submitted ✓ Progress: ${resp.progress.completed}/${resp.progress.total}`);
+        } else if (resp) {
+          setStatusLine("Submitted ✓");
+        }
+      } catch {
+      }
+    }
+
     return (
       <div>
         <div data-testid="mock-task-title">{task.title}</div>
+
+        {statusLine ? <div data-testid="submit-status">{statusLine}</div> : null}
 
         <button
           type="button"
           disabled={submitting}
           onClick={() =>
-            onSubmit(
+            void doSubmit(
               task.type === "code" || task.type === "debug" ? { codeBlob: "//" } : { contentText: "ok" }
             )
           }
@@ -47,11 +74,11 @@ jest.mock("@/components/candidate/TaskView", () => ({
           Submit & Continue
         </button>
 
-        <button type="button" disabled={submitting} onClick={() => onSubmit({ contentText: "   " })}>
+        <button type="button" disabled={submitting} onClick={() => void doSubmit({ contentText: "   " })}>
           Submit empty
         </button>
 
-        <button type="button" disabled={submitting} onClick={() => onSubmit({ codeBlob: "   " })}>
+        <button type="button" disabled={submitting} onClick={() => void doSubmit({ codeBlob: "   " })}>
           Submit empty code
         </button>
       </div>
@@ -73,10 +100,21 @@ function seedSessionStorage(value: unknown) {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value));
 }
 
+async function advance(ms: number) {
+  await act(async () => {
+    jest.advanceTimersByTime(ms);
+    await Promise.resolve();
+  });
+}
+
 describe("CandidateSimulationContent", () => {
   beforeEach(() => {
     jest.resetAllMocks();
     sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it("valid token loads intro screen with correct title/role and start button, then loads current task", async () => {
@@ -141,6 +179,8 @@ describe("CandidateSimulationContent", () => {
   });
 
   it("submitting a design/documentation task uses contentText payload", async () => {
+    jest.useFakeTimers();
+
     resolveMock.mockResolvedValueOnce({
       candidateSessionId: 123,
       status: "in_progress",
@@ -171,12 +211,18 @@ describe("CandidateSimulationContent", () => {
         },
       });
 
-    submitMock.mockResolvedValueOnce({ ok: true });
+    submitMock.mockResolvedValueOnce({
+      submissionId: 1,
+      taskId: 101,
+      candidateSessionId: 123,
+      submittedAt: "2025-12-16T00:00:00Z",
+      progress: { completed: 1, total: 5 },
+      isComplete: false,
+    });
 
     renderWithProvider(<CandidateSimulationContent token="VALID_TOKEN" />);
 
     fireEvent.click(await screen.findByRole("button", { name: /start simulation/i }));
-
     expect(await screen.findByText("Unique Day 1 Title")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /submit & continue/i }));
@@ -190,6 +236,10 @@ describe("CandidateSimulationContent", () => {
       candidateSessionId: 123,
       contentText: "ok",
     });
+
+    expect(await screen.findByTestId("submit-status")).toHaveTextContent("Progress: 1/5");
+
+    await advance(900);
 
     expect(await screen.findByText("Unique Day 2 Title")).toBeInTheDocument();
   });
@@ -255,6 +305,8 @@ describe("CandidateSimulationContent", () => {
   });
 
   it("after submitting Day 1, progress advances to Day 2", async () => {
+    jest.useFakeTimers();
+
     resolveMock.mockResolvedValueOnce({
       candidateSessionId: 123,
       status: "in_progress",
@@ -285,7 +337,14 @@ describe("CandidateSimulationContent", () => {
         },
       });
 
-    submitMock.mockResolvedValueOnce({ ok: true });
+    submitMock.mockResolvedValueOnce({
+      submissionId: 1,
+      taskId: 101,
+      candidateSessionId: 123,
+      submittedAt: "2025-12-16T00:00:00Z",
+      progress: { completed: 1, total: 5 },
+      isComplete: false,
+    });
 
     renderWithProvider(<CandidateSimulationContent token="VALID_TOKEN" />);
 
@@ -293,6 +352,10 @@ describe("CandidateSimulationContent", () => {
     expect(await screen.findByText("Unique Day 1 Title")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /submit & continue/i }));
+
+    expect(await screen.findByTestId("submit-status")).toHaveTextContent("Progress: 1/5");
+
+    await advance(900);
 
     expect(await screen.findByText("Unique Day 2 Title")).toBeInTheDocument();
   });

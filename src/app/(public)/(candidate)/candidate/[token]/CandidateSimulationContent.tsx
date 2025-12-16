@@ -11,6 +11,7 @@ import {
   submitCandidateTask,
   type CandidateSessionBootstrapResponse,
   type CandidateCurrentTaskResponse,
+  type CandidateTaskSubmitResponse,
 } from "@/lib/candidateApi";
 import { useCandidateSession } from "../CandidateSessionProvider";
 
@@ -60,6 +61,7 @@ function friendlySubmitError(err: unknown): string {
   if (status === 400) return "Task out of order.";
   if (status === 409) return "Task already submitted.";
   if (status === 404) return "Session mismatch. Please reopen your invite link.";
+  if (status === 410) return "That invite link has expired.";
   if (!status || status === 0) return "Network error. Please check your connection and try again.";
 
   const msg = messageFromUnknown(err);
@@ -104,6 +106,15 @@ export default function CandidateSimulationContent({ token }: { token: string })
   const bootstrapTokenRef = useRef<string | null>(null);
 
   const fetchTaskInFlightRef = useRef(false);
+
+  const postSubmitRefreshTimerRef = useRef<number | null>(null);
+  useEffect(() => {
+    return () => {
+      if (postSubmitRefreshTimerRef.current) {
+        window.clearTimeout(postSubmitRefreshTimerRef.current);
+      }
+    };
+  }, []);
 
   const fetchCurrentTask = useCallback(async () => {
     if (!state.token || !candidateSessionId) return;
@@ -203,7 +214,7 @@ export default function CandidateSimulationContent({ token }: { token: string })
   }, [completedCount, state.taskState.currentTask, state.taskState.isComplete]);
 
   const handleSubmit = useCallback(
-    async (payload: { contentText?: string; codeBlob?: string }) => {
+    async (payload: { contentText?: string; codeBlob?: string }): Promise<CandidateTaskSubmitResponse | void> => {
       if (!state.token || !candidateSessionId || !state.taskState.currentTask) return;
 
       const type = String(state.taskState.currentTask.type);
@@ -230,7 +241,7 @@ export default function CandidateSimulationContent({ token }: { token: string })
       clearTaskError();
 
       try {
-        await submitCandidateTask({
+        const resp = await submitCandidateTask({
           taskId: state.taskState.currentTask.id,
           token: state.token,
           candidateSessionId,
@@ -238,9 +249,17 @@ export default function CandidateSimulationContent({ token }: { token: string })
           codeBlob: payload.codeBlob,
         });
 
-        await fetchCurrentTask();
+        if (postSubmitRefreshTimerRef.current) {
+          window.clearTimeout(postSubmitRefreshTimerRef.current);
+        }
+        postSubmitRefreshTimerRef.current = window.setTimeout(() => {
+          void fetchCurrentTask();
+        }, 900);
+
+        return resp;
       } catch (err) {
         setTaskError(friendlySubmitError(err));
+        throw err;
       } finally {
         setSubmitting(false);
       }
@@ -315,9 +334,7 @@ export default function CandidateSimulationContent({ token }: { token: string })
     return (
       <div className="p-6 max-w-2xl mx-auto">
         <div className="text-2xl font-bold">Simulation complete 🎉</div>
-        <div className="text-sm text-gray-700 mt-3">
-          You’ve submitted all 5 days. You can close this tab now.
-        </div>
+        <div className="text-sm text-gray-700 mt-3">You’ve submitted all 5 days. You can close this tab now.</div>
       </div>
     );
   }
@@ -343,16 +360,22 @@ export default function CandidateSimulationContent({ token }: { token: string })
         </div>
       ) : null}
 
-      {state.taskState.currentTask ? (
+      {state.taskState.currentTask && candidateSessionId !== null ? (
         <TaskView
           task={state.taskState.currentTask}
+          candidateSessionId={candidateSessionId}
           submitting={submitting}
           submitError={state.taskState.error}
           onSubmit={handleSubmit}
         />
+      ) : state.taskState.currentTask ? (
+        <div className="border rounded-md p-4 text-sm text-gray-700">
+          Session not ready. Please refresh.
+        </div>
       ) : (
         <div className="border rounded-md p-4 text-sm text-gray-700">No current task available.</div>
       )}
+
     </div>
   );
 }

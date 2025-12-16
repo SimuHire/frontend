@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import loader from "@monaco-editor/loader";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type { EditorProps } from "@monaco-editor/react";
 
 let monacoConfigured = false;
@@ -28,12 +28,16 @@ export default function CodeEditor({
   value,
   onChange,
   language = "typescript",
+  height = 420,
 }: {
   value: string;
   onChange: (v: string) => void;
   language?: "javascript" | "typescript";
+  height?: number;
 }) {
-  ensureMonacoConfigured();
+  useEffect(() => {
+    ensureMonacoConfigured();
+  }, []);
 
   const options = useMemo<NonNullable<EditorProps["options"]>>(
     () => ({
@@ -51,7 +55,7 @@ export default function CodeEditor({
   return (
     <div className="border rounded-md overflow-hidden">
       <MonacoEditor
-        height="420px"
+        height={`${height}px`}
         language={language}
         value={value}
         onChange={(v: string | undefined) => onChange(v ?? "")}

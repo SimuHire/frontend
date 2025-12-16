@@ -8,13 +8,9 @@ type MonacoMockProps = {
   loading?: React.ReactNode;
 };
 
-type LoaderModule = {
-  config: (args: { paths: { vs: string } }) => void;
-};
-
 jest.mock("@monaco-editor/loader", () => ({
   __esModule: true,
-  default: { config: jest.fn() } satisfies LoaderModule,
+  default: { config: jest.fn() },
 }));
 
 jest.mock("@monaco-editor/react", () => ({
@@ -34,7 +30,7 @@ jest.mock("@monaco-editor/react", () => ({
 }));
 
 jest.mock("next/dynamic", () => {
-  return (_importer: unknown) => {
+  return (_importer: unknown, _opts?: unknown) => {
     return function DynamicMock(props: MonacoMockProps) {
       const mod = jest.requireMock("@monaco-editor/react") as {
         default: (p: MonacoMockProps) => React.ReactElement;
@@ -47,7 +43,7 @@ jest.mock("next/dynamic", () => {
 
 describe("CodeEditor", () => {
   it("renders and calls onChange when typing", () => {
-    const onChange = jest.fn() as unknown as (v: string) => void;
+    const onChange = jest.fn<void, [string]>();
 
     render(<CodeEditor value={"console.log('hi')\n"} onChange={onChange} language="typescript" />);
 
@@ -56,7 +52,7 @@ describe("CodeEditor", () => {
 
     fireEvent.change(textarea, { target: { value: "updated\n" } });
 
-    expect((onChange as unknown as jest.Mock).mock.calls[0]?.[0]).toBe("updated\n");
+    expect(onChange).toHaveBeenCalledWith("updated\n");
   });
 
   it("shows loading placeholder while editor loads (mocked)", () => {
