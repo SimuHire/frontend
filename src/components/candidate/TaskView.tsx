@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Button from "@/components/common/Button";
 import CodeEditor from "@/components/candidate/CodeEditor";
+import { clearCodeDraft, loadCodeDraft, saveCodeDraft } from "@/lib/codeDrafts";
 
 type TaskType = "design" | "code" | "debug" | "handoff" | "documentation" | string;
 
@@ -14,6 +15,19 @@ type Task = {
   description: string;
 };
 
+type SubmitPayload = { contentText?: string; codeBlob?: string };
+
+type SubmitResponse = {
+  submissionId: number;
+  taskId: number;
+  candidateSessionId: number;
+  submittedAt: string;
+  progress: { completed: number; total: number };
+  isComplete: boolean;
+};
+
+type SubmitStatus = "idle" | "submitting" | "submitted";
+
 function isCodeTask(t: Task) {
   return t.type === "code" || t.type === "debug";
 }
@@ -22,84 +36,167 @@ function isTextTask(t: Task) {
   return t.type === "design" || t.type === "documentation" || t.type === "handoff";
 }
 
-function loadDraft(storageKey: string) {
+function textDraftKey(taskId: number) {
+  return `simuhire:candidate:textDraft:${String(taskId)}`;
+}
+
+function loadTextDraft(taskId: number): string {
+  if (typeof window === "undefined") return "";
   try {
-    const raw = sessionStorage.getItem(storageKey);
-    if (!raw) return { text: "", code: "// start here\n" };
-    const parsed = JSON.parse(raw) as { text?: string; code?: string };
-    return {
-      text: parsed.text ?? "",
-      code: parsed.code ?? "// start here\n",
-    };
+    return window.sessionStorage.getItem(textDraftKey(taskId)) ?? "";
   } catch {
-    return { text: "", code: "// start here\n" };
+    return "";
   }
+}
+
+function saveTextDraft(taskId: number, text: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(textDraftKey(taskId), text);
+  } catch {
+  }
+}
+
+function clearTextDraft(taskId: number) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(textDraftKey(taskId));
+  } catch {
+  }
+}
+
+function isSubmitResponse(x: unknown): x is SubmitResponse {
+  if (typeof x !== "object" || x === null) return false;
+  const rec = x as Record<string, unknown>;
+  const progress = rec["progress"];
+  if (typeof rec["submissionId"] !== "number") return false;
+  if (typeof rec["taskId"] !== "number") return false;
+  if (typeof rec["candidateSessionId"] !== "number") return false;
+  if (typeof rec["submittedAt"] !== "string") return false;
+  if (typeof rec["isComplete"] !== "boolean") return false;
+  if (typeof progress !== "object" || progress === null) return false;
+  const p = progress as Record<string, unknown>;
+  return typeof p["completed"] === "number" && typeof p["total"] === "number";
 }
 
 function TaskViewInner({
   task,
+  candidateSessionId,
   onSubmit,
   submitting,
   submitError,
 }: {
   task: Task;
+  candidateSessionId: number;
   submitting: boolean;
   submitError?: string | null;
-  onSubmit: (payload: { contentText?: string; codeBlob?: string }) => Promise<void> | void;
+  onSubmit: (payload: SubmitPayload) => Promise<SubmitResponse | void> | SubmitResponse | void;
 }) {
-  const storageKey = useMemo(() => `simuhire:candidate_task_draft:${task.id}`, [task.id]);
+  const codeTask = isCodeTask(task);
+  const textTask = isTextTask(task);
 
-  const initial = useMemo(() => loadDraft(storageKey), [storageKey]);
-
-  const [text, setText] = useState<string>(() => initial.text);
-  const [code, setCode] = useState<string>(() => initial.code);
+  const [text, setText] = useState<string>(() => loadTextDraft(task.id));
+  const [code, setCode] = useState<string>(() => {
+    const draft = loadCodeDraft(candidateSessionId, task.id);
+    return draft ?? "// start here\n";
+  });
 
   const [localError, setLocalError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
-  const codeTask = isCodeTask(task);
-  const textTask = isTextTask(task);
+  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>("idle");
+  const [lastProgress, setLastProgress] = useState<{ completed: number; total: number } | null>(null);
 
   const saveTimerRef = useRef<number | null>(null);
+  const submittedTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setLocalError(null);
+    setLastProgress(null);
+    setSubmitStatus(submitting ? "submitting" : "idle");
+
+    if (textTask) {
+      setText(loadTextDraft(task.id));
+    }
+    if (codeTask) {
+      const draft = loadCodeDraft(candidateSessionId, task.id);
+      setCode(draft ?? "// start here\n");
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task.id]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+      if (submittedTimerRef.current) window.clearTimeout(submittedTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (submitting) setSubmitStatus("submitting");
+  }, [submitting]);
+
   useEffect(() => {
     if (submitting) return;
 
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+
     saveTimerRef.current = window.setTimeout(() => {
-      try {
-        sessionStorage.setItem(storageKey, JSON.stringify({ text, code }));
-      } catch {
-      }
+      if (textTask) saveTextDraft(task.id, text);
+      if (codeTask) saveCodeDraft(candidateSessionId, task.id, code);
     }, 350);
 
     return () => {
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
     };
-  }, [text, code, storageKey, submitting]);
+  }, [candidateSessionId, code, codeTask, submitting, task.id, text, textTask]);
 
-  function saveDraft() {
-    try {
-      sessionStorage.setItem(storageKey, JSON.stringify({ text, code }));
-      setSavedAt(Date.now());
-      window.setTimeout(() => setSavedAt(null), 1500);
-    } catch {
-    }
+  function saveDraftNow() {
+    if (!textTask) return;
+    saveTextDraft(task.id, text);
+    setSavedAt(Date.now());
+    window.setTimeout(() => setSavedAt(null), 1500);
+  }
+
+  function clearDraftOnSuccess() {
+    if (textTask) clearTextDraft(task.id);
+    if (codeTask) clearCodeDraft(candidateSessionId, task.id);
   }
 
   async function handleSubmit() {
+    if (submitStatus !== "idle" || submitting) return;
+
     if (textTask) {
       const trimmed = text.trim();
       if (!trimmed) {
         setLocalError("Please enter an answer before submitting.");
         return;
       }
-      setLocalError(null);
 
-      await onSubmit({ contentText: trimmed });
+      setLocalError(null);
+      setSubmitStatus("submitting");
 
       try {
-        sessionStorage.removeItem(storageKey);
-      } catch {}
+        const resp = await onSubmit({ contentText: trimmed });
+
+        if (isSubmitResponse(resp)) {
+          setLastProgress(resp.progress);
+          setSubmitStatus("submitted");
+          clearDraftOnSuccess();
+
+          submittedTimerRef.current = window.setTimeout(() => {
+            setSubmitStatus("idle");
+            setLastProgress(null);
+          }, 900);
+        } else {
+          clearDraftOnSuccess();
+          setSubmitStatus("idle");
+        }
+      } catch {
+        setSubmitStatus("idle");
+      }
+
       return;
     }
 
@@ -110,11 +207,27 @@ function TaskViewInner({
     }
 
     setLocalError(null);
-    await onSubmit({ codeBlob: code });
+    setSubmitStatus("submitting");
 
     try {
-      sessionStorage.removeItem(storageKey);
-    } catch {}
+      const resp = await onSubmit({ codeBlob: code });
+
+      if (isSubmitResponse(resp)) {
+        setLastProgress(resp.progress);
+        setSubmitStatus("submitted");
+        clearDraftOnSuccess();
+
+        submittedTimerRef.current = window.setTimeout(() => {
+          setSubmitStatus("idle");
+          setLastProgress(null);
+        }, 900);
+      } else {
+        clearDraftOnSuccess();
+        setSubmitStatus("idle");
+      }
+    } catch {
+      setSubmitStatus("idle");
+    }
   }
 
   const errorToShow = localError ?? submitError ?? null;
@@ -146,7 +259,7 @@ function TaskViewInner({
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Write your response here…"
-              disabled={submitting}
+              disabled={submitting || submitStatus === "submitted"}
             />
             <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
               <span>{text.length.toLocaleString()} characters</span>
@@ -156,8 +269,19 @@ function TaskViewInner({
         )}
       </div>
 
+      <div className="mt-3 text-sm text-gray-600 min-h-[20px]">
+        {submitStatus === "submitting" ? (
+          <span>Submitting…</span>
+        ) : submitStatus === "submitted" ? (
+          <span>
+            Submitted ✓{" "}
+            {lastProgress ? `Progress: ${lastProgress.completed}/${lastProgress.total}` : null}
+          </span>
+        ) : null}
+      </div>
+
       {errorToShow ? (
-        <div className="mt-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-2 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
           {errorToShow}
         </div>
       ) : null}
@@ -166,8 +290,8 @@ function TaskViewInner({
         {textTask ? (
           <button
             type="button"
-            onClick={saveDraft}
-            disabled={submitting}
+            onClick={saveDraftNow}
+            disabled={submitting || submitStatus !== "idle"}
             className="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium disabled:opacity-50"
           >
             Save draft
@@ -176,8 +300,12 @@ function TaskViewInner({
           <div />
         )}
 
-        <Button onClick={handleSubmit} disabled={submitting}>
-          {submitting ? "Submitting…" : "Submit & Continue"}
+        <Button onClick={handleSubmit} disabled={submitting || submitStatus !== "idle"}>
+          {submitStatus === "submitting"
+            ? "Submitting…"
+            : submitStatus === "submitted"
+              ? "Submitted ✓"
+              : "Submit & Continue"}
         </Button>
       </div>
     </div>
@@ -186,9 +314,10 @@ function TaskViewInner({
 
 export default function TaskView(props: {
   task: Task;
+  candidateSessionId: number;
   submitting: boolean;
   submitError?: string | null;
-  onSubmit: (payload: { contentText?: string; codeBlob?: string }) => Promise<void> | void;
+  onSubmit: (payload: SubmitPayload) => Promise<SubmitResponse | void> | SubmitResponse | void;
 }) {
   return <TaskViewInner key={props.task.id} {...props} />;
 }
