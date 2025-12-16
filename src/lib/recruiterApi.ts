@@ -23,7 +23,14 @@ function getString(value: unknown, fallback: string): string {
 }
 
 function getNumber(value: unknown): number | undefined {
-  return typeof value === "number" ? value : undefined;
+  if (typeof value !== "number") return undefined;
+  return Number.isFinite(value) ? value : undefined;
+}
+
+function getId(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  return "";
 }
 
 function normalizeSimulation(raw: unknown): SimulationListItem {
@@ -36,12 +43,17 @@ function normalizeSimulation(raw: unknown): SimulationListItem {
     };
   }
 
-  const id = getString(raw.id ?? raw.simulationId, "");
+  const id = getId(raw.id ?? raw.simulationId ?? raw.simulation_id);
   const title = getString(raw.title ?? raw.simulation_title, "Untitled simulation");
   const role = getString(raw.role ?? raw.role_name, "Unknown role");
   const createdAt = getString(raw.createdAt ?? raw.created_at, new Date().toISOString());
+
   const candidateCount =
-    getNumber(raw.candidateCount) ?? getNumber(raw.candidate_count) ?? undefined;
+    getNumber(raw.candidateCount) ??
+    getNumber(raw.candidate_count) ??
+    getNumber(raw.numCandidates) ??
+    getNumber(raw.num_candidates) ??
+    undefined;
 
   return { id, title, role, createdAt, candidateCount };
 }
@@ -52,16 +64,38 @@ export async function listSimulations(): Promise<SimulationListItem[]> {
   return data.map(normalizeSimulation);
 }
 
-export async function inviteCandidate(simulationId: string): Promise<InviteCandidateResponse> {
-  const data = await apiClient.post<unknown>(`/simulations/${simulationId}/invite`, {});
-
-  if (!isRecord(data)) {
+function normalizeInviteResponse(raw: unknown): InviteCandidateResponse {
+  if (!isRecord(raw)) {
     return { candidateSessionId: "", token: "", inviteUrl: "" };
   }
 
   return {
-    candidateSessionId: getString(data.candidateSessionId ?? data.candidate_session_id, ""),
-    token: getString(data.token, ""),
-    inviteUrl: getString(data.inviteUrl ?? data.invite_url, ""),
+    candidateSessionId: getString(
+      raw.candidateSessionId ?? raw.candidate_session_id,
+      ""
+    ),
+    token: getString(raw.token, ""),
+    inviteUrl: getString(raw.inviteUrl ?? raw.invite_url, ""),
   };
+}
+
+export async function inviteCandidate(
+  simulationId: string,
+  candidateName: string,
+  inviteEmail: string
+): Promise<InviteCandidateResponse> {
+  const safeId = simulationId.trim();
+  const safeName = candidateName.trim();
+  const safeEmail = inviteEmail.trim();
+
+  if (!safeId || !safeName || !safeEmail) {
+    return { candidateSessionId: "", token: "", inviteUrl: "" };
+  }
+
+  const data = await apiClient.post<unknown>(`/simulations/${safeId}/invite`, {
+    candidateName: safeName,
+    inviteEmail: safeEmail,
+  });
+
+  return normalizeInviteResponse(data);
 }

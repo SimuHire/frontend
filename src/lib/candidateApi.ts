@@ -78,7 +78,7 @@ async function parseErrorMessage(res: Response): Promise<string | null> {
 }
 
 export async function resolveCandidateInviteToken(token: string) {
-  const url = `${API_BASE}/api/candidate/session/${encodeURIComponent(token)}`;
+  const url = `${API_BASE}/candidate/session/${encodeURIComponent(token)}`;
 
   const res = await safeFetch(url, { method: "GET" });
 
@@ -92,7 +92,7 @@ export async function resolveCandidateInviteToken(token: string) {
 }
 
 export async function getCandidateCurrentTask(candidateSessionId: number, token: string) {
-  const url = `${API_BASE}/api/candidate/session/${candidateSessionId}/current_task`;
+  const url = `${API_BASE}/candidate/session/${candidateSessionId}/current_task`;
 
   const res = await safeFetch(url, {
     method: "GET",
