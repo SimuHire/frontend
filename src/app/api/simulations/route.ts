@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { auth0, getAccessToken } from "@/lib/auth0";
 
 function getBackendBaseUrl(): string {
-  return process.env.BACKEND_BASE_URL ?? "http://localhost:8000";
+  const raw = process.env.BACKEND_BASE_URL ?? "http://localhost:8000";
+  const trimmed = raw.replace(/\/+$/, "");
+  return trimmed.endsWith("/api") ? trimmed.slice(0, -4) : trimmed;
 }
 
 export async function GET() {
