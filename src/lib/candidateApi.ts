@@ -122,7 +122,7 @@ export async function submitCandidateTask(params: {
 }) {
   const { taskId, token, candidateSessionId, contentText, codeBlob } = params;
 
-  const url = `${API_BASE}/api/tasks/${taskId}/submit`;
+  const url = `${API_BASE}/tasks/${taskId}/submit`;
 
   const res = await safeFetch(url, {
     method: "POST",
