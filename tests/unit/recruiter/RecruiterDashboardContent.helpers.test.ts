@@ -2,7 +2,7 @@ import {
   copyToClipboard,
   errorToMessage,
   formatCreatedDate,
-} from '@/app/(private)/(recruiter)/dashboard/RecruiterDashboardContent';
+} from '@/features/recruiter/helpers';
 
 const originalExecCommand = document.execCommand;
 

@@ -1,35 +1,11 @@
 import { NextResponse } from 'next/server';
-import { auth0, getAccessToken } from '@/lib/auth0';
-
-function getBackendBaseUrl(): string {
-  const raw = process.env.BACKEND_BASE_URL ?? 'http://localhost:8000';
-  const trimmed = raw.replace(/\/+$/, '');
-  return trimmed.endsWith('/api') ? trimmed.slice(0, -4) : trimmed;
-}
+import { forwardJson, withAuthGuard } from '@/lib/server/bff';
 
 export async function GET() {
-  const session = await auth0.getSession();
-  if (!session) {
-    return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
-  }
-
   try {
-    const accessToken = await getAccessToken();
-    const backendBase = getBackendBaseUrl();
-
-    const res = await fetch(`${backendBase}/api/simulations`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      cache: 'no-store',
-    });
-
-    const contentType = res.headers.get('content-type') ?? '';
-    const body = contentType.includes('application/json')
-      ? ((await res.json()) as unknown)
-      : await res.text();
-
-    return NextResponse.json(body, { status: res.status });
+    return await withAuthGuard((accessToken) =>
+      forwardJson({ path: '/api/simulations', accessToken }),
+    );
   } catch (e: unknown) {
     const message =
       e instanceof Error ? `Upstream error: ${e.message}` : 'Upstream error';
@@ -38,32 +14,18 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await auth0.getSession();
-  if (!session) {
-    return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
-  }
-
   try {
-    const accessToken = await getAccessToken();
-    const backendBase = getBackendBaseUrl();
-
     const body = (await req.json()) as unknown;
 
-    const res = await fetch(`${backendBase}/api/simulations`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-
-    const contentType = res.headers.get('content-type') ?? '';
-    const parsed = contentType.includes('application/json')
-      ? ((await res.json()) as unknown)
-      : await res.text();
-
-    return NextResponse.json(parsed, { status: res.status });
+    return await withAuthGuard((accessToken) =>
+      forwardJson({
+        path: '/api/simulations',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        accessToken,
+      }),
+    );
   } catch (e: unknown) {
     const message =
       e instanceof Error ? `Upstream error: ${e.message}` : 'Upstream error';

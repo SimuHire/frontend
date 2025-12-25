@@ -16,6 +16,7 @@ export interface ApiErrorShape {
 
 type RequestOptions = {
   headers?: Record<string, string>;
+  cache?: RequestCache;
 };
 
 const DEFAULT_BASE_PATH = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
@@ -72,6 +73,7 @@ async function request<TResponse = unknown>(
     method?: HttpMethod;
     body?: unknown;
     headers?: Record<string, string>;
+    cache?: RequestCache;
   } = {},
   clientOptions: ApiClientOptions = {},
 ): Promise<TResponse> {
@@ -113,6 +115,7 @@ async function request<TResponse = unknown>(
           ? (options.body as FormData)
           : JSON.stringify(options.body),
     credentials: 'include',
+    cache: options.cache,
   });
 
   if (!response.ok) {
