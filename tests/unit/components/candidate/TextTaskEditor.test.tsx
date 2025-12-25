@@ -65,4 +65,17 @@ describe("TextTaskEditor", () => {
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByText(/please enter an answer before submitting/i)).toBeInTheDocument();
   });
+
+  it("surfaces submitError from parent and respects disabled state", () => {
+    const onSubmit = jest.fn();
+
+    render(
+      <TextTaskEditor taskId={505} onSubmit={onSubmit} disabled={true} submitError="Backend failed" />
+    );
+
+    expect(screen.getByText("Backend failed")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /submit/i }));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });

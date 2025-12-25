@@ -162,4 +162,93 @@ describe("SimulationDetailContent", () => {
       expect(screen.getByText("Boom")).toBeInTheDocument();
     });
   });
+
+  it("uses text fallback when candidates request fails with text/plain", async () => {
+    const fetchMock = jest.fn(
+      async (input: RequestInfo | URL): Promise<MockResponse> => {
+        const url = getUrl(input);
+        if (url === "/api/simulations/1/candidates") {
+          return mockTextResponse("Plain failure", 500);
+        }
+        return mockTextResponse("Not found", 404);
+      }
+    );
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<SimulationDetailContent />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Plain failure")).toBeInTheDocument();
+    });
+  });
+
+  it("shows not started status, unnamed fallback, and text error fallback", async () => {
+    const fetchMock = jest.fn(
+      async (input: RequestInfo | URL): Promise<MockResponse> => {
+        const url = getUrl(input);
+        if (url === "/api/simulations/1/candidates") {
+          return mockJsonResponse([
+            {
+              candidateSessionId: 9,
+              inviteEmail: null,
+              candidateName: null,
+              status: "not_started",
+              startedAt: null,
+              completedAt: null,
+              hasReport: false,
+            },
+          ]);
+        }
+        return mockTextResponse("fallback error", 500);
+      }
+    );
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<SimulationDetailContent />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Unnamed")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Not started")).toBeInTheDocument();
+  });
+
+  it("handles thrown fetch errors gracefully", async () => {
+    const fetchMock = jest.fn(async () => {
+      throw new Error("network fail");
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<SimulationDetailContent />);
+
+    expect(await screen.findByText(/network fail/i)).toBeInTheDocument();
+  });
+
+  it("uses default error when fetch throws non-error value", async () => {
+    const fetchMock = jest.fn(async () => {
+      throw "boom";
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<SimulationDetailContent />);
+
+    expect(await screen.findByText("Request failed")).toBeInTheDocument();
+  });
+
+  it("shows detail error message when provided by backend", async () => {
+    const fetchMock = jest.fn(
+      async (input: RequestInfo | URL): Promise<MockResponse> => {
+        const url = getUrl(input);
+        if (url === "/api/simulations/1/candidates") {
+          return mockJsonResponse({ detail: "No access" }, 403);
+        }
+        return mockTextResponse("Not found", 404);
+      }
+    );
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<SimulationDetailContent />);
+
+    expect(await screen.findByText("No access")).toBeInTheDocument();
+  });
 });

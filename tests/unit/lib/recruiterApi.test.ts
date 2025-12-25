@@ -151,6 +151,12 @@ describe("recruiterApi", () => {
         inviteUrl: "",
       });
     });
+
+    it("returns blanks when any input is empty after trimming", async () => {
+      const result = await inviteCandidate("   ", "   ", "   ");
+      expect(result).toEqual({ candidateSessionId: "", token: "", inviteUrl: "" });
+      expect(mockedPost).not.toHaveBeenCalled();
+    });
   });
 
   describe("createSimulation", () => {
@@ -200,5 +206,39 @@ describe("recruiterApi", () => {
 
       expect(result).toEqual({ id: "42" });
     });
+
+    it("omits focus field when blank after trimming", async () => {
+      mockedPost.mockResolvedValueOnce({ id: "sim_200" });
+
+      const result = await createSimulation({
+        title: "Sim",
+        role: "Backend",
+        techStack: "Node",
+        seniority: "Junior",
+        focus: "   ",
+      });
+
+      expect(mockedPost).toHaveBeenCalledWith("/simulations", {
+        title: "Sim",
+        role: "Backend",
+        techStack: "Node",
+        seniority: "Junior",
+        focus: undefined,
+      });
+
+      expect(result).toEqual({ id: "sim_200" });
+    });
+  });
+
+  it("normalizes candidateCount across numeric variants", async () => {
+    mockedGet.mockResolvedValueOnce([
+      { id: 1, simulation_title: "A", role_name: "R", created_at: "2025-01-01", numCandidates: 7 },
+      { id: 2, simulation_title: "B", role_name: "R", created_at: "2025-01-02", num_candidates: 8 },
+    ]);
+
+    const result = await listSimulations();
+
+    expect(result[0]?.candidateCount).toBe(7);
+    expect(result[1]?.candidateCount).toBe(8);
   });
 });

@@ -65,3 +65,11 @@ export default function CodeEditor({
     </div>
   );
 }
+
+export function __resetMonacoConfiguredForTest() {
+  monacoConfigured = false;
+}
+
+export function __ensureMonacoConfiguredForTest() {
+  ensureMonacoConfigured();
+}

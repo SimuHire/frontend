@@ -35,4 +35,31 @@ describe("codeDrafts helpers", () => {
 
     getItemSpy.mockRestore();
   });
+
+  it("returns null on server (no window)", () => {
+    const originalWindow = (global as unknown as { window?: Window }).window;
+    delete (global as unknown as { window?: Window }).window;
+
+    expect(loadCodeDraft(1, 1)).toBeNull();
+    expect(hasCodeDraft(1, 1)).toBe(false);
+    expect(() => saveCodeDraft(1, 1, "noop")).not.toThrow();
+    expect(() => clearCodeDraft(1, 1)).not.toThrow();
+
+    (global as unknown as { window?: Window }).window = originalWindow;
+  });
+
+  it("swallows storage write errors when saving and clearing", () => {
+    const setItemSpy = jest.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+    const removeItemSpy = jest.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+
+    expect(() => saveCodeDraft(3, 4, "code")).not.toThrow();
+    expect(() => clearCodeDraft(3, 4)).not.toThrow();
+
+    setItemSpy.mockRestore();
+    removeItemSpy.mockRestore();
+  });
 });

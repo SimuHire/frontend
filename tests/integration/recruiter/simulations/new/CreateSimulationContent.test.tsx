@@ -110,4 +110,23 @@ describe("CreateSimulationContent", () => {
     expect(await screen.findByText(/Server exploded/i)).toBeInTheDocument();
     expect(refreshMock).not.toHaveBeenCalled();
   });
+
+  it("navigates back to dashboard via header Back button", async () => {
+    const user = userEvent.setup();
+    render(<CreateSimulationContent />);
+
+    await user.click(screen.getByRole("button", { name: /^Back$/i }));
+    expect(pushMock).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("cancel button returns to dashboard without submitting", async () => {
+    const user = userEvent.setup();
+    render(<CreateSimulationContent />);
+
+    await user.type(screen.getByLabelText(/Title/i), "Backend Sim");
+    await user.click(screen.getByRole("button", { name: /^Cancel$/i }));
+
+    expect(pushMock).toHaveBeenCalledWith("/dashboard");
+    expect(createSimulationMock).not.toHaveBeenCalled();
+  });
 });

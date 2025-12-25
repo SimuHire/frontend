@@ -17,4 +17,15 @@ describe("auth storage helpers", () => {
     expect(localStorage.getItem("simuhire_token")).toBeNull();
     expect(getAuthToken()).toBeNull();
   });
+
+  it("returns null and no-ops when window is undefined", () => {
+    const original = global.window;
+    // @ts-expect-error simulate server
+    delete global.window;
+
+    expect(getAuthToken()).toBeNull();
+    expect(() => setAuthToken("abc")).not.toThrow();
+
+    global.window = original;
+  });
 });

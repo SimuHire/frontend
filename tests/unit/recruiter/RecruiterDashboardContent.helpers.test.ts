@@ -44,4 +44,13 @@ describe("RecruiterDashboardContent helpers", () => {
   it("returns false for empty clipboard input", async () => {
     await expect(copyToClipboard("   ")).resolves.toBe(false);
   });
+
+  it("returns false when execCommand throws", async () => {
+    const execSpy = jest.fn(() => {
+      throw new Error("denied");
+    });
+    (document as unknown as { execCommand?: typeof document.execCommand }).execCommand = execSpy;
+
+    await expect(copyToClipboard("copy me")).resolves.toBe(false);
+  });
 });

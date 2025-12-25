@@ -158,6 +158,14 @@ describe("CandidateSimulationContent", () => {
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
   });
 
+  it("expired token shows expired message", async () => {
+    resolveMock.mockRejectedValueOnce(new HttpError(410, "Expired"));
+
+    renderWithProvider(<CandidateSimulationContent token="EXPIRED" />);
+
+    expect(await screen.findByText(/invite link has expired/i)).toBeInTheDocument();
+  });
+
   it("network errors show retry and retry succeeds", async () => {
     resolveMock
       .mockRejectedValueOnce(new HttpError(0, "Network error. Please check your connection and try again."))
@@ -455,8 +463,24 @@ describe("CandidateSimulationContent", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: /start simulation/i }));
 
+    expect(await screen.findByText(/Session not found\. Please reopen your invite link\./i)).toBeInTheDocument();
+  });
+
+  it("shows network-friendly task error when fetch fails with status 0", async () => {
+    resolveMock.mockResolvedValueOnce({
+      candidateSessionId: 888,
+      status: "in_progress",
+      simulation: { title: "Sim", role: "Backend Engineer" },
+    });
+
+    currentTaskMock.mockRejectedValueOnce({ status: 0, message: "offline" });
+
+    renderWithProvider(<CandidateSimulationContent token="VALID_TOKEN" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /start simulation/i }));
+
     expect(
-      await screen.findByText(/Session not found\. Please reopen your invite link\./i)
+      await screen.findByText(/Network error\. Please check your connection and try again\./i)
     ).toBeInTheDocument();
   });
 
@@ -489,6 +513,68 @@ describe("CandidateSimulationContent", () => {
     fireEvent.click(screen.getByRole("button", { name: /submit & continue/i }));
 
     expect(await screen.findByText(/Task already submitted/i)).toBeInTheDocument();
+  });
+
+  it("renders submit error for out-of-order submission (400)", async () => {
+    resolveMock.mockResolvedValueOnce({
+      candidateSessionId: 123,
+      status: "in_progress",
+      simulation: { title: "Sim", role: "Backend Engineer" },
+    });
+
+    currentTaskMock.mockResolvedValueOnce({
+      isComplete: false,
+      completedTaskIds: [],
+      currentTask: {
+        id: 222,
+        dayIndex: 3,
+        type: "debug",
+        title: "Day 3 — Debug",
+        description: "Fix it.",
+      },
+    });
+
+    submitMock.mockRejectedValueOnce({ status: 400, message: "Out of order" });
+
+    renderWithProvider(<CandidateSimulationContent token="VALID_TOKEN" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /start simulation/i }));
+    expect(await screen.findByText("Day 3 — Debug")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /submit & continue/i }));
+
+    expect(await screen.findByText(/Task out of order/i)).toBeInTheDocument();
+  });
+
+  it("renders submit mismatch error when backend returns 404", async () => {
+    resolveMock.mockResolvedValueOnce({
+      candidateSessionId: 123,
+      status: "in_progress",
+      simulation: { title: "Sim", role: "Backend Engineer" },
+    });
+
+    currentTaskMock.mockResolvedValueOnce({
+      isComplete: false,
+      completedTaskIds: [],
+      currentTask: {
+        id: 333,
+        dayIndex: 4,
+        type: "documentation",
+        title: "Doc Task",
+        description: "Document it.",
+      },
+    });
+
+    submitMock.mockRejectedValueOnce({ status: 404, message: "missing session" });
+
+    renderWithProvider(<CandidateSimulationContent token="VALID_TOKEN" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /start simulation/i }));
+    expect(await screen.findByText("Doc Task")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /submit & continue/i }));
+
+    expect(await screen.findByText(/Session mismatch/i)).toBeInTheDocument();
   });
 
   it("uses nested progress.completedTaskIds when present", async () => {
@@ -649,6 +735,55 @@ describe("CandidateSimulationContent", () => {
     fireEvent.click(submitBtn);
 
     expect(await screen.findByText(/Something went wrong submitting your task/i)).toBeInTheDocument();
+  });
+
+  it("shows completion state when tasks are done", async () => {
+    resolveMock.mockResolvedValueOnce({
+      candidateSessionId: 777,
+      status: "completed",
+      simulation: { title: "Sim", role: "Backend Engineer" },
+    });
+
+    currentTaskMock.mockResolvedValueOnce({
+      isComplete: true,
+      completedTaskIds: [1, 2, 3, 4, 5],
+      currentTask: null,
+    });
+
+    renderWithProvider(<CandidateSimulationContent token="DONE" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /start simulation/i }));
+
+    expect(await screen.findByText(/Simulation complete/)).toBeInTheDocument();
+  });
+
+  it("shows submit error when backend rejects submission", async () => {
+    resolveMock.mockResolvedValueOnce({
+      candidateSessionId: 888,
+      status: "in_progress",
+      simulation: { title: "Sim", role: "Backend Engineer" },
+    });
+
+    currentTaskMock.mockResolvedValueOnce({
+      isComplete: false,
+      completedTaskIds: [],
+      currentTask: {
+        id: 909,
+        dayIndex: 1,
+        type: "design",
+        title: "Day 1 — Design",
+        description: "Desc",
+      },
+    });
+
+    submitMock.mockRejectedValueOnce(new HttpError(400, "Task out of order."));
+
+    renderWithProvider(<CandidateSimulationContent token="VALID_TOKEN" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /start simulation/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Submit & Continue/i }));
+
+    expect(await screen.findByText(/Task out of order/i)).toBeInTheDocument();
   });
 
   it("normalizes missing completed task ids to empty array", async () => {

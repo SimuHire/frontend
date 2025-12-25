@@ -359,21 +359,11 @@ describe("CandidateSubmissionsContent", () => {
         const url = getUrl(input);
 
         if (url === "/api/simulations/1/candidates") {
-          return mockJsonResponse([
-            {
-              candidateSessionId: 2,
-              inviteEmail: "jane@example.com",
-              candidateName: "Jane Doe",
-              status: "in_progress",
-              startedAt: "2025-12-23T18:57:00.000000Z",
-              completedAt: null,
-              hasReport: false,
-            },
-          ]);
+          return mockJsonResponse([{ candidateSessionId: 2, inviteEmail: "jane@example.com" }]);
         }
 
         if (url.startsWith("/api/submissions?candidateSessionId=2")) {
-          return mockJsonResponse({ message: "List failed" }, 500);
+          return mockJsonResponse({ detail: "Detailed failure" }, 500);
         }
 
         return mockTextResponse("Not found", 404);
@@ -385,7 +375,7 @@ describe("CandidateSubmissionsContent", () => {
     render(<CandidateSubmissionsContent />);
 
     await waitFor(() => {
-      expect(screen.getByText("List failed")).toBeInTheDocument();
+      expect(screen.getByText("Detailed failure")).toBeInTheDocument();
     });
   });
 
@@ -460,5 +450,173 @@ describe("CandidateSubmissionsContent", () => {
     });
 
     expect(screen.getByText("No content captured for this submission.")).toBeInTheDocument();
+  });
+
+  it("handles missing candidate info, renders prompt/test results, and fallback artifact message", async () => {
+    mockParams = { id: "1", candidateSessionId: "2" };
+
+    const fetchMock = jest.fn(
+      async (input: RequestInfo | URL): Promise<MockResponse> => {
+        const url = getUrl(input);
+
+        if (url === "/api/simulations/1/candidates") {
+          return mockTextResponse("no candidate", 500);
+        }
+
+        if (url.startsWith("/api/submissions?candidateSessionId=2")) {
+          return mockJsonResponse({
+            items: [
+              {
+                submissionId: 10,
+                candidateSessionId: 2,
+                taskId: 10,
+                dayIndex: 1,
+                type: "design",
+                submittedAt: "2025-12-23T18:57:10.981202Z",
+              },
+              {
+                submissionId: 11,
+                candidateSessionId: 2,
+                taskId: 11,
+                dayIndex: 2,
+                type: "debug",
+                submittedAt: "2025-12-23T19:57:10.981202Z",
+              },
+            ],
+          });
+        }
+
+        if (url === "/api/submissions/10") {
+          return mockJsonResponse({
+            submissionId: 10,
+            candidateSessionId: 2,
+            task: {
+              taskId: 10,
+              dayIndex: 1,
+              type: "design",
+              title: "Prompted Task",
+              prompt: "Prompt text",
+            },
+            contentText: "Answer",
+            code: null,
+            testResults: { passed: true },
+            submittedAt: "2025-12-23T18:57:10.981202Z",
+          });
+        }
+
+        if (url === "/api/submissions/11") {
+          return mockTextResponse("missing artifact", 404);
+        }
+
+        return mockTextResponse("Not found", 404);
+      }
+    );
+
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<CandidateSubmissionsContent />);
+
+    expect(await screen.findByText(/Candidate 2 — Submissions/)).toBeInTheDocument();
+    expect(screen.getByText(/CandidateSession: 2/)).toBeInTheDocument();
+    expect(
+      await screen.findByText((content) => content.includes("Prompted Task"))
+    ).toBeInTheDocument();
+    expect(screen.getByText("Prompt text")).toBeInTheDocument();
+    expect(screen.getByText(/\"passed\": true/)).toBeInTheDocument();
+    expect(screen.getByText(/content not available/i)).toBeInTheDocument();
+  });
+
+  it("surfaces thrown errors from fetch calls", async () => {
+    mockParams = { id: "9", candidateSessionId: "3" };
+
+    const fetchMock = jest.fn(async () => {
+      throw new Error("network down");
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<CandidateSubmissionsContent />);
+
+    expect(await screen.findByText(/network down/i)).toBeInTheDocument();
+  });
+
+  it("falls back to default error when fetch throws non-error value", async () => {
+    mockParams = { id: "11", candidateSessionId: "4" };
+    const fetchMock = jest.fn(async () => {
+      throw "bad";
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<CandidateSubmissionsContent />);
+
+    expect(await screen.findByText("Request failed")).toBeInTheDocument();
+  });
+
+  it("renders repo path when provided on code artifact", async () => {
+    mockParams = { id: "1", candidateSessionId: "2" };
+
+    const fetchMock = jest.fn(
+      async (input: RequestInfo | URL): Promise<MockResponse> => {
+        const url = getUrl(input);
+
+        if (url === "/api/simulations/1/candidates") {
+          return mockJsonResponse([
+            {
+              candidateSessionId: 2,
+              inviteEmail: "jane@example.com",
+              candidateName: "Jane Doe",
+              status: "completed",
+              startedAt: "2025-12-23T18:00:00.000000Z",
+              completedAt: "2025-12-23T19:00:00.000000Z",
+              hasReport: true,
+            },
+          ]);
+        }
+
+        if (url.startsWith("/api/submissions?candidateSessionId=2")) {
+          return mockJsonResponse({
+            items: [
+              {
+                submissionId: 12,
+                candidateSessionId: 2,
+                taskId: 12,
+                dayIndex: 4,
+                type: "code",
+                submittedAt: "2025-12-23T18:57:10.981202Z",
+              },
+            ],
+          });
+        }
+
+        if (url === "/api/submissions/12") {
+          return mockJsonResponse({
+            submissionId: 12,
+            candidateSessionId: 2,
+            task: {
+              taskId: 12,
+              dayIndex: 4,
+              type: "code",
+              title: "Path Task",
+              prompt: null,
+            },
+            contentText: null,
+            code: {
+              blob: "console.log('path');",
+              repoPath: "src/index.ts",
+            },
+            testResults: null,
+            submittedAt: "2025-12-23T18:57:10.981202Z",
+          });
+        }
+
+        return mockTextResponse("Not found", 404);
+      }
+    );
+
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<CandidateSubmissionsContent />);
+
+    expect(await screen.findByText(/Path Task/)).toBeInTheDocument();
+    expect(screen.getByText(/src\/index\.ts/)).toBeInTheDocument();
   });
 });

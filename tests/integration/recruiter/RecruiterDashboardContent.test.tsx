@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RecruiterDashboardContent, { RecruiterProfile } from "@/app/(private)/(recruiter)/dashboard/RecruiterDashboardContent";
 import { inviteCandidate, listSimulations } from "@/lib/recruiterApi";
@@ -33,6 +33,10 @@ describe("RecruiterDashboardContent", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it("renders profile details when available", async () => {
@@ -175,6 +179,152 @@ describe("RecruiterDashboardContent", () => {
 
     await user.click(screen.getByRole("button", { name: /Dismiss/i }));
     expect(screen.queryByText(/Invite created for Jane Doe/i)).not.toBeInTheDocument();
+  }, 15000);
+
+  it("shows invite error when backend fails", async () => {
+    mockedListSimulations.mockResolvedValue([
+      { id: "sim_1", title: "Sim 1", role: "Backend", createdAt: "2025-12-10T10:00:00Z" },
+    ]);
+
+    mockedInviteCandidate.mockRejectedValueOnce({ message: "Invite failed" });
+
+    render(<RecruiterDashboardContent profile={null} error={null} />);
+
+    const inviteBtn = await screen.findByRole("button", { name: "Invite candidate" });
+    fireEvent.click(inviteBtn);
+    fireEvent.change(screen.getByLabelText(/Candidate name/i), { target: { value: "Joe" } });
+    fireEvent.change(screen.getByLabelText(/Candidate email/i), { target: { value: "joe@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: /Create invite/i }));
+
+    await waitFor(() => expect(mockedInviteCandidate).toHaveBeenCalled());
+    expect(screen.getAllByText(/Invite failed/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("shows inline load error when listSimulations throws", async () => {
+    mockedListSimulations.mockRejectedValueOnce({ message: "Auth failed" });
+
+    render(<RecruiterDashboardContent profile={null} error={null} />);
+
+    expect(await screen.findByText("Couldn’t load simulations")).toBeInTheDocument();
+    expect(screen.getByText("Auth failed")).toBeInTheDocument();
+  });
+
+  it("can dismiss success toast and clear copied indicator", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
+
+    mockedListSimulations
+      .mockResolvedValueOnce([
+        { id: "sim_2", title: "Sim 2", role: "Backend", createdAt: "2025-12-10T10:00:00Z" },
+      ])
+      .mockResolvedValueOnce([
+        { id: "sim_2", title: "Sim 2", role: "Backend", createdAt: "2025-12-10T10:00:00Z" },
+      ]);
+
+    mockedInviteCandidate.mockResolvedValueOnce({
+      candidateSessionId: "cs_2",
+      token: "tok_456",
+      inviteUrl: "http://localhost:3000/candidate/tok_456",
+    });
+
+    render(<RecruiterDashboardContent profile={null} error={null} />);
+
+    const inviteBtn = await screen.findByRole("button", { name: "Invite candidate" });
+    await user.click(inviteBtn);
+    await user.type(screen.getByLabelText(/Candidate name/i), "Alex");
+    await user.type(screen.getByLabelText(/Candidate email/i), "alex@example.com");
+    await user.click(screen.getByRole("button", { name: /Create invite/i }));
+
+    const copyBtn = await screen.findByRole("button", { name: /Copy/i });
+    await user.click(copyBtn);
+    expect(writeText).toHaveBeenCalledWith("http://localhost:3000/candidate/tok_456");
+
+    await user.click(screen.getByRole("button", { name: /Dismiss/i }));
+    expect(screen.queryByText(/Invite created for Alex/i)).not.toBeInTheDocument();
+  });
+
+  it("auto-dismisses success toast after timeout", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+
+    mockedListSimulations
+      .mockResolvedValueOnce([
+        { id: "sim_3", title: "Sim 3", role: "Backend", createdAt: "2025-12-10T10:00:00Z" },
+      ])
+      .mockResolvedValueOnce([
+        { id: "sim_3", title: "Sim 3", role: "Backend", createdAt: "2025-12-10T10:00:00Z" },
+      ]);
+
+    mockedInviteCandidate.mockResolvedValueOnce({
+      candidateSessionId: "cs_3",
+      token: "tok_789",
+      inviteUrl: "http://localhost:3000/candidate/tok_789",
+    });
+
+    render(<RecruiterDashboardContent profile={null} error={null} />);
+
+    const inviteBtn = await screen.findByRole("button", { name: "Invite candidate" });
+    await user.click(inviteBtn);
+    await user.type(screen.getByLabelText(/Candidate name/i), "Jamie");
+    await user.type(screen.getByLabelText(/Candidate email/i), "jamie@example.com");
+    await user.click(screen.getByRole("button", { name: /Create invite/i }));
+
+    expect(await screen.findByText(/Invite created for Jamie/i)).toBeInTheDocument();
+
+    act(() => {
+      jest.advanceTimersByTime(7000);
+    });
+
+    expect(screen.queryByText(/Invite created for Jamie/i)).not.toBeInTheDocument();
+  });
+
+  it("clears existing copy timeout when copying multiple times", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
+
+    mockedListSimulations
+      .mockResolvedValueOnce([
+        { id: "sim_4", title: "Sim 4", role: "Backend", createdAt: "2025-12-10T10:00:00Z" },
+      ])
+      .mockResolvedValueOnce([
+        { id: "sim_4", title: "Sim 4", role: "Backend", createdAt: "2025-12-10T10:00:00Z" },
+      ]);
+
+    mockedInviteCandidate.mockResolvedValueOnce({
+      candidateSessionId: "cs_4",
+      token: "tok_999",
+      inviteUrl: "http://localhost:3000/candidate/tok_999",
+    });
+
+    render(<RecruiterDashboardContent profile={null} error={null} />);
+
+    const inviteBtn = await screen.findByRole("button", { name: "Invite candidate" });
+    await user.click(inviteBtn);
+    await user.type(screen.getByLabelText(/Candidate name/i), "Chris");
+    await user.type(screen.getByLabelText(/Candidate email/i), "chris@example.com");
+    await user.click(screen.getByRole("button", { name: /Create invite/i }));
+
+    const copyBtn = await screen.findByRole("button", { name: /Copy/i });
+    await user.click(copyBtn);
+    await user.click(copyBtn);
+
+    expect(writeText).toHaveBeenCalledTimes(2);
+
+    act(() => {
+      jest.advanceTimersByTime(1800);
+    });
+
+    expect(screen.getByRole("button", { name: /Copy/i })).toBeInTheDocument();
   });
 
 });

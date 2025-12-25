@@ -147,6 +147,32 @@ describe("apiClient request helpers", () => {
     expect(resp).toBeUndefined();
   });
 
+  it("supports delete with request options and explicit basePath", async () => {
+    fetchMock.mockResolvedValue(makeResponse({}, { status: 200 }));
+
+    await apiClient.delete("/custom-delete", { headers: { "X-Del": "1" } }, { basePath: "https://api.dev" });
+
+    expect(fetchMock).toHaveBeenCalledWith("https://api.dev/custom-delete", {
+      method: "DELETE",
+      headers: { "X-Del": "1" },
+      body: undefined,
+      credentials: "include",
+    });
+  });
+
+  it("passes through provided authToken to request helper", async () => {
+    fetchMock.mockResolvedValue(makeResponse({}, { status: 200 }));
+
+    await apiClient.post("/auth", { ok: true }, { authToken: "tok" });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/auth", {
+      method: "POST",
+      headers: { Authorization: "Bearer tok", "Content-Type": "application/json" },
+      body: JSON.stringify({ ok: true }),
+      credentials: "include",
+    });
+  });
+
   it("uses explicit authToken and merges headers for put/patch/delete", async () => {
     fetchMock
       .mockResolvedValueOnce(makeResponse({ ok: true }))

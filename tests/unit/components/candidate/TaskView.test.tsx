@@ -196,4 +196,159 @@ describe("TaskView", () => {
     expect(screen.getByText(/Progress: 2\/5/i)).toBeInTheDocument();
     expect(clearCodeDraftMock).toHaveBeenCalledWith(555, 9);
   });
+
+  it("does not submit when already submitting", () => {
+    const onSubmit = jest.fn();
+    render(<TaskView task={codeTask} candidateSessionId={555} submitting={true} onSubmit={onSubmit} />);
+
+    const submittingBtn = screen.getByRole("button", { name: /submitting/i });
+    expect(submittingBtn).toBeDisabled();
+    fireEvent.click(submittingBtn);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("allows manual save draft and clears saved flag after timeout", async () => {
+    jest.useFakeTimers();
+    sessionStorage.clear();
+
+    render(
+      <TaskView task={textTask} candidateSessionId={123} submitting={false} onSubmit={jest.fn()} />
+    );
+
+    const textarea = screen.getByPlaceholderText("Write your response here…") as HTMLTextAreaElement;
+    fireEvent.change(textarea, { target: { value: "manual draft" } });
+
+    const saveBtn = screen.getByRole("button", { name: /save draft/i });
+    fireEvent.click(saveBtn);
+
+    expect(sessionStorage.getItem("simuhire:candidate:textDraft:5")).toBe("manual draft");
+    expect(screen.getByText(/Draft saved/)).toBeInTheDocument();
+
+    await act(async () => {
+      jest.advanceTimersByTime(1500);
+    });
+
+    expect(screen.queryByText(/Draft saved/)).not.toBeInTheDocument();
+  });
+
+  it("resets to idle when onSubmit resolves without SubmitResponse", async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined);
+    render(
+      <TaskView task={textTask} candidateSessionId={321} submitting={false} onSubmit={onSubmit} />
+    );
+
+    const textarea = screen.getByPlaceholderText("Write your response here…");
+    fireEvent.change(textarea, { target: { value: "Draft body" } });
+    fireEvent.click(screen.getByRole("button", { name: /submit & continue/i }));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(onSubmit).toHaveBeenCalled();
+    expect(await screen.findByRole("button", { name: /submit & continue/i })).toBeEnabled();
+  });
+
+  it("falls back to submitError prop when provided", () => {
+    render(
+      <TaskView
+        task={textTask}
+        candidateSessionId={321}
+        submitting={false}
+        onSubmit={jest.fn()}
+        submitError="Server unavailable"
+      />
+    );
+
+    expect(screen.getByText("Server unavailable")).toBeInTheDocument();
+  });
+
+  it("handles submit rejection for code tasks and returns to idle", async () => {
+    const onSubmit = jest.fn().mockRejectedValue(new Error("boom"));
+
+    render(
+      <TaskView task={codeTask} candidateSessionId={909} submitting={false} onSubmit={onSubmit} />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /submit & continue/i }));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(onSubmit).toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /submit & continue/i })).toBeEnabled();
+  });
+
+  it("handles submit rejection for text tasks and surfaces submitError prop", async () => {
+    const onSubmit = jest.fn().mockRejectedValue(new Error("fail"));
+
+    render(
+      <TaskView
+        task={textTask}
+        candidateSessionId={123}
+        submitting={false}
+        onSubmit={onSubmit}
+        submitError="Server down"
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("Write your response here…"), {
+      target: { value: "hello" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit & continue/i }));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(onSubmit).toHaveBeenCalled();
+    expect(screen.getByText("Server down")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /submit & continue/i })).toBeEnabled();
+  });
+
+  it("resets to idle when code submit resolves with non-response payload", async () => {
+    const onSubmit = jest.fn().mockResolvedValue({ ok: true });
+
+    render(
+      <TaskView task={codeTask} candidateSessionId={123} submitting={false} onSubmit={onSubmit} />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /submit & continue/i }));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(onSubmit).toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /submit & continue/i })).toBeEnabled();
+  });
+
+  it("returns to idle after successful text submit timeout", async () => {
+    jest.useFakeTimers();
+    const onSubmit = jest.fn().mockResolvedValue({
+      submissionId: 1,
+      taskId: 5,
+      candidateSessionId: 123,
+      submittedAt: "2025-01-01",
+      progress: { completed: 1, total: 5 },
+      isComplete: false,
+    });
+
+    render(
+      <TaskView task={textTask} candidateSessionId={123} submitting={false} onSubmit={onSubmit} />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("Write your response here…"), {
+      target: { value: "Filled" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit & continue/i }));
+    expect(await screen.findByRole("button", { name: /submitted ✓/i })).toBeDisabled();
+
+    await act(async () => {
+      jest.advanceTimersByTime(950);
+    });
+
+    expect(screen.getByRole("button", { name: /submit & continue/i })).toBeEnabled();
+  });
 });
