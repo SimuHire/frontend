@@ -1,6 +1,13 @@
-"use client";
+'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+} from 'react';
 
 type SimulationSummary = {
   title: string;
@@ -9,11 +16,17 @@ type SimulationSummary = {
 
 type CandidateBootstrap = {
   candidateSessionId: number;
-  status: "not_started" | "in_progress" | "completed" | "expired";
+  status: 'not_started' | 'in_progress' | 'completed' | 'expired';
   simulation: SimulationSummary;
 };
 
-type TaskType = "design" | "code" | "debug" | "handoff" | "documentation" | string;
+type TaskType =
+  | 'design'
+  | 'code'
+  | 'debug'
+  | 'handoff'
+  | 'documentation'
+  | string;
 
 type CandidateTask = {
   id: number;
@@ -39,17 +52,21 @@ type CandidateSessionState = {
 };
 
 type Action =
-  | { type: "SET_TOKEN"; token: string }
-  | { type: "SET_BOOTSTRAP"; bootstrap: CandidateBootstrap }
-  | { type: "SET_STARTED"; started: boolean }
-  | { type: "RESET" }
-  | { type: "TASK_LOADING" }
+  | { type: 'SET_TOKEN'; token: string }
+  | { type: 'SET_BOOTSTRAP'; bootstrap: CandidateBootstrap }
+  | { type: 'SET_STARTED'; started: boolean }
+  | { type: 'RESET' }
+  | { type: 'TASK_LOADING' }
   | {
-      type: "TASK_LOADED";
-      payload: { isComplete: boolean; completedTaskIds: number[]; currentTask: CandidateTask | null };
+      type: 'TASK_LOADED';
+      payload: {
+        isComplete: boolean;
+        completedTaskIds: number[];
+        currentTask: CandidateTask | null;
+      };
     }
-  | { type: "TASK_ERROR"; error: string }
-  | { type: "TASK_CLEAR_ERROR" };
+  | { type: 'TASK_ERROR'; error: string }
+  | { type: 'TASK_CLEAR_ERROR' };
 
 const initialTaskState: TaskState = {
   loading: false,
@@ -66,26 +83,29 @@ const initialState: CandidateSessionState = {
   taskState: initialTaskState,
 };
 
-function reducer(state: CandidateSessionState, action: Action): CandidateSessionState {
+function reducer(
+  state: CandidateSessionState,
+  action: Action,
+): CandidateSessionState {
   switch (action.type) {
-    case "SET_TOKEN":
+    case 'SET_TOKEN':
       if (state.token === action.token) return state;
       return { ...state, token: action.token };
 
-    case "SET_BOOTSTRAP":
+    case 'SET_BOOTSTRAP':
       if (state.bootstrap === action.bootstrap) return state;
       return { ...state, bootstrap: action.bootstrap };
 
-    case "SET_STARTED":
+    case 'SET_STARTED':
       return { ...state, started: action.started };
 
-    case "TASK_LOADING":
+    case 'TASK_LOADING':
       return {
         ...state,
         taskState: { ...state.taskState, loading: true, error: null },
       };
 
-    case "TASK_LOADED":
+    case 'TASK_LOADED':
       return {
         ...state,
         taskState: {
@@ -97,19 +117,19 @@ function reducer(state: CandidateSessionState, action: Action): CandidateSession
         },
       };
 
-    case "TASK_ERROR":
+    case 'TASK_ERROR':
       return {
         ...state,
         taskState: { ...state.taskState, loading: false, error: action.error },
       };
 
-    case "TASK_CLEAR_ERROR":
+    case 'TASK_CLEAR_ERROR':
       return {
         ...state,
         taskState: { ...state.taskState, error: null },
       };
 
-    case "RESET":
+    case 'RESET':
       return initialState;
 
     default:
@@ -125,14 +145,18 @@ type Ctx = {
   reset: () => void;
 
   setTaskLoading: () => void;
-  setTaskLoaded: (p: { isComplete: boolean; completedTaskIds: number[]; currentTask: CandidateTask | null }) => void;
+  setTaskLoaded: (p: {
+    isComplete: boolean;
+    completedTaskIds: number[];
+    currentTask: CandidateTask | null;
+  }) => void;
   setTaskError: (error: string) => void;
   clearTaskError: () => void;
 };
 
 const CandidateSessionContext = createContext<Ctx | null>(null);
 
-const STORAGE_KEY = "simuhire:candidate_session_v1";
+const STORAGE_KEY = 'simuhire:candidate_session_v1';
 
 type PersistedState = {
   token: string | null;
@@ -140,25 +164,48 @@ type PersistedState = {
   started: boolean;
 };
 
-export function CandidateSessionProvider({ children }: { children: React.ReactNode }) {
+export function CandidateSessionProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const setToken = useCallback((token: string) => dispatch({ type: "SET_TOKEN", token }), []);
+  const setToken = useCallback(
+    (token: string) => dispatch({ type: 'SET_TOKEN', token }),
+    [],
+  );
   const setBootstrap = useCallback(
-    (bootstrap: CandidateBootstrap) => dispatch({ type: "SET_BOOTSTRAP", bootstrap }),
-    []
+    (bootstrap: CandidateBootstrap) =>
+      dispatch({ type: 'SET_BOOTSTRAP', bootstrap }),
+    [],
   );
-  const setStarted = useCallback((started: boolean) => dispatch({ type: "SET_STARTED", started }), []);
-  const reset = useCallback(() => dispatch({ type: "RESET" }), []);
+  const setStarted = useCallback(
+    (started: boolean) => dispatch({ type: 'SET_STARTED', started }),
+    [],
+  );
+  const reset = useCallback(() => dispatch({ type: 'RESET' }), []);
 
-  const setTaskLoading = useCallback(() => dispatch({ type: "TASK_LOADING" }), []);
-  const setTaskLoaded = useCallback(
-    (payload: { isComplete: boolean; completedTaskIds: number[]; currentTask: CandidateTask | null }) =>
-      dispatch({ type: "TASK_LOADED", payload }),
-    []
+  const setTaskLoading = useCallback(
+    () => dispatch({ type: 'TASK_LOADING' }),
+    [],
   );
-  const setTaskError = useCallback((error: string) => dispatch({ type: "TASK_ERROR", error }), []);
-  const clearTaskError = useCallback(() => dispatch({ type: "TASK_CLEAR_ERROR" }), []);
+  const setTaskLoaded = useCallback(
+    (payload: {
+      isComplete: boolean;
+      completedTaskIds: number[];
+      currentTask: CandidateTask | null;
+    }) => dispatch({ type: 'TASK_LOADED', payload }),
+    [],
+  );
+  const setTaskError = useCallback(
+    (error: string) => dispatch({ type: 'TASK_ERROR', error }),
+    [],
+  );
+  const clearTaskError = useCallback(
+    () => dispatch({ type: 'TASK_CLEAR_ERROR' }),
+    [],
+  );
 
   useEffect(() => {
     try {
@@ -166,17 +213,19 @@ export function CandidateSessionProvider({ children }: { children: React.ReactNo
       if (!raw) return;
 
       const parsed = JSON.parse(raw) as Partial<PersistedState>;
-      if (typeof parsed?.token === "string" && parsed.token) {
-        dispatch({ type: "SET_TOKEN", token: parsed.token });
+      if (typeof parsed?.token === 'string' && parsed.token) {
+        dispatch({ type: 'SET_TOKEN', token: parsed.token });
       }
       if (parsed?.bootstrap) {
-        dispatch({ type: "SET_BOOTSTRAP", bootstrap: parsed.bootstrap as CandidateBootstrap });
+        dispatch({
+          type: 'SET_BOOTSTRAP',
+          bootstrap: parsed.bootstrap as CandidateBootstrap,
+        });
       }
-      if (typeof parsed?.started === "boolean") {
-        dispatch({ type: "SET_STARTED", started: parsed.started });
+      if (typeof parsed?.started === 'boolean') {
+        dispatch({ type: 'SET_STARTED', started: parsed.started });
       }
-    } catch {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -187,8 +236,7 @@ export function CandidateSessionProvider({ children }: { children: React.ReactNo
         started: state.started,
       };
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(toPersist));
-    } catch {
-    }
+    } catch {}
   }, [state.token, state.bootstrap, state.started]);
 
   const value = useMemo<Ctx>(
@@ -204,15 +252,32 @@ export function CandidateSessionProvider({ children }: { children: React.ReactNo
       setTaskError,
       clearTaskError,
     }),
-    [clearTaskError, reset, setBootstrap, setStarted, setTaskError, setTaskLoaded, setTaskLoading, setToken, state]
+    [
+      clearTaskError,
+      reset,
+      setBootstrap,
+      setStarted,
+      setTaskError,
+      setTaskLoaded,
+      setTaskLoading,
+      setToken,
+      state,
+    ],
   );
 
-  return <CandidateSessionContext.Provider value={value}>{children}</CandidateSessionContext.Provider>;
+  return (
+    <CandidateSessionContext.Provider value={value}>
+      {children}
+    </CandidateSessionContext.Provider>
+  );
 }
 
 export function useCandidateSession() {
   const ctx = useContext(CandidateSessionContext);
-  if (!ctx) throw new Error("useCandidateSession must be used within CandidateSessionProvider");
+  if (!ctx)
+    throw new Error(
+      'useCandidateSession must be used within CandidateSessionProvider',
+    );
   return ctx;
 }
 

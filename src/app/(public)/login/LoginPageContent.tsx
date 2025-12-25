@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import PageHeader from "@/components/common/PageHeader";
-import Button from "@/components/common/Button";
-import AuthLoginLink from "@/components/auth/AuthLoginLink";
+import PageHeader from '@/components/common/PageHeader';
+import Button from '@/components/common/Button';
+import AuthLoginLink from '@/components/auth/AuthLoginLink';
 
 export default function LoginPageContent() {
   return (

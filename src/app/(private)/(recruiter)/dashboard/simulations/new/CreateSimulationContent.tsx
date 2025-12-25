@@ -1,12 +1,15 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import Button from "@/components/common/Button";
-import Input from "@/components/common/Input";
-import PageHeader from "@/components/common/PageHeader";
-import { createSimulation, type CreateSimulationInput } from "@/lib/recruiterApi";
+import Button from '@/components/common/Button';
+import Input from '@/components/common/Input';
+import PageHeader from '@/components/common/PageHeader';
+import {
+  createSimulation,
+  type CreateSimulationInput,
+} from '@/lib/recruiterApi';
 
 type FieldErrors = Partial<Record<keyof CreateSimulationInput, string>> & {
   form?: string;
@@ -19,21 +22,21 @@ type HttpishError = {
   message?: string;
 };
 
-const SENIORITY_OPTIONS: CreateSimulationInput["seniority"][] = [
-  "Junior",
-  "Mid",
-  "Senior",
+const SENIORITY_OPTIONS: CreateSimulationInput['seniority'][] = [
+  'Junior',
+  'Mid',
+  'Senior',
 ];
 
 export default function CreateSimulationContent() {
   const router = useRouter();
 
-  const [title, setTitle] = useState<string>("");
-  const [role, setRole] = useState<string>("Backend Engineer");
-  const [techStack, setTechStack] = useState<string>("Node.js + Postgres");
+  const [title, setTitle] = useState<string>('');
+  const [role, setRole] = useState<string>('Backend Engineer');
+  const [techStack, setTechStack] = useState<string>('Node.js + Postgres');
   const [seniority, setSeniority] =
-    useState<CreateSimulationInput["seniority"]>("Mid");
-  const [focus, setFocus] = useState<string>("");
+    useState<CreateSimulationInput['seniority']>('Mid');
+  const [focus, setFocus] = useState<string>('');
 
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -46,15 +49,15 @@ export default function CreateSimulationContent() {
       seniority,
       focus: focus.trim() ? focus.trim() : undefined,
     }),
-    [title, role, techStack, seniority, focus]
+    [title, role, techStack, seniority, focus],
   );
 
   function validate(input: CreateSimulationInput): FieldErrors {
     const next: FieldErrors = {};
-    if (!input.title) next.title = "Title is required.";
-    if (!input.role) next.role = "Role is required.";
-    if (!input.techStack) next.techStack = "Tech stack is required.";
-    if (!input.seniority) next.seniority = "Seniority is required.";
+    if (!input.title) next.title = 'Title is required.';
+    if (!input.role) next.role = 'Role is required.';
+    if (!input.techStack) next.techStack = 'Tech stack is required.';
+    if (!input.seniority) next.seniority = 'Seniority is required.';
     return next;
   }
 
@@ -74,18 +77,18 @@ export default function CreateSimulationContent() {
       const res = await createSimulation(payload);
 
       if (!res.id) {
-        setErrors({ form: "Simulation created but no id was returned." });
+        setErrors({ form: 'Simulation created but no id was returned.' });
         return;
       }
 
-      router.push("/dashboard");
+      router.push('/dashboard');
       router.refresh();
     } catch (caught: unknown) {
       const err = caught as HttpishError;
       const status = err.status ?? err.response?.status;
 
       if (status === 401) {
-        router.push("/login");
+        router.push('/login');
         return;
       }
 
@@ -93,7 +96,7 @@ export default function CreateSimulationContent() {
         err.body?.message ??
         err.body?.detail ??
         err.message ??
-        "Failed to create simulation. Please try again.";
+        'Failed to create simulation. Please try again.';
 
       setErrors({ form: message });
     } finally {
@@ -107,7 +110,7 @@ export default function CreateSimulationContent() {
         title="New Simulation"
         subtitle="Create a new 5-day simulation."
         actions={
-          <Button type="button" onClick={() => router.push("/dashboard")}>
+          <Button type="button" onClick={() => router.push('/dashboard')}>
             Back
           </Button>
         }
@@ -115,8 +118,13 @@ export default function CreateSimulationContent() {
 
       <form onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-4">
         {errors.form ? (
-          <div className="rounded border border-red-200 bg-red-50 p-3" role="alert">
-            <p className="text-sm font-medium text-red-700">Couldn’t create simulation</p>
+          <div
+            className="rounded border border-red-200 bg-red-50 p-3"
+            role="alert"
+          >
+            <p className="text-sm font-medium text-red-700">
+              Couldn’t create simulation
+            </p>
             <p className="text-sm text-red-700">{errors.form}</p>
           </div>
         ) : null}
@@ -137,11 +145,15 @@ export default function CreateSimulationContent() {
             }
             placeholder="Backend Engineer — Payments API"
             aria-invalid={Boolean(errors.title)}
-            aria-describedby={errors.title ? "title-error" : undefined}
+            aria-describedby={errors.title ? 'title-error' : undefined}
             disabled={isSubmitting}
           />
           {errors.title ? (
-            <p id="title-error" className="mt-1 text-sm text-red-700" role="alert">
+            <p
+              id="title-error"
+              className="mt-1 text-sm text-red-700"
+              role="alert"
+            >
               {errors.title}
             </p>
           ) : null}
@@ -163,11 +175,15 @@ export default function CreateSimulationContent() {
             }
             placeholder="Backend Engineer"
             aria-invalid={Boolean(errors.role)}
-            aria-describedby={errors.role ? "role-error" : undefined}
+            aria-describedby={errors.role ? 'role-error' : undefined}
             disabled={isSubmitting}
           />
           {errors.role ? (
-            <p id="role-error" className="mt-1 text-sm text-red-700" role="alert">
+            <p
+              id="role-error"
+              className="mt-1 text-sm text-red-700"
+              role="alert"
+            >
               {errors.role}
             </p>
           ) : null}
@@ -189,7 +205,7 @@ export default function CreateSimulationContent() {
             }
             placeholder="Node.js + Postgres"
             aria-invalid={Boolean(errors.techStack)}
-            aria-describedby={errors.techStack ? "techStack-error" : undefined}
+            aria-describedby={errors.techStack ? 'techStack-error' : undefined}
             disabled={isSubmitting}
           />
           {errors.techStack ? (
@@ -215,11 +231,11 @@ export default function CreateSimulationContent() {
             className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm"
             value={seniority}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setSeniority(e.target.value as CreateSimulationInput["seniority"])
+              setSeniority(e.target.value as CreateSimulationInput['seniority'])
             }
             disabled={isSubmitting}
             aria-invalid={Boolean(errors.seniority)}
-            aria-describedby={errors.seniority ? "seniority-error" : undefined}
+            aria-describedby={errors.seniority ? 'seniority-error' : undefined}
           >
             {SENIORITY_OPTIONS.map((opt) => (
               <option key={opt} value={opt}>
@@ -259,11 +275,15 @@ export default function CreateSimulationContent() {
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button type="button" onClick={() => router.push("/dashboard")} disabled={isSubmitting}>
+          <Button
+            type="button"
+            onClick={() => router.push('/dashboard')}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating…" : "Create simulation"}
+            {isSubmitting ? 'Creating…' : 'Create simulation'}
           </Button>
         </div>
       </form>

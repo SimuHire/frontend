@@ -1,5 +1,4 @@
-import SimulationDetailContent from "./SimulationDetailContent";
-
+import SimulationDetailContent from './SimulationDetailContent';
 
 export default function Page() {
   return <SimulationDetailContent />;

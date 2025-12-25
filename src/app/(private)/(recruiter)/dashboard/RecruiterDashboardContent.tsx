@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   inviteCandidate,
   listSimulations,
   type SimulationListItem,
-} from "@/lib/recruiterApi";
-import Button from "@/components/common/Button";
-import PageHeader from "@/components/common/PageHeader";
+} from '@/lib/recruiterApi';
+import Button from '@/components/common/Button';
+import PageHeader from '@/components/common/PageHeader';
 
 export type RecruiterProfile = {
   id: number;
@@ -24,9 +24,9 @@ type RecruiterDashboardContentProps = {
 };
 
 type InviteUiState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "error"; message: string };
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'error'; message: string };
 
 type InviteModalState = {
   open: boolean;
@@ -38,22 +38,22 @@ type ToastState =
   | { open: false }
   | {
       open: true;
-      kind: "success" | "error";
+      kind: 'success' | 'error';
       message: string;
       inviteUrl?: string;
     };
 
 export function formatCreatedDate(iso: string): string {
-  if (typeof iso !== "string") return "";
+  if (typeof iso !== 'string') return '';
   return iso.length >= 10 ? iso.slice(0, 10) : iso;
 }
 
 export function errorToMessage(e: unknown, fallback: string): string {
-  if (e && typeof e === "object") {
+  if (e && typeof e === 'object') {
     const maybeMsg = (e as { message?: unknown }).message;
-    if (typeof maybeMsg === "string" && maybeMsg.trim()) return maybeMsg;
+    if (typeof maybeMsg === 'string' && maybeMsg.trim()) return maybeMsg;
     const maybeDetail = (e as { detail?: unknown }).detail;
-    if (typeof maybeDetail === "string" && maybeDetail.trim())
+    if (typeof maybeDetail === 'string' && maybeDetail.trim())
       return maybeDetail;
   }
   if (e instanceof Error) return e.message;
@@ -64,23 +64,22 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   const trimmed = text.trim();
   if (!trimmed) return false;
 
-  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
     try {
       await navigator.clipboard.writeText(trimmed);
       return true;
-    } catch {
-    }
+    } catch {}
   }
 
   try {
-    const ta = document.createElement("textarea");
+    const ta = document.createElement('textarea');
     ta.value = trimmed;
-    ta.setAttribute("readonly", "true");
-    ta.style.position = "fixed";
-    ta.style.left = "-9999px";
+    ta.setAttribute('readonly', 'true');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
     document.body.appendChild(ta);
     ta.select();
-    const ok = document.execCommand("copy");
+    const ok = document.execCommand('copy');
     document.body.removeChild(ta);
     return ok;
   } catch {
@@ -99,33 +98,33 @@ function InviteCandidateModal(props: {
 }) {
   const { open, title, onClose, onSubmit, state } = props;
 
-  const [candidateName, setCandidateName] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
+  const [candidateName, setCandidateName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
 
-  const nameInputId = "invite-candidate-name";
-  const emailInputId = "invite-candidate-email";
+  const nameInputId = 'invite-candidate-name';
+  const emailInputId = 'invite-candidate-email';
 
   const openKey = open
-    ? `${props.initialName ?? ""}::${props.initialEmail ?? ""}`
-    : "closed";
+    ? `${props.initialName ?? ''}::${props.initialEmail ?? ''}`
+    : 'closed';
 
   useEffect(() => {
     if (!open) return;
-    setCandidateName(props.initialName ?? "");
-    setInviteEmail(props.initialEmail ?? "");
+    setCandidateName(props.initialName ?? '');
+    setInviteEmail(props.initialEmail ?? '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openKey]);
 
   const clientValidationError = useMemo(() => {
     if (!open) return null;
-    if (!candidateName.trim()) return "Candidate name is required.";
-    if (!inviteEmail.trim()) return "Candidate email is required.";
+    if (!candidateName.trim()) return 'Candidate name is required.';
+    if (!inviteEmail.trim()) return 'Candidate email is required.';
     return null;
   }, [open, candidateName, inviteEmail]);
 
   if (!open) return null;
 
-  const disabled = state.status === "loading";
+  const disabled = state.status === 'loading';
 
   return (
     <div
@@ -194,7 +193,7 @@ function InviteCandidateModal(props: {
             </div>
           ) : null}
 
-          {state.status === "error" ? (
+          {state.status === 'error' ? (
             <div className="rounded border border-red-200 bg-red-50 p-3">
               <p className="text-sm font-medium text-red-700">Invite failed</p>
               <p className="text-sm text-red-700">{state.message}</p>
@@ -213,7 +212,7 @@ function InviteCandidateModal(props: {
             }}
             disabled={disabled || Boolean(clientValidationError)}
           >
-            {state.status === "loading" ? "Creating…" : "Create invite"}
+            {state.status === 'loading' ? 'Creating…' : 'Create invite'}
           </Button>
         </div>
       </div>
@@ -233,12 +232,12 @@ export default function RecruiterDashboardContent({
 
   const [modal, setModal] = useState<InviteModalState>({
     open: false,
-    simulationId: "",
-    simulationTitle: "",
+    simulationId: '',
+    simulationTitle: '',
   });
 
   const [inviteState, setInviteState] = useState<InviteUiState>({
-    status: "idle",
+    status: 'idle',
   });
 
   const [toast, setToast] = useState<ToastState>({ open: false });
@@ -252,7 +251,7 @@ export default function RecruiterDashboardContent({
     setCopied(false);
   }
 
-  function showToast(next: Omit<Extract<ToastState, { open: true }>, "open">) {
+  function showToast(next: Omit<Extract<ToastState, { open: true }>, 'open'>) {
     setToast({ open: true, ...next });
     setCopied(false);
 
@@ -280,7 +279,7 @@ export default function RecruiterDashboardContent({
         const sims = await listSimulations();
         if (!cancelled) setSimulations(Array.isArray(sims) ? sims : []);
       } catch (e: unknown) {
-        const message = errorToMessage(e, "Failed to load simulations.");
+        const message = errorToMessage(e, 'Failed to load simulations.');
         if (!cancelled) setSimError(message);
       } finally {
         if (!cancelled) setLoading(false);
@@ -293,7 +292,7 @@ export default function RecruiterDashboardContent({
   }, []);
 
   function openInviteModal(sim: SimulationListItem) {
-    setInviteState({ status: "idle" });
+    setInviteState({ status: 'idle' });
     setModal({
       open: true,
       simulationId: sim.id,
@@ -302,18 +301,18 @@ export default function RecruiterDashboardContent({
   }
 
   function closeInviteModal() {
-    setModal({ open: false, simulationId: "", simulationTitle: "" });
-    setInviteState({ status: "idle" });
+    setModal({ open: false, simulationId: '', simulationTitle: '' });
+    setInviteState({ status: 'idle' });
   }
 
   async function submitInvite(candidateName: string, inviteEmail: string) {
-    setInviteState({ status: "loading" });
+    setInviteState({ status: 'loading' });
 
     try {
       const res = await inviteCandidate(
         modal.simulationId,
         candidateName,
-        inviteEmail
+        inviteEmail,
       );
 
       closeInviteModal();
@@ -325,7 +324,7 @@ export default function RecruiterDashboardContent({
         : displayEmail;
 
       showToast({
-        kind: "success",
+        kind: 'success',
         message: `Invite created for ${who}.`,
         inviteUrl: res.inviteUrl,
       });
@@ -333,13 +332,12 @@ export default function RecruiterDashboardContent({
       try {
         const sims = await listSimulations();
         setSimulations(Array.isArray(sims) ? sims : []);
-      } catch {
-      }
+      } catch {}
 
-      setInviteState({ status: "idle" });
+      setInviteState({ status: 'idle' });
     } catch (e: unknown) {
-      const message = errorToMessage(e, "Failed to invite candidate.");
-      setInviteState({ status: "error", message });
+      const message = errorToMessage(e, 'Failed to invite candidate.');
+      setInviteState({ status: 'error', message });
     }
   }
 
@@ -350,7 +348,7 @@ export default function RecruiterDashboardContent({
         actions={
           <Button
             type="button"
-            onClick={() => router.push("/dashboard/simulations/new")}
+            onClick={() => router.push('/dashboard/simulations/new')}
           >
             New Simulation
           </Button>
@@ -360,9 +358,9 @@ export default function RecruiterDashboardContent({
       {toast.open ? (
         <div
           className={
-            toast.kind === "success"
-              ? "rounded border border-green-200 bg-green-50 p-3"
-              : "rounded border border-red-200 bg-red-50 p-3"
+            toast.kind === 'success'
+              ? 'rounded border border-green-200 bg-green-50 p-3'
+              : 'rounded border border-red-200 bg-red-50 p-3'
           }
           role="status"
         >
@@ -370,15 +368,15 @@ export default function RecruiterDashboardContent({
             <div className="w-full">
               <p
                 className={
-                  toast.kind === "success"
-                    ? "text-sm text-green-800"
-                    : "text-sm text-red-800"
+                  toast.kind === 'success'
+                    ? 'text-sm text-green-800'
+                    : 'text-sm text-red-800'
                 }
               >
                 {toast.message}
               </p>
 
-              {toast.kind === "success" && toast.inviteUrl ? (
+              {toast.kind === 'success' && toast.inviteUrl ? (
                 <div className="mt-2">
                   <p className="text-xs font-medium uppercase tracking-wide text-green-800/80">
                     Invite URL
@@ -394,7 +392,7 @@ export default function RecruiterDashboardContent({
                     <Button
                       type="button"
                       onClick={async () => {
-                        const ok = await copyToClipboard(toast.inviteUrl ?? "");
+                        const ok = await copyToClipboard(toast.inviteUrl ?? '');
                         setCopied(ok);
 
                         if (copiedTimerRef.current)
@@ -406,7 +404,7 @@ export default function RecruiterDashboardContent({
                         }, 1800);
                       }}
                     >
-                      {copied ? "Copied" : "Copy"}
+                      {copied ? 'Copied' : 'Copy'}
                     </Button>
                   </div>
                 </div>
@@ -481,7 +479,7 @@ export default function RecruiterDashboardContent({
                     >
                       {sim.title}
                     </Link>
-                    {typeof sim.candidateCount === "number" ? (
+                    {typeof sim.candidateCount === 'number' ? (
                       <p className="text-xs text-gray-500">
                         {sim.candidateCount} candidate(s)
                       </p>

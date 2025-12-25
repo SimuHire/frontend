@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
-import CandidateSimulationContent from "./CandidateSimulationContent";
+import { notFound } from 'next/navigation';
+import CandidateSimulationContent from './CandidateSimulationContent';
 
 export default async function CandidatePage({
   params,

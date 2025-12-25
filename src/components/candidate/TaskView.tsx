@@ -1,11 +1,17 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import Button from "@/components/common/Button";
-import CodeEditor from "@/components/candidate/CodeEditor";
-import { clearCodeDraft, loadCodeDraft, saveCodeDraft } from "@/lib/codeDrafts";
+import { useEffect, useRef, useState } from 'react';
+import Button from '@/components/common/Button';
+import CodeEditor from '@/components/candidate/CodeEditor';
+import { clearCodeDraft, loadCodeDraft, saveCodeDraft } from '@/lib/codeDrafts';
 
-type TaskType = "design" | "code" | "debug" | "handoff" | "documentation" | string;
+type TaskType =
+  | 'design'
+  | 'code'
+  | 'debug'
+  | 'handoff'
+  | 'documentation'
+  | string;
 
 type Task = {
   id: number;
@@ -26,14 +32,16 @@ type SubmitResponse = {
   isComplete: boolean;
 };
 
-type SubmitStatus = "idle" | "submitting" | "submitted";
+type SubmitStatus = 'idle' | 'submitting' | 'submitted';
 
 function isCodeTask(t: Task) {
-  return t.type === "code" || t.type === "debug";
+  return t.type === 'code' || t.type === 'debug';
 }
 
 function isTextTask(t: Task) {
-  return t.type === "design" || t.type === "documentation" || t.type === "handoff";
+  return (
+    t.type === 'design' || t.type === 'documentation' || t.type === 'handoff'
+  );
 }
 
 function textDraftKey(taskId: number) {
@@ -41,42 +49,40 @@ function textDraftKey(taskId: number) {
 }
 
 function loadTextDraft(taskId: number): string {
-  if (typeof window === "undefined") return "";
+  if (typeof window === 'undefined') return '';
   try {
-    return window.sessionStorage.getItem(textDraftKey(taskId)) ?? "";
+    return window.sessionStorage.getItem(textDraftKey(taskId)) ?? '';
   } catch {
-    return "";
+    return '';
   }
 }
 
 function saveTextDraft(taskId: number, text: string) {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   try {
     window.sessionStorage.setItem(textDraftKey(taskId), text);
-  } catch {
-  }
+  } catch {}
 }
 
 function clearTextDraft(taskId: number) {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   try {
     window.sessionStorage.removeItem(textDraftKey(taskId));
-  } catch {
-  }
+  } catch {}
 }
 
 function isSubmitResponse(x: unknown): x is SubmitResponse {
-  if (typeof x !== "object" || x === null) return false;
+  if (typeof x !== 'object' || x === null) return false;
   const rec = x as Record<string, unknown>;
-  const progress = rec["progress"];
-  if (typeof rec["submissionId"] !== "number") return false;
-  if (typeof rec["taskId"] !== "number") return false;
-  if (typeof rec["candidateSessionId"] !== "number") return false;
-  if (typeof rec["submittedAt"] !== "string") return false;
-  if (typeof rec["isComplete"] !== "boolean") return false;
-  if (typeof progress !== "object" || progress === null) return false;
+  const progress = rec['progress'];
+  if (typeof rec['submissionId'] !== 'number') return false;
+  if (typeof rec['taskId'] !== 'number') return false;
+  if (typeof rec['candidateSessionId'] !== 'number') return false;
+  if (typeof rec['submittedAt'] !== 'string') return false;
+  if (typeof rec['isComplete'] !== 'boolean') return false;
+  if (typeof progress !== 'object' || progress === null) return false;
   const p = progress as Record<string, unknown>;
-  return typeof p["completed"] === "number" && typeof p["total"] === "number";
+  return typeof p['completed'] === 'number' && typeof p['total'] === 'number';
 }
 
 function TaskViewInner({
@@ -90,7 +96,9 @@ function TaskViewInner({
   candidateSessionId: number;
   submitting: boolean;
   submitError?: string | null;
-  onSubmit: (payload: SubmitPayload) => Promise<SubmitResponse | void> | SubmitResponse | void;
+  onSubmit: (
+    payload: SubmitPayload,
+  ) => Promise<SubmitResponse | void> | SubmitResponse | void;
 }) {
   const codeTask = isCodeTask(task);
   const textTask = isTextTask(task);
@@ -98,14 +106,17 @@ function TaskViewInner({
   const [text, setText] = useState<string>(() => loadTextDraft(task.id));
   const [code, setCode] = useState<string>(() => {
     const draft = loadCodeDraft(candidateSessionId, task.id);
-    return draft ?? "// start here\n";
+    return draft ?? '// start here\n';
   });
 
   const [localError, setLocalError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
-  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>("idle");
-  const [lastProgress, setLastProgress] = useState<{ completed: number; total: number } | null>(null);
+  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>('idle');
+  const [lastProgress, setLastProgress] = useState<{
+    completed: number;
+    total: number;
+  } | null>(null);
 
   const saveTimerRef = useRef<number | null>(null);
   const submittedTimerRef = useRef<number | null>(null);
@@ -113,14 +124,14 @@ function TaskViewInner({
   useEffect(() => {
     setLocalError(null);
     setLastProgress(null);
-    setSubmitStatus(submitting ? "submitting" : "idle");
+    setSubmitStatus(submitting ? 'submitting' : 'idle');
 
     if (textTask) {
       setText(loadTextDraft(task.id));
     }
     if (codeTask) {
       const draft = loadCodeDraft(candidateSessionId, task.id);
-      setCode(draft ?? "// start here\n");
+      setCode(draft ?? '// start here\n');
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -129,12 +140,13 @@ function TaskViewInner({
   useEffect(() => {
     return () => {
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
-      if (submittedTimerRef.current) window.clearTimeout(submittedTimerRef.current);
+      if (submittedTimerRef.current)
+        window.clearTimeout(submittedTimerRef.current);
     };
   }, []);
 
   useEffect(() => {
-    if (submitting) setSubmitStatus("submitting");
+    if (submitting) setSubmitStatus('submitting');
   }, [submitting]);
 
   useEffect(() => {
@@ -165,36 +177,36 @@ function TaskViewInner({
   }
 
   async function handleSubmit() {
-    if (submitStatus !== "idle" || submitting) return;
+    if (submitStatus !== 'idle' || submitting) return;
 
     if (textTask) {
       const trimmed = text.trim();
       if (!trimmed) {
-        setLocalError("Please enter an answer before submitting.");
+        setLocalError('Please enter an answer before submitting.');
         return;
       }
 
       setLocalError(null);
-      setSubmitStatus("submitting");
+      setSubmitStatus('submitting');
 
       try {
         const resp = await onSubmit({ contentText: trimmed });
 
         if (isSubmitResponse(resp)) {
           setLastProgress(resp.progress);
-          setSubmitStatus("submitted");
+          setSubmitStatus('submitted');
           clearDraftOnSuccess();
 
           submittedTimerRef.current = window.setTimeout(() => {
-            setSubmitStatus("idle");
+            setSubmitStatus('idle');
             setLastProgress(null);
           }, 900);
         } else {
           clearDraftOnSuccess();
-          setSubmitStatus("idle");
+          setSubmitStatus('idle');
         }
       } catch {
-        setSubmitStatus("idle");
+        setSubmitStatus('idle');
       }
 
       return;
@@ -202,31 +214,31 @@ function TaskViewInner({
 
     const trimmedCode = code.trim();
     if (!trimmedCode) {
-      setLocalError("Please write some code before submitting.");
+      setLocalError('Please write some code before submitting.');
       return;
     }
 
     setLocalError(null);
-    setSubmitStatus("submitting");
+    setSubmitStatus('submitting');
 
     try {
       const resp = await onSubmit({ codeBlob: code });
 
       if (isSubmitResponse(resp)) {
         setLastProgress(resp.progress);
-        setSubmitStatus("submitted");
+        setSubmitStatus('submitted');
         clearDraftOnSuccess();
 
         submittedTimerRef.current = window.setTimeout(() => {
-          setSubmitStatus("idle");
+          setSubmitStatus('idle');
           setLastProgress(null);
         }, 900);
       } else {
         clearDraftOnSuccess();
-        setSubmitStatus("idle");
+        setSubmitStatus('idle');
       }
     } catch {
-      setSubmitStatus("idle");
+      setSubmitStatus('idle');
     }
   }
 
@@ -239,7 +251,9 @@ function TaskViewInner({
       </div>
       <div className="text-2xl font-bold mt-1">{task.title}</div>
 
-      <div className="mt-4 whitespace-pre-wrap text-sm text-gray-800">{task.description}</div>
+      <div className="mt-4 whitespace-pre-wrap text-sm text-gray-800">
+        {task.description}
+      </div>
 
       <div className="mt-6">
         {codeTask ? (
@@ -249,7 +263,8 @@ function TaskViewInner({
             </div>
             <CodeEditor value={code} onChange={setCode} language="typescript" />
             <div className="text-xs text-gray-500">
-              Draft auto-saves locally while you type (refresh-safe until you submit).
+              Draft auto-saves locally while you type (refresh-safe until you
+              submit).
             </div>
           </div>
         ) : (
@@ -259,7 +274,7 @@ function TaskViewInner({
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Write your response here…"
-              disabled={submitting || submitStatus === "submitted"}
+              disabled={submitting || submitStatus === 'submitted'}
             />
             <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
               <span>{text.length.toLocaleString()} characters</span>
@@ -270,12 +285,14 @@ function TaskViewInner({
       </div>
 
       <div className="mt-3 text-sm text-gray-600 min-h-[20px]">
-        {submitStatus === "submitting" ? (
+        {submitStatus === 'submitting' ? (
           <span>Submitting…</span>
-        ) : submitStatus === "submitted" ? (
+        ) : submitStatus === 'submitted' ? (
           <span>
-            Submitted ✓{" "}
-            {lastProgress ? `Progress: ${lastProgress.completed}/${lastProgress.total}` : null}
+            Submitted ✓{' '}
+            {lastProgress
+              ? `Progress: ${lastProgress.completed}/${lastProgress.total}`
+              : null}
           </span>
         ) : null}
       </div>
@@ -291,7 +308,7 @@ function TaskViewInner({
           <button
             type="button"
             onClick={saveDraftNow}
-            disabled={submitting || submitStatus !== "idle"}
+            disabled={submitting || submitStatus !== 'idle'}
             className="inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium disabled:opacity-50"
           >
             Save draft
@@ -300,12 +317,15 @@ function TaskViewInner({
           <div />
         )}
 
-        <Button onClick={handleSubmit} disabled={submitting || submitStatus !== "idle"}>
-          {submitStatus === "submitting"
-            ? "Submitting…"
-            : submitStatus === "submitted"
-              ? "Submitted ✓"
-              : "Submit & Continue"}
+        <Button
+          onClick={handleSubmit}
+          disabled={submitting || submitStatus !== 'idle'}
+        >
+          {submitStatus === 'submitting'
+            ? 'Submitting…'
+            : submitStatus === 'submitted'
+              ? 'Submitted ✓'
+              : 'Submit & Continue'}
         </Button>
       </div>
     </div>
@@ -317,7 +337,9 @@ export default function TaskView(props: {
   candidateSessionId: number;
   submitting: boolean;
   submitError?: string | null;
-  onSubmit: (payload: SubmitPayload) => Promise<SubmitResponse | void> | SubmitResponse | void;
+  onSubmit: (
+    payload: SubmitPayload,
+  ) => Promise<SubmitResponse | void> | SubmitResponse | void;
 }) {
   return <TaskViewInner key={props.task.id} {...props} />;
 }

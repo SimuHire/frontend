@@ -1,14 +1,14 @@
-import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
-import CandidateSubmissionsContent from "@/app/(private)/(recruiter)/dashboard/simulations/[id]/candidates/[candidateSessionId]/CandidateSubmissionsContent";
+import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
+import CandidateSubmissionsContent from '@/app/(private)/(recruiter)/dashboard/simulations/[id]/candidates/[candidateSessionId]/CandidateSubmissionsContent';
 
-let mockParams: Record<string, string> = { id: "1", candidateSessionId: "2" };
+let mockParams: Record<string, string> = { id: '1', candidateSessionId: '2' };
 
-jest.mock("next/navigation", () => ({
+jest.mock('next/navigation', () => ({
   useParams: () => mockParams,
 }));
 
-jest.mock("next/link", () => ({
+jest.mock('next/link', () => ({
   __esModule: true,
   default: ({
     href,
@@ -39,7 +39,7 @@ function mockJsonResponse(body: unknown, status = 200): MockResponse {
     status,
     json: async () => body,
     text: async () => text,
-    headers: { get: () => "application/json" },
+    headers: { get: () => 'application/json' },
   };
 }
 
@@ -48,25 +48,25 @@ function mockTextResponse(body: string, status = 200): MockResponse {
     ok: status >= 200 && status < 300,
     status,
     json: async () => {
-      throw new Error("Invalid JSON");
+      throw new Error('Invalid JSON');
     },
     text: async () => body,
-    headers: { get: () => "text/plain" },
+    headers: { get: () => 'text/plain' },
   };
 }
 
 function getUrl(input: RequestInfo | URL): string {
-  if (typeof input === "string") return input;
+  if (typeof input === 'string') return input;
   if (input instanceof URL) return input.toString();
   return input.url;
 }
 
 let anchorClickSpy: jest.SpyInstance | null = null;
 
-describe("CandidateSubmissionsContent", () => {
+describe('CandidateSubmissionsContent', () => {
   beforeAll(() => {
     anchorClickSpy = jest
-      .spyOn(HTMLAnchorElement.prototype, "click")
+      .spyOn(HTMLAnchorElement.prototype, 'click')
       .mockImplementation(() => {});
   });
 
@@ -78,28 +78,28 @@ describe("CandidateSubmissionsContent", () => {
     anchorClickSpy?.mockRestore();
   });
 
-  it("renders available submissions for an incomplete candidate", async () => {
-    mockParams = { id: "1", candidateSessionId: "2" };
+  it('renders available submissions for an incomplete candidate', async () => {
+    mockParams = { id: '1', candidateSessionId: '2' };
 
     const fetchMock = jest.fn(
       async (input: RequestInfo | URL): Promise<MockResponse> => {
         const url = getUrl(input);
 
-        if (url === "/api/simulations/1/candidates") {
+        if (url === '/api/simulations/1/candidates') {
           return mockJsonResponse([
             {
               candidateSessionId: 2,
-              inviteEmail: "jane@example.com",
-              candidateName: "Jane Doe",
-              status: "in_progress",
-              startedAt: "2025-12-23T18:57:00.000000Z",
+              inviteEmail: 'jane@example.com',
+              candidateName: 'Jane Doe',
+              status: 'in_progress',
+              startedAt: '2025-12-23T18:57:00.000000Z',
               completedAt: null,
               hasReport: false,
             },
           ]);
         }
 
-        if (url.startsWith("/api/submissions?candidateSessionId=2")) {
+        if (url.startsWith('/api/submissions?candidateSessionId=2')) {
           return mockJsonResponse({
             items: [
               {
@@ -107,77 +107,79 @@ describe("CandidateSubmissionsContent", () => {
                 candidateSessionId: 2,
                 taskId: 6,
                 dayIndex: 1,
-                type: "design",
-                submittedAt: "2025-12-23T18:57:10.981202Z",
+                type: 'design',
+                submittedAt: '2025-12-23T18:57:10.981202Z',
               },
             ],
           });
         }
 
-        if (url === "/api/submissions/6") {
+        if (url === '/api/submissions/6') {
           return mockJsonResponse({
             submissionId: 6,
             candidateSessionId: 2,
             task: {
               taskId: 6,
               dayIndex: 1,
-              type: "design",
-              title: "Architecture & Planning",
-              prompt: "Describe your approach",
+              type: 'design',
+              title: 'Architecture & Planning',
+              prompt: 'Describe your approach',
             },
-            contentText: "Here is my architecture plan...",
+            contentText: 'Here is my architecture plan...',
             code: null,
             testResults: null,
-            submittedAt: "2025-12-23T18:57:10.981202Z",
+            submittedAt: '2025-12-23T18:57:10.981202Z',
           });
         }
 
-        return mockTextResponse("Not found", 404);
-      }
+        return mockTextResponse('Not found', 404);
+      },
     );
 
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<CandidateSubmissionsContent />);
 
-    expect(screen.getByText("Loading submissions…")).toBeInTheDocument();
+    expect(screen.getByText('Loading submissions…')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(
-        screen.getByText((content) =>
-          content.includes("Day 1:") && content.includes("Architecture & Planning")
-        )
+        screen.getByText(
+          (content) =>
+            content.includes('Day 1:') &&
+            content.includes('Architecture & Planning'),
+        ),
       ).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Text answer")).toBeInTheDocument();
+    expect(screen.getByText('Text answer')).toBeInTheDocument();
     expect(
-      screen.getByText("Here is my architecture plan...")
+      screen.getByText('Here is my architecture plan...'),
     ).toBeInTheDocument();
   });
 
-  it("renders multiple submissions and includes code content when present", async () => {
-    mockParams = { id: "1", candidateSessionId: "2" };
+  it('renders multiple submissions and includes code content when present', async () => {
+    mockParams = { id: '1', candidateSessionId: '2' };
 
     const fetchMock = jest.fn(
       async (input: RequestInfo | URL): Promise<MockResponse> => {
         const url = getUrl(input);
 
-        if (url === "/api/simulations/1/candidates") {
+        if (url === '/api/simulations/1/candidates') {
           return mockJsonResponse([
             {
               candidateSessionId: 2,
-              inviteEmail: "jane@example.com",
-              candidateName: "Jane Doe",
-              status: "completed",
-              startedAt: "2025-12-23T18:00:00.000000Z",
-              completedAt: "2025-12-23T19:00:00.000000Z",
+              inviteEmail: 'jane@example.com',
+              candidateName: 'Jane Doe',
+              status: 'completed',
+              startedAt: '2025-12-23T18:00:00.000000Z',
+              completedAt: '2025-12-23T19:00:00.000000Z',
               hasReport: false,
             },
           ]);
         }
 
-        if (url.startsWith("/api/submissions?candidateSessionId=2")) {
+        if (url.startsWith('/api/submissions?candidateSessionId=2')) {
           return mockJsonResponse({
             items: [
               {
@@ -185,48 +187,48 @@ describe("CandidateSubmissionsContent", () => {
                 candidateSessionId: 2,
                 taskId: 6,
                 dayIndex: 1,
-                type: "design",
-                submittedAt: "2025-12-23T18:57:10.981202Z",
+                type: 'design',
+                submittedAt: '2025-12-23T18:57:10.981202Z',
               },
               {
                 submissionId: 7,
                 candidateSessionId: 2,
                 taskId: 7,
                 dayIndex: 2,
-                type: "code",
-                submittedAt: "2025-12-23T18:57:19.035314Z",
+                type: 'code',
+                submittedAt: '2025-12-23T18:57:19.035314Z',
               },
             ],
           });
         }
 
-        if (url === "/api/submissions/6") {
+        if (url === '/api/submissions/6') {
           return mockJsonResponse({
             submissionId: 6,
             candidateSessionId: 2,
             task: {
               taskId: 6,
               dayIndex: 1,
-              type: "design",
-              title: "Architecture & Planning",
+              type: 'design',
+              title: 'Architecture & Planning',
               prompt: null,
             },
-            contentText: "Design response",
+            contentText: 'Design response',
             code: null,
             testResults: null,
-            submittedAt: "2025-12-23T18:57:10.981202Z",
+            submittedAt: '2025-12-23T18:57:10.981202Z',
           });
         }
 
-        if (url === "/api/submissions/7") {
+        if (url === '/api/submissions/7') {
           return mockJsonResponse({
             submissionId: 7,
             candidateSessionId: 2,
             task: {
               taskId: 7,
               dayIndex: 2,
-              type: "code",
-              title: "Feature Implementation",
+              type: 'code',
+              title: 'Feature Implementation',
               prompt: null,
             },
             contentText: null,
@@ -235,12 +237,12 @@ describe("CandidateSubmissionsContent", () => {
               repoPath: null,
             },
             testResults: null,
-            submittedAt: "2025-12-23T18:57:19.035314Z",
+            submittedAt: '2025-12-23T18:57:19.035314Z',
           });
         }
 
-        return mockTextResponse("Not found", 404);
-      }
+        return mockTextResponse('Not found', 404);
+      },
     );
 
     global.fetch = fetchMock as unknown as typeof fetch;
@@ -249,82 +251,90 @@ describe("CandidateSubmissionsContent", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText((content) =>
-          content.includes("Day 1:") && content.includes("Architecture & Planning")
-        )
+        screen.getByText(
+          (content) =>
+            content.includes('Day 1:') &&
+            content.includes('Architecture & Planning'),
+        ),
       ).toBeInTheDocument();
     });
 
     expect(
-      screen.getByText((content) =>
-        content.includes("Day 2:") && content.includes("Feature Implementation")
-      )
+      screen.getByText(
+        (content) =>
+          content.includes('Day 2:') &&
+          content.includes('Feature Implementation'),
+      ),
     ).toBeInTheDocument();
 
-    expect(screen.getByText("Code")).toBeInTheDocument();
+    expect(screen.getByText('Code')).toBeInTheDocument();
     expect(
-      screen.getByText("console.log('hello from candidate');")
+      screen.getByText("console.log('hello from candidate');"),
     ).toBeInTheDocument();
 
-    const writeText = jest.fn().mockRejectedValue(new Error("clipboard blocked"));
-    Object.defineProperty(navigator, "clipboard", {
+    const writeText = jest
+      .fn()
+      .mockRejectedValue(new Error('clipboard blocked'));
+    Object.defineProperty(navigator, 'clipboard', {
       value: { writeText },
       configurable: true,
     });
 
-    const createObjectURL = jest.fn().mockReturnValue("blob://mock");
+    const createObjectURL = jest.fn().mockReturnValue('blob://mock');
     const revokeObjectURL = jest.fn();
     const originalCreateObjectURL = URL.createObjectURL;
     const originalRevokeObjectURL = URL.revokeObjectURL;
-    Object.defineProperty(URL, "createObjectURL", {
+    Object.defineProperty(URL, 'createObjectURL', {
       value: createObjectURL,
       writable: true,
       configurable: true,
     });
-    Object.defineProperty(URL, "revokeObjectURL", {
+    Object.defineProperty(URL, 'revokeObjectURL', {
       value: revokeObjectURL,
       writable: true,
       configurable: true,
     });
 
-    const downloadBtn = screen.getByRole("button", { name: "Download" });
-    const copyBtn = screen.getByRole("button", { name: "Copy code" });
+    const downloadBtn = screen.getByRole('button', { name: 'Download' });
+    const copyBtn = screen.getByRole('button', { name: 'Copy code' });
 
     await waitFor(async () => {
       copyBtn.click();
       downloadBtn.click();
     });
 
-    expect(writeText).toHaveBeenCalledWith("console.log('hello from candidate');");
+    expect(writeText).toHaveBeenCalledWith(
+      "console.log('hello from candidate');",
+    );
     expect(createObjectURL).toHaveBeenCalled();
     expect(revokeObjectURL).toHaveBeenCalled();
 
-    Object.defineProperty(URL, "createObjectURL", {
+    Object.defineProperty(URL, 'createObjectURL', {
       value: originalCreateObjectURL,
       writable: true,
       configurable: true,
     });
-    Object.defineProperty(URL, "revokeObjectURL", {
+    Object.defineProperty(URL, 'revokeObjectURL', {
       value: originalRevokeObjectURL,
       writable: true,
       configurable: true,
     });
   });
 
-  it("renders empty state when candidate has no submissions", async () => {
-    mockParams = { id: "1", candidateSessionId: "2" };
+  it('renders empty state when candidate has no submissions', async () => {
+    mockParams = { id: '1', candidateSessionId: '2' };
 
     const fetchMock = jest.fn(
       async (input: RequestInfo | URL): Promise<MockResponse> => {
         const url = getUrl(input);
 
-        if (url === "/api/simulations/1/candidates") {
+        if (url === '/api/simulations/1/candidates') {
           return mockJsonResponse([
             {
               candidateSessionId: 2,
-              inviteEmail: "jane@example.com",
-              candidateName: "Jane Doe",
-              status: "not_started",
+              inviteEmail: 'jane@example.com',
+              candidateName: 'Jane Doe',
+              status: 'not_started',
               startedAt: null,
               completedAt: null,
               hasReport: false,
@@ -332,12 +342,12 @@ describe("CandidateSubmissionsContent", () => {
           ]);
         }
 
-        if (url.startsWith("/api/submissions?candidateSessionId=2")) {
+        if (url.startsWith('/api/submissions?candidateSessionId=2')) {
           return mockJsonResponse({ items: [] });
         }
 
-        return mockTextResponse("Not found", 404);
-      }
+        return mockTextResponse('Not found', 404);
+      },
     );
 
     global.fetch = fetchMock as unknown as typeof fetch;
@@ -346,28 +356,30 @@ describe("CandidateSubmissionsContent", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("No submissions yet for this candidate.")
+        screen.getByText('No submissions yet for this candidate.'),
       ).toBeInTheDocument();
     });
   });
 
-  it("renders error state when submissions list request fails", async () => {
-    mockParams = { id: "1", candidateSessionId: "2" };
+  it('renders error state when submissions list request fails', async () => {
+    mockParams = { id: '1', candidateSessionId: '2' };
 
     const fetchMock = jest.fn(
       async (input: RequestInfo | URL): Promise<MockResponse> => {
         const url = getUrl(input);
 
-        if (url === "/api/simulations/1/candidates") {
-          return mockJsonResponse([{ candidateSessionId: 2, inviteEmail: "jane@example.com" }]);
+        if (url === '/api/simulations/1/candidates') {
+          return mockJsonResponse([
+            { candidateSessionId: 2, inviteEmail: 'jane@example.com' },
+          ]);
         }
 
-        if (url.startsWith("/api/submissions?candidateSessionId=2")) {
-          return mockJsonResponse({ detail: "Detailed failure" }, 500);
+        if (url.startsWith('/api/submissions?candidateSessionId=2')) {
+          return mockJsonResponse({ detail: 'Detailed failure' }, 500);
         }
 
-        return mockTextResponse("Not found", 404);
-      }
+        return mockTextResponse('Not found', 404);
+      },
     );
 
     global.fetch = fetchMock as unknown as typeof fetch;
@@ -375,32 +387,32 @@ describe("CandidateSubmissionsContent", () => {
     render(<CandidateSubmissionsContent />);
 
     await waitFor(() => {
-      expect(screen.getByText("Detailed failure")).toBeInTheDocument();
+      expect(screen.getByText('Detailed failure')).toBeInTheDocument();
     });
   });
 
-  it("shows fallback text when no content is captured in artifact", async () => {
-    mockParams = { id: "1", candidateSessionId: "2" };
+  it('shows fallback text when no content is captured in artifact', async () => {
+    mockParams = { id: '1', candidateSessionId: '2' };
 
     const fetchMock = jest.fn(
       async (input: RequestInfo | URL): Promise<MockResponse> => {
         const url = getUrl(input);
 
-        if (url === "/api/simulations/1/candidates") {
+        if (url === '/api/simulations/1/candidates') {
           return mockJsonResponse([
             {
               candidateSessionId: 2,
-              inviteEmail: "jane@example.com",
-              candidateName: "Jane Doe",
-              status: "completed",
-              startedAt: "2025-12-23T18:00:00.000000Z",
-              completedAt: "2025-12-23T19:00:00.000000Z",
+              inviteEmail: 'jane@example.com',
+              candidateName: 'Jane Doe',
+              status: 'completed',
+              startedAt: '2025-12-23T18:00:00.000000Z',
+              completedAt: '2025-12-23T19:00:00.000000Z',
               hasReport: false,
             },
           ]);
         }
 
-        if (url.startsWith("/api/submissions?candidateSessionId=2")) {
+        if (url.startsWith('/api/submissions?candidateSessionId=2')) {
           return mockJsonResponse({
             items: [
               {
@@ -408,33 +420,33 @@ describe("CandidateSubmissionsContent", () => {
                 candidateSessionId: 2,
                 taskId: 9,
                 dayIndex: 3,
-                type: "design",
-                submittedAt: "2025-12-23T18:57:10.981202Z",
+                type: 'design',
+                submittedAt: '2025-12-23T18:57:10.981202Z',
               },
             ],
           });
         }
 
-        if (url === "/api/submissions/9") {
+        if (url === '/api/submissions/9') {
           return mockJsonResponse({
             submissionId: 9,
             candidateSessionId: 2,
             task: {
               taskId: 9,
               dayIndex: 3,
-              type: "design",
-              title: "No Content Task",
-              prompt: "Describe nothing",
+              type: 'design',
+              title: 'No Content Task',
+              prompt: 'Describe nothing',
             },
             contentText: null,
-            code: { blob: "   ", repoPath: null },
+            code: { blob: '   ', repoPath: null },
             testResults: null,
-            submittedAt: "2025-12-23T18:57:10.981202Z",
+            submittedAt: '2025-12-23T18:57:10.981202Z',
           });
         }
 
-        return mockTextResponse("Not found", 404);
-      }
+        return mockTextResponse('Not found', 404);
+      },
     );
 
     global.fetch = fetchMock as unknown as typeof fetch;
@@ -443,27 +455,30 @@ describe("CandidateSubmissionsContent", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText((content) =>
-          content.includes("Day 3:") && content.includes("No Content Task")
-        )
+        screen.getByText(
+          (content) =>
+            content.includes('Day 3:') && content.includes('No Content Task'),
+        ),
       ).toBeInTheDocument();
     });
 
-    expect(screen.getByText("No content captured for this submission.")).toBeInTheDocument();
+    expect(
+      screen.getByText('No content captured for this submission.'),
+    ).toBeInTheDocument();
   });
 
-  it("handles missing candidate info, renders prompt/test results, and fallback artifact message", async () => {
-    mockParams = { id: "1", candidateSessionId: "2" };
+  it('handles missing candidate info, renders prompt/test results, and fallback artifact message', async () => {
+    mockParams = { id: '1', candidateSessionId: '2' };
 
     const fetchMock = jest.fn(
       async (input: RequestInfo | URL): Promise<MockResponse> => {
         const url = getUrl(input);
 
-        if (url === "/api/simulations/1/candidates") {
-          return mockTextResponse("no candidate", 500);
+        if (url === '/api/simulations/1/candidates') {
+          return mockTextResponse('no candidate', 500);
         }
 
-        if (url.startsWith("/api/submissions?candidateSessionId=2")) {
+        if (url.startsWith('/api/submissions?candidateSessionId=2')) {
           return mockJsonResponse({
             items: [
               {
@@ -471,66 +486,68 @@ describe("CandidateSubmissionsContent", () => {
                 candidateSessionId: 2,
                 taskId: 10,
                 dayIndex: 1,
-                type: "design",
-                submittedAt: "2025-12-23T18:57:10.981202Z",
+                type: 'design',
+                submittedAt: '2025-12-23T18:57:10.981202Z',
               },
               {
                 submissionId: 11,
                 candidateSessionId: 2,
                 taskId: 11,
                 dayIndex: 2,
-                type: "debug",
-                submittedAt: "2025-12-23T19:57:10.981202Z",
+                type: 'debug',
+                submittedAt: '2025-12-23T19:57:10.981202Z',
               },
             ],
           });
         }
 
-        if (url === "/api/submissions/10") {
+        if (url === '/api/submissions/10') {
           return mockJsonResponse({
             submissionId: 10,
             candidateSessionId: 2,
             task: {
               taskId: 10,
               dayIndex: 1,
-              type: "design",
-              title: "Prompted Task",
-              prompt: "Prompt text",
+              type: 'design',
+              title: 'Prompted Task',
+              prompt: 'Prompt text',
             },
-            contentText: "Answer",
+            contentText: 'Answer',
             code: null,
             testResults: { passed: true },
-            submittedAt: "2025-12-23T18:57:10.981202Z",
+            submittedAt: '2025-12-23T18:57:10.981202Z',
           });
         }
 
-        if (url === "/api/submissions/11") {
-          return mockTextResponse("missing artifact", 404);
+        if (url === '/api/submissions/11') {
+          return mockTextResponse('missing artifact', 404);
         }
 
-        return mockTextResponse("Not found", 404);
-      }
+        return mockTextResponse('Not found', 404);
+      },
     );
 
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<CandidateSubmissionsContent />);
 
-    expect(await screen.findByText(/Candidate 2 — Submissions/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Candidate 2 — Submissions/),
+    ).toBeInTheDocument();
     expect(screen.getByText(/CandidateSession: 2/)).toBeInTheDocument();
     expect(
-      await screen.findByText((content) => content.includes("Prompted Task"))
+      await screen.findByText((content) => content.includes('Prompted Task')),
     ).toBeInTheDocument();
-    expect(screen.getByText("Prompt text")).toBeInTheDocument();
+    expect(screen.getByText('Prompt text')).toBeInTheDocument();
     expect(screen.getByText(/\"passed\": true/)).toBeInTheDocument();
     expect(screen.getByText(/content not available/i)).toBeInTheDocument();
   });
 
-  it("surfaces thrown errors from fetch calls", async () => {
-    mockParams = { id: "9", candidateSessionId: "3" };
+  it('surfaces thrown errors from fetch calls', async () => {
+    mockParams = { id: '9', candidateSessionId: '3' };
 
     const fetchMock = jest.fn(async () => {
-      throw new Error("network down");
+      throw new Error('network down');
     });
     global.fetch = fetchMock as unknown as typeof fetch;
 
@@ -539,40 +556,40 @@ describe("CandidateSubmissionsContent", () => {
     expect(await screen.findByText(/network down/i)).toBeInTheDocument();
   });
 
-  it("falls back to default error when fetch throws non-error value", async () => {
-    mockParams = { id: "11", candidateSessionId: "4" };
+  it('falls back to default error when fetch throws non-error value', async () => {
+    mockParams = { id: '11', candidateSessionId: '4' };
     const fetchMock = jest.fn(async () => {
-      throw "bad";
+      throw 'bad';
     });
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<CandidateSubmissionsContent />);
 
-    expect(await screen.findByText("Request failed")).toBeInTheDocument();
+    expect(await screen.findByText('Request failed')).toBeInTheDocument();
   });
 
-  it("renders repo path when provided on code artifact", async () => {
-    mockParams = { id: "1", candidateSessionId: "2" };
+  it('renders repo path when provided on code artifact', async () => {
+    mockParams = { id: '1', candidateSessionId: '2' };
 
     const fetchMock = jest.fn(
       async (input: RequestInfo | URL): Promise<MockResponse> => {
         const url = getUrl(input);
 
-        if (url === "/api/simulations/1/candidates") {
+        if (url === '/api/simulations/1/candidates') {
           return mockJsonResponse([
             {
               candidateSessionId: 2,
-              inviteEmail: "jane@example.com",
-              candidateName: "Jane Doe",
-              status: "completed",
-              startedAt: "2025-12-23T18:00:00.000000Z",
-              completedAt: "2025-12-23T19:00:00.000000Z",
+              inviteEmail: 'jane@example.com',
+              candidateName: 'Jane Doe',
+              status: 'completed',
+              startedAt: '2025-12-23T18:00:00.000000Z',
+              completedAt: '2025-12-23T19:00:00.000000Z',
               hasReport: true,
             },
           ]);
         }
 
-        if (url.startsWith("/api/submissions?candidateSessionId=2")) {
+        if (url.startsWith('/api/submissions?candidateSessionId=2')) {
           return mockJsonResponse({
             items: [
               {
@@ -580,36 +597,36 @@ describe("CandidateSubmissionsContent", () => {
                 candidateSessionId: 2,
                 taskId: 12,
                 dayIndex: 4,
-                type: "code",
-                submittedAt: "2025-12-23T18:57:10.981202Z",
+                type: 'code',
+                submittedAt: '2025-12-23T18:57:10.981202Z',
               },
             ],
           });
         }
 
-        if (url === "/api/submissions/12") {
+        if (url === '/api/submissions/12') {
           return mockJsonResponse({
             submissionId: 12,
             candidateSessionId: 2,
             task: {
               taskId: 12,
               dayIndex: 4,
-              type: "code",
-              title: "Path Task",
+              type: 'code',
+              title: 'Path Task',
               prompt: null,
             },
             contentText: null,
             code: {
               blob: "console.log('path');",
-              repoPath: "src/index.ts",
+              repoPath: 'src/index.ts',
             },
             testResults: null,
-            submittedAt: "2025-12-23T18:57:10.981202Z",
+            submittedAt: '2025-12-23T18:57:10.981202Z',
           });
         }
 
-        return mockTextResponse("Not found", 404);
-      }
+        return mockTextResponse('Not found', 404);
+      },
     );
 
     global.fetch = fetchMock as unknown as typeof fetch;

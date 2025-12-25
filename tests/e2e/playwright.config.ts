@@ -1,24 +1,24 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: './tests/e2e',
   timeout: 60_000,
   retries: 1,
   fullyParallel: true,
   use: {
-    baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
-    trace: "retain-on-failure",
-    video: "retain-on-failure",
-    screenshot: "only-on-failure",
+    baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:3000',
+    trace: 'retain-on-failure',
+    video: 'retain-on-failure',
+    screenshot: 'only-on-failure',
   },
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: "mobile-chrome",
-      use: { ...devices["Pixel 5"] },
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 5'] },
     },
   ],
 });

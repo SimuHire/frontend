@@ -1,31 +1,33 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import CreateSimulationContent from "@/app/(private)/(recruiter)/dashboard/simulations/new/CreateSimulationContent";
-import { createSimulation } from "@/lib/recruiterApi";
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import CreateSimulationContent from '@/app/(private)/(recruiter)/dashboard/simulations/new/CreateSimulationContent';
+import { createSimulation } from '@/lib/recruiterApi';
 
 const pushMock = jest.fn();
 const refreshMock = jest.fn();
 
-jest.mock("next/navigation", () => ({
+jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: pushMock,
     refresh: refreshMock,
   }),
 }));
 
-jest.mock("@/lib/recruiterApi", () => ({
-  ...jest.requireActual("@/lib/recruiterApi"),
+jest.mock('@/lib/recruiterApi', () => ({
+  ...jest.requireActual('@/lib/recruiterApi'),
   createSimulation: jest.fn(),
 }));
 
-const createSimulationMock = createSimulation as jest.MockedFunction<typeof createSimulation>;
+const createSimulationMock = createSimulation as jest.MockedFunction<
+  typeof createSimulation
+>;
 
-describe("CreateSimulationContent", () => {
+describe('CreateSimulationContent', () => {
   beforeEach(() => {
     jest.resetAllMocks();
   });
 
-  it("validates required fields before submitting", async () => {
+  it('validates required fields before submitting', async () => {
     const user = userEvent.setup();
     render(<CreateSimulationContent />);
 
@@ -33,7 +35,9 @@ describe("CreateSimulationContent", () => {
     await user.clear(screen.getByLabelText(/Role/i));
     await user.clear(screen.getByLabelText(/Tech stack/i));
 
-    await user.click(screen.getByRole("button", { name: /Create simulation/i }));
+    await user.click(
+      screen.getByRole('button', { name: /Create simulation/i }),
+    );
 
     expect(await screen.findByText(/Title is required/i)).toBeInTheDocument();
     expect(screen.getByText(/Role is required/i)).toBeInTheDocument();
@@ -41,92 +45,100 @@ describe("CreateSimulationContent", () => {
     expect(createSimulationMock).not.toHaveBeenCalled();
   });
 
-  it("creates simulation and redirects to dashboard", async () => {
+  it('creates simulation and redirects to dashboard', async () => {
     const user = userEvent.setup();
-    createSimulationMock.mockResolvedValueOnce({ id: "sim_123" });
+    createSimulationMock.mockResolvedValueOnce({ id: 'sim_123' });
 
     render(<CreateSimulationContent />);
 
-    await user.type(screen.getByLabelText(/Title/i), " Backend Payments ");
+    await user.type(screen.getByLabelText(/Title/i), ' Backend Payments ');
     await user.clear(screen.getByLabelText(/Role/i));
-    await user.type(screen.getByLabelText(/Role/i), " Backend Engineer ");
+    await user.type(screen.getByLabelText(/Role/i), ' Backend Engineer ');
     await user.clear(screen.getByLabelText(/Tech stack/i));
-    await user.type(screen.getByLabelText(/Tech stack/i), " Node + Postgres ");
-    await user.type(screen.getByLabelText(/Focus /i), "Messaging focus");
+    await user.type(screen.getByLabelText(/Tech stack/i), ' Node + Postgres ');
+    await user.type(screen.getByLabelText(/Focus /i), 'Messaging focus');
 
-    await user.click(screen.getByRole("button", { name: /Create simulation/i }));
+    await user.click(
+      screen.getByRole('button', { name: /Create simulation/i }),
+    );
 
     await waitFor(() => {
       expect(createSimulationMock).toHaveBeenCalledWith({
-        title: "Backend Payments",
-        role: "Backend Engineer",
-        techStack: "Node + Postgres",
-        seniority: "Mid",
-        focus: "Messaging focus",
+        title: 'Backend Payments',
+        role: 'Backend Engineer',
+        techStack: 'Node + Postgres',
+        seniority: 'Mid',
+        focus: 'Messaging focus',
       });
     });
 
-    expect(pushMock).toHaveBeenCalledWith("/dashboard");
+    expect(pushMock).toHaveBeenCalledWith('/dashboard');
     expect(refreshMock).toHaveBeenCalled();
   });
 
-  it("shows form error when backend returns no id", async () => {
+  it('shows form error when backend returns no id', async () => {
     const user = userEvent.setup();
-    createSimulationMock.mockResolvedValueOnce({ id: "" });
+    createSimulationMock.mockResolvedValueOnce({ id: '' });
 
     render(<CreateSimulationContent />);
 
-    await user.type(screen.getByLabelText(/Title/i), "Backend Sim");
-    await user.click(screen.getByRole("button", { name: /Create simulation/i }));
+    await user.type(screen.getByLabelText(/Title/i), 'Backend Sim');
+    await user.click(
+      screen.getByRole('button', { name: /Create simulation/i }),
+    );
 
     expect(await screen.findByText(/no id was returned/i)).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
   });
 
-  it("redirects to login on 401 response", async () => {
+  it('redirects to login on 401 response', async () => {
     const user = userEvent.setup();
     createSimulationMock.mockRejectedValueOnce({ status: 401 });
 
     render(<CreateSimulationContent />);
 
-    await user.type(screen.getByLabelText(/Title/i), "Backend Sim");
-    await user.click(screen.getByRole("button", { name: /Create simulation/i }));
+    await user.type(screen.getByLabelText(/Title/i), 'Backend Sim');
+    await user.click(
+      screen.getByRole('button', { name: /Create simulation/i }),
+    );
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/login"));
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/login'));
   });
 
-  it("surfaces backend error message on failure", async () => {
+  it('surfaces backend error message on failure', async () => {
     const user = userEvent.setup();
     createSimulationMock.mockRejectedValueOnce({
       status: 500,
-      body: { detail: "Server exploded" },
+      body: { detail: 'Server exploded' },
     });
 
     render(<CreateSimulationContent />);
 
-    await user.type(screen.getByLabelText(/Title/i), "Backend Sim");
-    await user.click(screen.getByRole("button", { name: /Create simulation/i }));
+    await user.type(screen.getByLabelText(/Title/i), 'Backend Sim');
+    await user.click(
+      screen.getByRole('button', { name: /Create simulation/i }),
+    );
 
     expect(await screen.findByText(/Server exploded/i)).toBeInTheDocument();
     expect(refreshMock).not.toHaveBeenCalled();
   });
 
-  it("navigates back to dashboard via header Back button", async () => {
+  it('navigates back to dashboard via header Back button', async () => {
     const user = userEvent.setup();
     render(<CreateSimulationContent />);
 
-    await user.click(screen.getByRole("button", { name: /^Back$/i }));
-    expect(pushMock).toHaveBeenCalledWith("/dashboard");
+    await user.click(screen.getByRole('button', { name: /^Back$/i }));
+    expect(pushMock).toHaveBeenCalledWith('/dashboard');
   });
 
-  it("cancel button returns to dashboard without submitting", async () => {
+  it('cancel button returns to dashboard without submitting', async () => {
     const user = userEvent.setup();
     render(<CreateSimulationContent />);
 
-    await user.type(screen.getByLabelText(/Title/i), "Backend Sim");
-    await user.click(screen.getByRole("button", { name: /^Cancel$/i }));
+    await user.type(screen.getByLabelText(/Title/i), 'Backend Sim');
+    await user.click(screen.getByRole('button', { name: /^Cancel$/i }));
 
-    expect(pushMock).toHaveBeenCalledWith("/dashboard");
+    expect(pushMock).toHaveBeenCalledWith('/dashboard');
     expect(createSimulationMock).not.toHaveBeenCalled();
   });
 });

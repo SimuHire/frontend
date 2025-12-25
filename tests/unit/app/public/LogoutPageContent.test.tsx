@@ -6,7 +6,12 @@ describe('LogoutPageContent', () => {
     render(<LogoutPageContent />);
 
     expect(screen.getByText('Log out')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Yes, log me out' })).toHaveAttribute('href', '/auth/logout');
-    expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute('href', '/dashboard');
+    expect(
+      screen.getByRole('link', { name: 'Yes, log me out' }),
+    ).toHaveAttribute('href', '/auth/logout');
+    expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
+      'href',
+      '/dashboard',
+    );
   });
 });

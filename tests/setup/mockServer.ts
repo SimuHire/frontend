@@ -14,7 +14,9 @@ type MockRequest = {
   json(): Promise<unknown>;
 };
 
-type MockResolver = (req: MockRequest) => Promise<Response | MockResponseInit> | Response | MockResponseInit;
+type MockResolver = (
+  req: MockRequest,
+) => Promise<Response | MockResponseInit> | Response | MockResponseInit;
 
 type Handler = {
   method: string;
@@ -25,50 +27,53 @@ type Handler = {
 function toURL(input: RequestInfo | URL): URL {
   if (input instanceof URL) return input;
 
-  if (typeof input === "string") {
+  if (typeof input === 'string') {
     try {
       return new URL(input);
     } catch {
-      return new URL(input, "http://localhost");
+      return new URL(input, 'http://localhost');
     }
   }
 
   try {
     return new URL((input as Request).url);
   } catch {
-    return new URL("http://localhost");
+    return new URL('http://localhost');
   }
 }
 
 function matches(matcher: RouteMatcher, path: string) {
-  if (typeof matcher === "string") return matcher === path;
+  if (typeof matcher === 'string') return matcher === path;
   if (matcher instanceof RegExp) return matcher.test(path);
   return matcher(path);
 }
 
 function toResponse(init: Response | MockResponseInit): Response {
-  if (typeof Response !== "undefined" && init instanceof Response) return init;
+  if (typeof Response !== 'undefined' && init instanceof Response) return init;
 
   const status = init.status ?? 200;
   const headerMap = init.headers ?? {};
   const lower = Object.fromEntries(
-    Object.entries(headerMap).map(([k, v]) => [k.toLowerCase(), v])
+    Object.entries(headerMap).map(([k, v]) => [k.toLowerCase(), v]),
   );
 
-  const hasResponseCtor = typeof Response !== "undefined";
+  const hasResponseCtor = typeof Response !== 'undefined';
 
-  const bodyIsString = typeof init.body === "string";
+  const bodyIsString = typeof init.body === 'string';
   const bodyText =
     init.body === undefined
-      ? ""
+      ? ''
       : bodyIsString
         ? (init.body as string)
         : JSON.stringify(init.body);
 
   if (hasResponseCtor) {
     const headers = new Headers(init.headers ?? {});
-    if (!headers.has("content-type")) {
-      headers.set("content-type", bodyIsString ? "text/plain" : "application/json");
+    if (!headers.has('content-type')) {
+      headers.set(
+        'content-type',
+        bodyIsString ? 'text/plain' : 'application/json',
+      );
     }
     return new Response(bodyText, { status, headers });
   }
@@ -81,7 +86,7 @@ function toResponse(init: Response | MockResponseInit): Response {
     },
     json: async () => {
       try {
-        return JSON.parse(bodyText || "{}");
+        return JSON.parse(bodyText || '{}');
       } catch {
         return {};
       }
@@ -90,12 +95,20 @@ function toResponse(init: Response | MockResponseInit): Response {
   } as unknown as Response;
 }
 
-function buildRequest(input: RequestInfo | URL, init?: RequestInit): MockRequest {
+function buildRequest(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): MockRequest {
   const url = toURL(input);
-  const method = (init?.method ?? "GET").toUpperCase();
+  const method = (init?.method ?? 'GET').toUpperCase();
   const headers = new Headers(init?.headers ?? {});
-  const bodyRaw = init?.body ?? "";
-  const bodyText = typeof bodyRaw === "string" ? bodyRaw : bodyRaw ? JSON.stringify(bodyRaw) : "";
+  const bodyRaw = init?.body ?? '';
+  const bodyText =
+    typeof bodyRaw === 'string'
+      ? bodyRaw
+      : bodyRaw
+        ? JSON.stringify(bodyRaw)
+        : '';
 
   return {
     url,
@@ -104,7 +117,7 @@ function buildRequest(input: RequestInfo | URL, init?: RequestInit): MockRequest
     bodyText,
     async json() {
       try {
-        return JSON.parse(bodyText || "{}");
+        return JSON.parse(bodyText || '{}');
       } catch {
         return {};
       }
@@ -116,13 +129,16 @@ export function createMockServer() {
   const handlers: Handler[] = [];
   let originalFetch: typeof fetch | null = null;
 
-  async function handleFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  async function handleFetch(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> {
     const req = buildRequest(input, init);
     const path = req.url.pathname;
     const method = req.method;
 
     const handler = handlers.find(
-      (h) => h.method === method && matches(h.matcher, path)
+      (h) => h.method === method && matches(h.matcher, path),
     );
 
     if (!handler) {
@@ -158,6 +174,10 @@ export function createMockServer() {
   };
 }
 
-export function jsonResponse(body: unknown, status = 200, headers?: Record<string, string>) {
+export function jsonResponse(
+  body: unknown,
+  status = 200,
+  headers?: Record<string, string>,
+) {
   return toResponse({ body: body as Record<string, unknown>, status, headers });
 }

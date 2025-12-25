@@ -1,6 +1,6 @@
-import { ReactNode } from "react";
-import Link from "next/link";
-import { auth0 } from "@/lib/auth0";
+import { ReactNode } from 'react';
+import Link from 'next/link';
+import { auth0 } from '@/lib/auth0';
 
 type AppShellProps = {
   children: ReactNode;
@@ -19,9 +19,14 @@ export default async function AppShell({ children }: AppShellProps) {
           </Link>
 
           <nav className="flex items-center gap-4 text-sm">
-            {isAuthed && ( <Link href="/dashboard" className="text-gray-700 hover:text-gray-900">
-              Dashboard
-            </Link>)  }
+            {isAuthed && (
+              <Link
+                href="/dashboard"
+                className="text-gray-700 hover:text-gray-900"
+              >
+                Dashboard
+              </Link>
+            )}
 
             {isAuthed && (
               <a href="/logout" className="text-gray-700 hover:text-gray-900">
