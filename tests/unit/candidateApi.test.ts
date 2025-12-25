@@ -501,4 +501,45 @@ describe('candidateApi', () => {
     expect(resp.taskId).toBe(9);
     expect(fetchMock).toHaveBeenCalled();
   });
+
+  it('uses backend detail when bootstrap fails with details payload', async () => {
+    const fetchMock = jest.fn() as FetchMock;
+    fetchMock.mockResolvedValue(makeResponse({ detail: 'Backend down' }, 500));
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const { resolveCandidateInviteToken, HttpError } = await importApi();
+
+    await expect(resolveCandidateInviteToken('tok')).rejects.toBeInstanceOf(
+      HttpError,
+    );
+    await expect(resolveCandidateInviteToken('tok')).rejects.toMatchObject({
+      status: 500,
+      message: 'Backend down',
+    });
+  });
+
+  it('returns network error status 0 when submit fails to reach server', async () => {
+    const fetchMock = jest.fn() as FetchMock;
+    fetchMock.mockRejectedValue(new TypeError('network down'));
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const { submitCandidateTask, HttpError } = await importApi();
+
+    await expect(
+      submitCandidateTask({
+        taskId: 1,
+        token: 'tok',
+        candidateSessionId: 2,
+        contentText: 'hi',
+      }),
+    ).rejects.toBeInstanceOf(HttpError);
+    await expect(
+      submitCandidateTask({
+        taskId: 1,
+        token: 'tok',
+        candidateSessionId: 2,
+        contentText: 'hi',
+      }),
+    ).rejects.toMatchObject({ status: 0 });
+  });
 });

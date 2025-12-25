@@ -29,4 +29,13 @@ describe('PublicHomeContent', () => {
       screen.getByRole('link', { name: 'Candidate portal' }),
     ).toHaveAttribute('href', '/auth/login?returnTo=%2Fcandidate%2Fdemo-token');
   });
+
+  it('handles user without a name gracefully', () => {
+    render(<PublicHomeContent user={{ name: null }} />);
+
+    expect(screen.getByText('Welcome back.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Go to dashboard' }),
+    ).toHaveAttribute('href', '/dashboard');
+  });
 });

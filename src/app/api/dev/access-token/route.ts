@@ -1,12 +1,8 @@
 import { NextResponse } from 'next/server';
-import { auth0, getAccessToken } from '@/lib/auth0';
+import { ensureAccessToken } from '@/lib/server/bff';
 
 export async function GET() {
-  const session = await auth0.getSession();
-  if (!session) {
-    return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
-  }
-
-  const token = await getAccessToken();
-  return NextResponse.json({ accessToken: token });
+  const auth = await ensureAccessToken();
+  if (auth instanceof NextResponse) return auth;
+  return NextResponse.json({ accessToken: auth.accessToken });
 }

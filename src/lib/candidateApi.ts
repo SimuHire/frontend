@@ -1,3 +1,5 @@
+import { apiClient, type ApiClientOptions } from './apiClient';
+
 export class HttpError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -7,6 +9,35 @@ export class HttpError extends Error {
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+const clientOptions: ApiClientOptions = {
+  basePath: API_BASE || '',
+  skipAuth: true,
+};
+
+function extractBackendMessage(
+  value: unknown,
+  allowPlainString = true,
+): string | null {
+  if (allowPlainString && typeof value === 'string' && value.trim())
+    return value.trim();
+  if (typeof value === 'object' && value !== null) {
+    const record = value as Record<string, unknown>;
+    const detail = record['detail'];
+    const message = record['message'];
+
+    if (typeof detail === 'string' && detail.trim()) return detail.trim();
+    if (typeof message === 'string' && message.trim()) return message.trim();
+  }
+  return null;
+}
+
+function fallbackStatus(err: unknown, defaultStatus: number) {
+  const maybeStatus =
+    err && typeof err === 'object'
+      ? (err as { status?: unknown }).status
+      : null;
+  return typeof maybeStatus === 'number' ? maybeStatus : defaultStatus;
+}
 
 type SimulationSummary = { title: string; role: string };
 
@@ -51,90 +82,129 @@ export type CandidateTaskSubmitResponse = {
   isComplete: boolean;
 };
 
-async function safeFetch(url: string, init: RequestInit) {
-  let res: Response;
-  try {
-    res = await fetch(url, { ...init, cache: 'no-store' });
-  } catch {
-    throw new HttpError(
+function toHttpError(
+  err: unknown,
+  fallback: { status: number; message: string },
+) {
+  if (err instanceof HttpError) return err;
+  if (err instanceof TypeError) {
+    return new HttpError(
       0,
       'Network error. Please check your connection and try again.',
     );
   }
-  return res;
-}
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-async function parseErrorMessage(res: Response): Promise<string | null> {
-  try {
-    const data: unknown = await res.json();
-    if (!isRecord(data)) return null;
-
-    const detail = data['detail'];
-    const message = data['message'];
-
-    const msg =
-      (typeof detail === 'string' && detail.trim() ? detail : null) ??
-      (typeof message === 'string' && message.trim() ? message : null);
-
-    return msg;
-  } catch {
-    return null;
+  if (err && typeof err === 'object') {
+    const maybeStatus = (err as { status?: unknown }).status;
+    const maybeMsg = (err as { message?: unknown }).message;
+    const status =
+      typeof maybeStatus === 'number' ? maybeStatus : fallback.status;
+    const message =
+      typeof maybeMsg === 'string' && maybeMsg.trim()
+        ? maybeMsg
+        : fallback.message;
+    return new HttpError(status, message);
   }
+
+  return new HttpError(fallback.status, fallback.message);
 }
 
 export async function resolveCandidateInviteToken(token: string) {
-  const url = `${API_BASE}/candidate/session/${encodeURIComponent(token)}`;
+  const path = `/candidate/session/${encodeURIComponent(token)}`;
 
-  const res = await safeFetch(url, { method: 'GET' });
-
-  if (!res.ok) {
-    if (res.status === 404)
-      throw new HttpError(404, 'That invite link is invalid.');
-    if (res.status === 410)
-      throw new HttpError(410, 'That invite link has expired.');
-    throw new HttpError(
-      res.status,
-      'Something went wrong loading your simulation.',
+  try {
+    return await apiClient.get<CandidateSessionBootstrapResponse>(
+      path,
+      { cache: 'no-store' },
+      clientOptions,
     );
-  }
+  } catch (err: unknown) {
+    if (err && typeof err === 'object') {
+      const status = (err as { status?: unknown }).status;
+      if (status === 404)
+        throw new HttpError(404, 'That invite link is invalid.');
+      if (status === 410)
+        throw new HttpError(410, 'That invite link has expired.');
 
-  return (await res.json()) as CandidateSessionBootstrapResponse;
+      const backendMsg = extractBackendMessage(
+        (err as { details?: unknown }).details,
+        false,
+      );
+
+      const safeStatus =
+        typeof status === 'number' ? status : fallbackStatus(err, 500);
+
+      throw new HttpError(
+        safeStatus,
+        backendMsg?.trim() || 'Something went wrong loading your simulation.',
+      );
+    }
+
+    throw toHttpError(err, {
+      status: 500,
+      message: 'Something went wrong loading your simulation.',
+    });
+  }
 }
 
 export async function getCandidateCurrentTask(
   candidateSessionId: number,
   token: string,
 ) {
-  const url = `${API_BASE}/candidate/session/${candidateSessionId}/current_task`;
+  const path = `/candidate/session/${candidateSessionId}/current_task`;
 
-  const res = await safeFetch(url, {
-    method: 'GET',
-    headers: {
-      'x-candidate-token': token,
-    },
-  });
-
-  if (!res.ok) {
-    if (res.status === 404)
-      throw new HttpError(
-        404,
-        'Session not found. Please reopen your invite link.',
-      );
-    if (res.status === 410)
-      throw new HttpError(410, 'That invite link has expired.');
-
-    const backendMsg = await parseErrorMessage(res);
-    throw new HttpError(
-      res.status,
-      backendMsg ?? 'Something went wrong loading your current task.',
+  try {
+    return await apiClient.get<CandidateCurrentTaskResponse>(
+      path,
+      {
+        headers: { 'x-candidate-token': token },
+        cache: 'no-store',
+      },
+      clientOptions,
     );
-  }
+  } catch (err: unknown) {
+    if (err instanceof TypeError) {
+      throw new HttpError(
+        0,
+        'Network error. Please check your connection and try again.',
+      );
+    }
 
-  return (await res.json()) as CandidateCurrentTaskResponse;
+    if (err && typeof err === 'object') {
+      const status = (err as { status?: unknown }).status;
+      if (typeof status !== 'number') {
+        throw new HttpError(
+          0,
+          'Network error. Please check your connection and try again.',
+        );
+      }
+      const backendMsg = extractBackendMessage(
+        (err as { details?: unknown }).details,
+        false,
+      );
+
+      if (status === 404)
+        throw new HttpError(
+          404,
+          backendMsg ?? 'Session not found. Please reopen your invite link.',
+        );
+      if (status === 410)
+        throw new HttpError(410, 'That invite link has expired.');
+
+      const message =
+        backendMsg ?? 'Something went wrong loading your current task.';
+
+      throw new HttpError(
+        typeof status === 'number' ? status : fallbackStatus(err, 500),
+        message,
+      );
+    }
+
+    throw toHttpError(err, {
+      status: 500,
+      message: 'Something went wrong loading your current task.',
+    });
+  }
 }
 
 export async function submitCandidateTask(params: {
@@ -146,43 +216,66 @@ export async function submitCandidateTask(params: {
 }) {
   const { taskId, token, candidateSessionId, contentText, codeBlob } = params;
 
-  const url = `${API_BASE}/tasks/${taskId}/submit`;
+  const path = `/tasks/${taskId}/submit`;
 
-  const res = await safeFetch(url, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-candidate-token': token,
-      'x-candidate-session-id': String(candidateSessionId),
-    },
-    body: JSON.stringify({
-      ...(typeof contentText === 'string' ? { contentText } : {}),
-      ...(typeof codeBlob === 'string' ? { codeBlob } : {}),
-    }),
-  });
-
-  if (!res.ok) {
-    const backendMsg = await parseErrorMessage(res);
-
-    if (res.status === 400)
-      throw new HttpError(400, backendMsg ?? 'Task out of order.');
-    if (res.status === 404)
-      throw new HttpError(
-        404,
-        backendMsg ?? 'Session mismatch. Please reopen your invite link.',
-      );
-    if (res.status === 409)
-      throw new HttpError(409, backendMsg ?? 'Task already submitted.');
-    if (res.status === 410)
-      throw new HttpError(410, backendMsg ?? 'That invite link has expired.');
-
-    throw new HttpError(
-      res.status,
-      backendMsg ?? 'Something went wrong submitting your task.',
+  try {
+    return await apiClient.post<CandidateTaskSubmitResponse>(
+      path,
+      {
+        ...(typeof contentText === 'string' ? { contentText } : {}),
+        ...(typeof codeBlob === 'string' ? { codeBlob } : {}),
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-candidate-token': token,
+          'x-candidate-session-id': String(candidateSessionId),
+        },
+        cache: 'no-store',
+      },
+      clientOptions,
     );
-  }
+  } catch (err: unknown) {
+    if (err instanceof TypeError) {
+      throw new HttpError(
+        0,
+        'Network error. Please check your connection and try again.',
+      );
+    }
 
-  return (await res.json()) as CandidateTaskSubmitResponse;
+    if (err && typeof err === 'object') {
+      const status = (err as { status?: unknown }).status;
+      const backendMsg = extractBackendMessage(
+        (err as { details?: unknown }).details,
+        false,
+      );
+
+      if (status === 400)
+        throw new HttpError(400, backendMsg ?? 'Task out of order.');
+      if (status === 404)
+        throw new HttpError(
+          404,
+          backendMsg ?? 'Session mismatch. Please reopen your invite link.',
+        );
+      if (status === 409)
+        throw new HttpError(409, backendMsg ?? 'Task already submitted.');
+      if (status === 410)
+        throw new HttpError(410, backendMsg ?? 'That invite link has expired.');
+
+      const message =
+        backendMsg ?? 'Something went wrong submitting your task.';
+
+      throw new HttpError(
+        typeof status === 'number' ? status : fallbackStatus(err, 500),
+        message,
+      );
+    }
+
+    throw toHttpError(err, {
+      status: 500,
+      message: 'Something went wrong submitting your task.',
+    });
+  }
 }
 
 export async function submitCandidateCodeTask(params: {
