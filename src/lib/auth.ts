@@ -13,4 +13,3 @@ export function setAuthToken(token: string | null) {
     window.localStorage.removeItem(TOKEN_KEY);
   }
 }
-

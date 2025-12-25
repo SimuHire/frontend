@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import PageHeader from "@/components/common/PageHeader";
-import Button from "@/components/common/Button";
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import PageHeader from '@/components/common/PageHeader';
+import Button from '@/components/common/Button';
 
 type CandidateSession = {
   candidateSessionId: number;
   inviteEmail: string | null;
   candidateName: string | null;
-  status: "not_started" | "in_progress" | "completed";
+  status: 'not_started' | 'in_progress' | 'completed';
   startedAt: string | null;
   completedAt: string | null;
   hasReport: boolean;
@@ -46,9 +46,9 @@ type SubmissionArtifact = {
 };
 
 function downloadTextFile(filename: string, contents: string) {
-  const blob = new Blob([contents], { type: "text/plain;charset=utf-8" });
+  const blob = new Blob([contents], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -59,8 +59,8 @@ function downloadTextFile(filename: string, contents: string) {
 
 function ArtifactCard({ artifact }: { artifact: SubmissionArtifact }) {
   const isCodeTask =
-    artifact.task.type === "code" || artifact.task.type === "debug";
-  const codeBlob = (artifact.code?.blob ?? "").trim();
+    artifact.task.type === 'code' || artifact.task.type === 'debug';
+  const codeBlob = (artifact.code?.blob ?? '').trim();
 
   return (
     <div className="rounded border border-gray-200 bg-white p-4">
@@ -70,7 +70,7 @@ function ArtifactCard({ artifact }: { artifact: SubmissionArtifact }) {
             Day {artifact.task.dayIndex}: {artifact.task.title}
           </div>
           <div className="mt-1 text-xs text-gray-500">
-            {artifact.task.type} • submitted{" "}
+            {artifact.task.type} • submitted{' '}
             {new Date(artifact.submittedAt).toLocaleString()}
           </div>
         </div>
@@ -81,8 +81,7 @@ function ArtifactCard({ artifact }: { artifact: SubmissionArtifact }) {
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(codeBlob);
-                } catch {
-                }
+                } catch {}
               }}
             >
               Copy code
@@ -91,7 +90,7 @@ function ArtifactCard({ artifact }: { artifact: SubmissionArtifact }) {
               onClick={() =>
                 downloadTextFile(
                   `day-${artifact.task.dayIndex}-${artifact.task.type}.txt`,
-                  codeBlob
+                  codeBlob,
                 )
               }
             >
@@ -156,14 +155,14 @@ function ArtifactCard({ artifact }: { artifact: SubmissionArtifact }) {
 }
 
 function parseErrorMessage(u: unknown): string {
-  if (u && typeof u === "object") {
+  if (u && typeof u === 'object') {
     const msg = (u as { message?: unknown }).message;
-    if (typeof msg === "string" && msg.trim()) return msg;
+    if (typeof msg === 'string' && msg.trim()) return msg;
     const detail = (u as { detail?: unknown }).detail;
-    if (typeof detail === "string" && detail.trim()) return detail;
+    if (typeof detail === 'string' && detail.trim()) return detail;
   }
   if (u instanceof Error) return u.message;
-  return "Request failed";
+  return 'Request failed';
 }
 
 export default function CandidateSubmissionsContent() {
@@ -176,9 +175,9 @@ export default function CandidateSubmissionsContent() {
 
   const [candidate, setCandidate] = useState<CandidateSession | null>(null);
   const [items, setItems] = useState<SubmissionListItem[]>([]);
-  const [artifacts, setArtifacts] = useState<Record<number, SubmissionArtifact>>(
-    {}
-  );
+  const [artifacts, setArtifacts] = useState<
+    Record<number, SubmissionArtifact>
+  >({});
 
   useEffect(() => {
     let cancelled = false;
@@ -190,7 +189,7 @@ export default function CandidateSubmissionsContent() {
 
         const candRes = await fetch(
           `/api/simulations/${simulationId}/candidates`,
-          { method: "GET", cache: "no-store" }
+          { method: 'GET', cache: 'no-store' },
         );
 
         if (candRes.ok) {
@@ -205,22 +204,24 @@ export default function CandidateSubmissionsContent() {
 
         const listRes = await fetch(
           `/api/submissions?candidateSessionId=${encodeURIComponent(
-            String(candidateSessionId)
+            String(candidateSessionId),
           )}`,
-          { method: "GET", cache: "no-store" }
+          { method: 'GET', cache: 'no-store' },
         );
 
         if (!listRes.ok) {
           const maybeJson: unknown = await listRes.json().catch(() => null);
-          const fallbackText = await listRes.text().catch(() => "");
+          const fallbackText = await listRes.text().catch(() => '');
           const msg =
             maybeJson !== null ? parseErrorMessage(maybeJson) : fallbackText;
-          throw new Error(msg || `Failed to load submissions (${listRes.status})`);
+          throw new Error(
+            msg || `Failed to load submissions (${listRes.status})`,
+          );
         }
 
         const listJson = (await listRes.json()) as SubmissionListResponse;
         const ordered = [...(listJson.items ?? [])].sort(
-          (a, b) => a.dayIndex - b.dayIndex
+          (a, b) => a.dayIndex - b.dayIndex,
         );
         if (!cancelled) setItems(ordered);
 
@@ -232,13 +233,13 @@ export default function CandidateSubmissionsContent() {
         const results = await Promise.all(
           ordered.map(async (s) => {
             const r = await fetch(`/api/submissions/${s.submissionId}`, {
-              method: "GET",
-              cache: "no-store",
+              method: 'GET',
+              cache: 'no-store',
             });
             if (!r.ok) return null;
             const a = (await r.json()) as SubmissionArtifact;
             return a;
-          })
+          }),
         );
 
         const map: Record<number, SubmissionArtifact> = {};
@@ -276,9 +277,9 @@ export default function CandidateSubmissionsContent() {
       bits.push(`Started: ${new Date(candidate.startedAt).toLocaleString()}`);
     if (candidate?.completedAt)
       bits.push(
-        `Completed: ${new Date(candidate.completedAt).toLocaleString()}`
+        `Completed: ${new Date(candidate.completedAt).toLocaleString()}`,
       );
-    return bits.join(" • ");
+    return bits.join(' • ');
   }, [candidate, candidateSessionId]);
 
   return (
@@ -314,7 +315,7 @@ export default function CandidateSubmissionsContent() {
                 key={it.submissionId}
                 className="rounded border border-gray-200 bg-white p-4 text-sm text-gray-700"
               >
-                Day {it.dayIndex} ({it.type}) — submission #{it.submissionId}{" "}
+                Day {it.dayIndex} ({it.type}) — submission #{it.submissionId}{' '}
                 content not available.
               </div>
             );

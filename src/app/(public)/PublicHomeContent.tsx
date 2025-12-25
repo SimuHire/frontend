@@ -1,5 +1,5 @@
-import Link from "next/link";
-import AuthLoginLink from "@/components/auth/AuthLoginLink";
+import Link from 'next/link';
+import AuthLoginLink from '@/components/auth/AuthLoginLink';
 
 type PublicHomeContentProps = {
   user?: { name?: string | null } | null;
@@ -11,7 +11,7 @@ export default function PublicHomeContent({ user }: PublicHomeContentProps) {
       <div className="flex flex-col gap-6">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900">
-            Welcome back{user.name ? `, ${user.name}` : ""}.
+            Welcome back{user.name ? `, ${user.name}` : ''}.
           </h1>
           <p className="mt-2 max-w-xl text-sm text-slate-600">
             You’re signed in. Jump into the dashboard or continue a simulation.
@@ -73,7 +73,7 @@ export default function PublicHomeContent({ user }: PublicHomeContentProps) {
       </div>
 
       <p className="mt-4 text-xs text-slate-500">
-        In production, candidates will receive a unique simulation link like{" "}
+        In production, candidates will receive a unique simulation link like{' '}
         <code className="rounded bg-slate-100 px-1 py-0.5 text-[0.7rem]">
           /candidate/&lt;invite-token&gt;
         </code>

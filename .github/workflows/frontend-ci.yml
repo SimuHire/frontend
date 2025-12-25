@@ -23,8 +23,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install deps
         run: npm ci
@@ -33,7 +33,7 @@ jobs:
         run: npm run lint
 
   test:
-    name: Unit Tests
+    name: Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -41,14 +41,32 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install deps
         run: npm ci
 
       - name: Run tests
         run: npm run test:ci
+
+      - name: Check coverage thresholds
+        run: node scripts/checkCoverage.js
+
+      - name: Show coverage summary
+        if: success()
+        run: |
+          node -e "const s=require('./coverage/coverage-summary.json'); const t=s.total; console.log('Coverage -> statements:',t.statements.pct,'branches:',t.branches.pct,'functions:',t.functions.pct,'lines:',t.lines.pct);"
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            coverage/coverage-summary.json
+            coverage/coverage-final.json
+          if-no-files-found: warn
 
   build:
     name: Typecheck + Build
@@ -59,8 +77,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install deps
         run: npm ci

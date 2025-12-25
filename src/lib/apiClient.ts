@@ -1,6 +1,6 @@
-import { getAuthToken } from "./auth";
+import { getAuthToken } from './auth';
 
-export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export interface ApiClientOptions {
   basePath?: string;
@@ -18,25 +18,25 @@ type RequestOptions = {
   headers?: Record<string, string>;
 };
 
-const DEFAULT_BASE_PATH = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
+const DEFAULT_BASE_PATH = process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api';
 
 function normalizeUrl(basePath: string, path: string): string {
-  const base = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
-  const p = path.startsWith("/") ? path : `/${path}`;
+  const base = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+  const p = path.startsWith('/') ? path : `/${path}`;
   return `${base}${p}`;
 }
 
 function extractErrorMessage(errorBody: unknown, status: number): string {
-  if (typeof errorBody === "object" && errorBody !== null) {
+  if (typeof errorBody === 'object' && errorBody !== null) {
     const candidate = errorBody as { message?: unknown; detail?: unknown };
 
-    if (typeof candidate.message === "string") return candidate.message;
+    if (typeof candidate.message === 'string') return candidate.message;
 
-    if (typeof candidate.detail === "string") return candidate.detail;
+    if (typeof candidate.detail === 'string') return candidate.detail;
 
     if (Array.isArray(candidate.detail) && candidate.detail.length > 0) {
       const first = candidate.detail[0] as { msg?: unknown };
-      if (first && typeof first.msg === "string") return first.msg;
+      if (first && typeof first.msg === 'string') return first.msg;
     }
   }
 
@@ -44,8 +44,8 @@ function extractErrorMessage(errorBody: unknown, status: number): string {
 }
 
 async function parseResponseBody(response: Response): Promise<unknown> {
-  const contentType = response.headers.get("content-type") ?? "";
-  if (contentType.includes("application/json")) {
+  const contentType = response.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
     try {
       return (await response.json()) as unknown;
     } catch {
@@ -61,9 +61,9 @@ async function parseResponseBody(response: Response): Promise<unknown> {
 }
 
 function isApiClientOptions(value: unknown): value is ApiClientOptions {
-  if (!value || typeof value !== "object") return false;
+  if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
-  return "basePath" in v || "authToken" in v || "skipAuth" in v;
+  return 'basePath' in v || 'authToken' in v || 'skipAuth' in v;
 }
 
 async function request<TResponse = unknown>(
@@ -73,7 +73,7 @@ async function request<TResponse = unknown>(
     body?: unknown;
     headers?: Record<string, string>;
   } = {},
-  clientOptions: ApiClientOptions = {}
+  clientOptions: ApiClientOptions = {},
 ): Promise<TResponse> {
   const basePath = clientOptions.basePath ?? DEFAULT_BASE_PATH;
 
@@ -82,29 +82,29 @@ async function request<TResponse = unknown>(
   };
 
   const isFormData =
-    typeof FormData !== "undefined" && options.body instanceof FormData;
+    typeof FormData !== 'undefined' && options.body instanceof FormData;
 
   if (options.body !== undefined && !isFormData) {
-    headers["Content-Type"] = headers["Content-Type"] ?? "application/json";
+    headers['Content-Type'] = headers['Content-Type'] ?? 'application/json';
   }
 
   const hasAuthToken = Object.prototype.hasOwnProperty.call(
     clientOptions,
-    "authToken"
+    'authToken',
   );
 
   const token = hasAuthToken
     ? clientOptions.authToken
-    : typeof window !== "undefined"
+    : typeof window !== 'undefined'
       ? getAuthToken()
       : null;
 
   if (!clientOptions.skipAuth && token) {
-    headers["Authorization"] = `Bearer ${token}`;
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   const response = await fetch(normalizeUrl(basePath, path), {
-    method: options.method ?? "GET",
+    method: options.method ?? 'GET',
     headers,
     body:
       options.body === undefined
@@ -112,7 +112,7 @@ async function request<TResponse = unknown>(
         : isFormData
           ? (options.body as FormData)
           : JSON.stringify(options.body),
-    credentials: "include",
+    credentials: 'include',
   });
 
   if (!response.ok) {
@@ -138,7 +138,7 @@ export interface LoginResponseUser {
 
 export interface LoginResponse {
   access_token: string;
-  token_type: "bearer" | string;
+  token_type: 'bearer' | string;
   user?: LoginResponseUser;
 }
 
@@ -148,8 +148,8 @@ export interface LoginPayload {
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  return request<LoginResponse>("/auth/login", {
-    method: "POST",
+  return request<LoginResponse>('/auth/login', {
+    method: 'POST',
     body: payload,
   });
 }
@@ -158,7 +158,7 @@ export const apiClient = {
   get: async <T = unknown>(
     path: string,
     arg2?: ApiClientOptions | RequestOptions,
-    arg3?: ApiClientOptions
+    arg3?: ApiClientOptions,
   ) => {
     const requestOptions: RequestOptions | undefined = isApiClientOptions(arg2)
       ? undefined
@@ -170,8 +170,8 @@ export const apiClient = {
 
     return request<T>(
       path,
-      { method: "GET", ...(requestOptions ?? {}) },
-      clientOptions
+      { method: 'GET', ...(requestOptions ?? {}) },
+      clientOptions,
     );
   },
 
@@ -179,7 +179,7 @@ export const apiClient = {
     path: string,
     body?: unknown,
     arg3?: ApiClientOptions | RequestOptions,
-    arg4?: ApiClientOptions
+    arg4?: ApiClientOptions,
   ) => {
     const requestOptions: RequestOptions | undefined = isApiClientOptions(arg3)
       ? undefined
@@ -191,8 +191,8 @@ export const apiClient = {
 
     return request<T>(
       path,
-      { method: "POST", body, ...(requestOptions ?? {}) },
-      clientOptions
+      { method: 'POST', body, ...(requestOptions ?? {}) },
+      clientOptions,
     );
   },
 
@@ -200,7 +200,7 @@ export const apiClient = {
     path: string,
     body?: unknown,
     arg3?: ApiClientOptions | RequestOptions,
-    arg4?: ApiClientOptions
+    arg4?: ApiClientOptions,
   ) => {
     const requestOptions: RequestOptions | undefined = isApiClientOptions(arg3)
       ? undefined
@@ -212,8 +212,8 @@ export const apiClient = {
 
     return request<T>(
       path,
-      { method: "PUT", body, ...(requestOptions ?? {}) },
-      clientOptions
+      { method: 'PUT', body, ...(requestOptions ?? {}) },
+      clientOptions,
     );
   },
 
@@ -221,7 +221,7 @@ export const apiClient = {
     path: string,
     body?: unknown,
     arg3?: ApiClientOptions | RequestOptions,
-    arg4?: ApiClientOptions
+    arg4?: ApiClientOptions,
   ) => {
     const requestOptions: RequestOptions | undefined = isApiClientOptions(arg3)
       ? undefined
@@ -233,15 +233,15 @@ export const apiClient = {
 
     return request<T>(
       path,
-      { method: "PATCH", body, ...(requestOptions ?? {}) },
-      clientOptions
+      { method: 'PATCH', body, ...(requestOptions ?? {}) },
+      clientOptions,
     );
   },
 
   delete: async <T = unknown>(
     path: string,
     arg2?: ApiClientOptions | RequestOptions,
-    arg3?: ApiClientOptions
+    arg3?: ApiClientOptions,
   ) => {
     const requestOptions: RequestOptions | undefined = isApiClientOptions(arg2)
       ? undefined
@@ -253,8 +253,8 @@ export const apiClient = {
 
     return request<T>(
       path,
-      { method: "DELETE", ...(requestOptions ?? {}) },
-      clientOptions
+      { method: 'DELETE', ...(requestOptions ?? {}) },
+      clientOptions,
     );
   },
 };

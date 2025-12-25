@@ -14,7 +14,12 @@ type Props = {
   onSubmit: (contentText: string) => Promise<void>;
 };
 
-export default function TextTaskEditor({ taskId, disabled, submitError, onSubmit }: Props) {
+export default function TextTaskEditor({
+  taskId,
+  disabled,
+  submitError,
+  onSubmit,
+}: Props) {
   const [value, setValue] = React.useState('');
   const [localError, setLocalError] = React.useState<string | null>(null);
   const [savedAt, setSavedAt] = React.useState<number | null>(null);
@@ -66,7 +71,7 @@ export default function TextTaskEditor({ taskId, disabled, submitError, onSubmit
 
       <div className="flex gap-2">
         <Button type="button" onClick={handleSaveDraft} disabled={disabled}>
-            Save draft
+          Save draft
         </Button>
         <Button type="button" onClick={handleSubmit} disabled={disabled}>
           Submit

@@ -6,10 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --max-warnings=0",
+    "lint": "npm run lint:eslint && npm run lint:prettier",
+    "lint:eslint": "eslint . --max-warnings=0",
+    "lint:prettier": "prettier . --check",
     "typecheck": "rimraf .next && tsc --noEmit",
     "test": "jest",
-    "test:ci": "jest --ci --runInBand"
+    "test:coverage": "jest --coverage --runInBand",
+    "test:ci": "jest --ci --runInBand --coverage",
+    "test:e2e": "npx playwright test -c tests/e2e/playwright.config.ts",
+    "format": "prettier . --write",
+    "prettier:write": "prettier . --write"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^4.13.2",
@@ -21,6 +27,7 @@
     "react-dom": "19.2.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",

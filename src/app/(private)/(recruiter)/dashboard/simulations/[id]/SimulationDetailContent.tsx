@@ -1,34 +1,34 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import PageHeader from "@/components/common/PageHeader";
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import PageHeader from '@/components/common/PageHeader';
 
 type CandidateSession = {
   candidateSessionId: number;
   inviteEmail: string | null;
   candidateName: string | null;
-  status: "not_started" | "in_progress" | "completed";
+  status: 'not_started' | 'in_progress' | 'completed';
   startedAt: string | null;
   completedAt: string | null;
   hasReport: boolean;
 };
 
-function StatusPill({ status }: { status: CandidateSession["status"] }) {
+function StatusPill({ status }: { status: CandidateSession['status'] }) {
   const label =
-    status === "not_started"
-      ? "Not started"
-      : status === "in_progress"
-        ? "In progress"
-        : "Completed";
+    status === 'not_started'
+      ? 'Not started'
+      : status === 'in_progress'
+        ? 'In progress'
+        : 'Completed';
 
   const cls =
-    status === "completed"
-      ? "bg-green-100 text-green-800"
-      : status === "in_progress"
-        ? "bg-yellow-100 text-yellow-800"
-        : "bg-gray-100 text-gray-800";
+    status === 'completed'
+      ? 'bg-green-100 text-green-800'
+      : status === 'in_progress'
+        ? 'bg-yellow-100 text-yellow-800'
+        : 'bg-gray-100 text-gray-800';
 
   return (
     <span
@@ -40,14 +40,14 @@ function StatusPill({ status }: { status: CandidateSession["status"] }) {
 }
 
 function parseErrorMessage(u: unknown): string {
-  if (u && typeof u === "object") {
+  if (u && typeof u === 'object') {
     const msg = (u as { message?: unknown }).message;
-    if (typeof msg === "string" && msg.trim()) return msg;
+    if (typeof msg === 'string' && msg.trim()) return msg;
     const detail = (u as { detail?: unknown }).detail;
-    if (typeof detail === "string" && detail.trim()) return detail;
+    if (typeof detail === 'string' && detail.trim()) return detail;
   }
   if (u instanceof Error) return u.message;
-  return "Request failed";
+  return 'Request failed';
 }
 
 export default function SimulationDetailContent() {
@@ -67,13 +67,13 @@ export default function SimulationDetailContent() {
         setError(null);
 
         const res = await fetch(`/api/simulations/${simulationId}/candidates`, {
-          method: "GET",
-          cache: "no-store",
+          method: 'GET',
+          cache: 'no-store',
         });
 
         if (!res.ok) {
           const maybeJson: unknown = await res.json().catch(() => null);
-          const fallbackText = await res.text().catch(() => "");
+          const fallbackText = await res.text().catch(() => '');
           const msg =
             maybeJson !== null ? parseErrorMessage(maybeJson) : fallbackText;
           throw new Error(msg || `Failed to load candidates (${res.status})`);
@@ -99,8 +99,14 @@ export default function SimulationDetailContent() {
   return (
     <div className="flex flex-col gap-4 py-8">
       <div className="flex items-center justify-between gap-4">
-        <PageHeader title="Simulation" subtitle={`Simulation ID: ${simulationId}`} />
-        <Link className="text-sm text-blue-600 hover:underline" href="/dashboard">
+        <PageHeader
+          title="Simulation"
+          subtitle={`Simulation ID: ${simulationId}`}
+        />
+        <Link
+          className="text-sm text-blue-600 hover:underline"
+          href="/dashboard"
+        >
           ← Back to dashboard
         </Link>
       </div>
@@ -129,15 +135,19 @@ export default function SimulationDetailContent() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {rows.map((c) => {
-                const display = c.candidateName || c.inviteEmail || "Unnamed";
+                const display = c.candidateName || c.inviteEmail || 'Unnamed';
                 return (
                   <tr key={c.candidateSessionId}>
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">{display}</div>
                       {c.inviteEmail ? (
-                        <div className="text-xs text-gray-500">{c.inviteEmail}</div>
+                        <div className="text-xs text-gray-500">
+                          {c.inviteEmail}
+                        </div>
                       ) : null}
-                      <div className="text-xs text-gray-400">{c.candidateSessionId}</div>
+                      <div className="text-xs text-gray-400">
+                        {c.candidateSessionId}
+                      </div>
                     </td>
 
                     <td className="px-4 py-3">
@@ -145,11 +155,15 @@ export default function SimulationDetailContent() {
                     </td>
 
                     <td className="px-4 py-3 text-gray-700">
-                      {c.startedAt ? new Date(c.startedAt).toLocaleString() : "—"}
+                      {c.startedAt
+                        ? new Date(c.startedAt).toLocaleString()
+                        : '—'}
                     </td>
 
                     <td className="px-4 py-3 text-gray-700">
-                      {c.completedAt ? new Date(c.completedAt).toLocaleString() : "—"}
+                      {c.completedAt
+                        ? new Date(c.completedAt).toLocaleString()
+                        : '—'}
                     </td>
 
                     <td className="px-4 py-3 text-right">

@@ -1,16 +1,16 @@
-import { NextResponse } from "next/server";
-import { auth0, getAccessToken } from "@/lib/auth0";
+import { NextResponse } from 'next/server';
+import { auth0, getAccessToken } from '@/lib/auth0';
 
 function getBackendBaseUrl(): string {
-  const raw = process.env.BACKEND_BASE_URL ?? "http://localhost:8000";
-  const trimmed = raw.replace(/\/+$/, "");
-  return trimmed.endsWith("/api") ? trimmed.slice(0, -4) : trimmed;
+  const raw = process.env.BACKEND_BASE_URL ?? 'http://localhost:8000';
+  const trimmed = raw.replace(/\/+$/, '');
+  return trimmed.endsWith('/api') ? trimmed.slice(0, -4) : trimmed;
 }
 
 export async function GET() {
   const session = await auth0.getSession();
   if (!session) {
-    return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
   }
 
   try {
@@ -21,27 +21,26 @@ export async function GET() {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-      cache: "no-store",
+      cache: 'no-store',
     });
 
-    const contentType = res.headers.get("content-type") ?? "";
-    const body = contentType.includes("application/json")
+    const contentType = res.headers.get('content-type') ?? '';
+    const body = contentType.includes('application/json')
       ? ((await res.json()) as unknown)
       : await res.text();
 
     return NextResponse.json(body, { status: res.status });
   } catch (e: unknown) {
     const message =
-      e instanceof Error ? `Upstream error: ${e.message}` : "Upstream error";
+      e instanceof Error ? `Upstream error: ${e.message}` : 'Upstream error';
     return NextResponse.json({ message }, { status: 500 });
   }
 }
 
-
 export async function POST(req: Request) {
   const session = await auth0.getSession();
   if (!session) {
-    return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
   }
 
   try {
@@ -51,23 +50,23 @@ export async function POST(req: Request) {
     const body = (await req.json()) as unknown;
 
     const res = await fetch(`${backendBase}/api/simulations`, {
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
     });
 
-    const contentType = res.headers.get("content-type") ?? "";
-    const parsed = contentType.includes("application/json")
+    const contentType = res.headers.get('content-type') ?? '';
+    const parsed = contentType.includes('application/json')
       ? ((await res.json()) as unknown)
       : await res.text();
 
     return NextResponse.json(parsed, { status: res.status });
   } catch (e: unknown) {
     const message =
-      e instanceof Error ? `Upstream error: ${e.message}` : "Upstream error";
+      e instanceof Error ? `Upstream error: ${e.message}` : 'Upstream error';
     return NextResponse.json({ message }, { status: 500 });
   }
 }

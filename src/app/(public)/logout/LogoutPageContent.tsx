@@ -1,6 +1,6 @@
-import Link from "next/link";
-import PageHeader from "@/components/common/PageHeader";
-import Button from "@/components/common/Button";
+import Link from 'next/link';
+import PageHeader from '@/components/common/PageHeader';
+import Button from '@/components/common/Button';
 
 export default function LogoutPageContent() {
   return (
@@ -33,7 +33,8 @@ export default function LogoutPageContent() {
           </div>
 
           <p className="mt-4 text-xs text-gray-500">
-            This will end your SimuHire session and redirect you back to the app.
+            This will end your SimuHire session and redirect you back to the
+            app.
           </p>
         </div>
       </div>

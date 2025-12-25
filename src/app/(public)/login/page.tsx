@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import LoginPageContent from "./LoginPageContent";
+import LoginPageContent from './LoginPageContent';
 
 export default function LoginRoutePage() {
   return <LoginPageContent />;
