@@ -101,6 +101,21 @@ describe('bff helpers', () => {
       });
       await expect(parseUpstreamBody(res)).resolves.toBe('plain text');
     });
+
+    it('returns undefined when json parse fails or text throws', async () => {
+      const badJson = new Response('not-json', {
+        headers: { 'content-type': 'application/json' },
+      });
+      await expect(parseUpstreamBody(badJson)).resolves.toBeUndefined();
+
+      const badText = {
+        headers: { get: () => 'text/plain' },
+        text: async () => {
+          throw new Error('fail');
+        },
+      } as unknown as Response;
+      await expect(parseUpstreamBody(badText)).resolves.toBeUndefined();
+    });
   });
 
   describe('ensureAccessToken', () => {
@@ -170,5 +185,19 @@ describe('bff helpers', () => {
       const parsed = await resp.json();
       expect(parsed).toEqual({ ok: true });
     });
+  });
+
+  it('withAuthGuard short-circuits when auth is missing', async () => {
+    auth0.getSession.mockResolvedValue(null);
+    const { withAuthGuard } = await import('@/lib/server/bff');
+
+    const result = await withAuthGuard(async () =>
+      NextResponse.json({ ok: true }),
+    );
+
+    expect(result).toBeInstanceOf(NextResponse);
+    if (result instanceof NextResponse) {
+      expect(result.status).toBe(401);
+    }
   });
 });

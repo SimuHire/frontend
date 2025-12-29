@@ -542,4 +542,110 @@ describe('candidateApi', () => {
       }),
     ).rejects.toMatchObject({ status: 0 });
   });
+
+  it('wraps unknown errors with fallback HttpError in bootstrap', async () => {
+    const fetchMock = jest.fn() as FetchMock;
+    fetchMock.mockRejectedValue('boom');
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const { resolveCandidateInviteToken, HttpError } = await importApi();
+
+    await expect(resolveCandidateInviteToken('tok')).rejects.toBeInstanceOf(
+      HttpError,
+    );
+    await expect(resolveCandidateInviteToken('tok')).rejects.toMatchObject({
+      status: 500,
+      message: 'Something went wrong loading your simulation.',
+    });
+  });
+
+  it('wraps unknown errors with fallback HttpError for current task and submit', async () => {
+    const fetchMock = jest.fn() as FetchMock;
+    fetchMock.mockRejectedValue('boom');
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const { getCandidateCurrentTask, submitCandidateTask, HttpError } =
+      await importApi();
+
+    await expect(getCandidateCurrentTask(1, 'tok')).rejects.toBeInstanceOf(
+      HttpError,
+    );
+    await expect(getCandidateCurrentTask(1, 'tok')).rejects.toMatchObject({
+      status: 500,
+      message: 'Something went wrong loading your current task.',
+    });
+
+    await expect(
+      submitCandidateTask({
+        taskId: 1,
+        token: 'tok',
+        candidateSessionId: 1,
+      }),
+    ).rejects.toBeInstanceOf(HttpError);
+    await expect(
+      submitCandidateTask({
+        taskId: 1,
+        token: 'tok',
+        candidateSessionId: 1,
+      }),
+    ).rejects.toMatchObject({
+      status: 500,
+      message: 'Something went wrong submitting your task.',
+    });
+  });
+
+  it('handles current task TypeError branch', async () => {
+    const fetchMock = jest.fn() as FetchMock;
+    fetchMock.mockRejectedValue(new TypeError('offline'));
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const { getCandidateCurrentTask } = await importApi();
+
+    await expect(getCandidateCurrentTask(1, 'tok')).rejects.toMatchObject({
+      status: 0,
+    });
+  });
+
+  it('handles current task 404 branch with backend detail', async () => {
+    const fetchMock = jest.fn() as FetchMock;
+    fetchMock.mockResolvedValue(
+      makeResponse({ detail: 'Missing session' }, 404),
+    );
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const { getCandidateCurrentTask, HttpError } = await importApi();
+
+    await expect(getCandidateCurrentTask(2, 'tok')).rejects.toBeInstanceOf(
+      HttpError,
+    );
+    await expect(getCandidateCurrentTask(2, 'tok')).rejects.toMatchObject({
+      status: 404,
+      message: 'Missing session',
+    });
+  });
+
+  it('handles submit 410 expired branch', async () => {
+    const fetchMock = jest.fn() as FetchMock;
+    fetchMock.mockResolvedValue(
+      makeResponse({ detail: 'Expired session' }, 410),
+    );
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const { submitCandidateTask, HttpError } = await importApi();
+
+    await expect(
+      submitCandidateTask({
+        taskId: 9,
+        token: 'tok',
+        candidateSessionId: 1,
+      }),
+    ).rejects.toBeInstanceOf(HttpError);
+    await expect(
+      submitCandidateTask({
+        taskId: 9,
+        token: 'tok',
+        candidateSessionId: 1,
+      }),
+    ).rejects.toMatchObject({ status: 410 });
+  });
 });
