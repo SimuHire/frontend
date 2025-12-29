@@ -108,8 +108,8 @@ export default function CandidateSessionPageClient({
 
   const bootstrap = state.bootstrap as CandidateSessionBootstrapResponse | null;
 
-  const title = useMemo(() => bootstrap?.simulation.title ?? '', [bootstrap]);
-  const role = useMemo(() => bootstrap?.simulation.role ?? '', [bootstrap]);
+  const title = useMemo(() => bootstrap?.simulation?.title ?? '', [bootstrap]);
+  const role = useMemo(() => bootstrap?.simulation?.role ?? '', [bootstrap]);
 
   const candidateSessionId = bootstrap?.candidateSessionId ?? null;
 
