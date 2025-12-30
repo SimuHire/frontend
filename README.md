@@ -1,126 +1,67 @@
 # SimuHire Frontend
 
-Next.js frontend for SimuHire, a simulation-based hiring platform. Candidates complete a 5-day task sequence via invite tokens; recruiters create simulations, invite candidates, and review their submissions.
+Next.js App Router (React 19 + TypeScript) UI for SimuHire’s 5-day work simulations. Candidates complete day-by-day tasks via invite tokens; recruiters create simulations, invite candidates, and review submissions.
 
 ## Architecture
 
-- **Framework**: Next.js App Router (React 19) with server/client components.
-- **Auth**: Auth0 for recruiter portal; middleware guards everything except marketing, auth callback pages, and candidate routes.
-- **Routing**: Segmented app folders for marketing `(marketing)`, candidate `(candidate)`, auth `(auth)`, and recruiter dashboard `(dashboard)`.
-- **Data access**:
-  - Candidate portal talks directly to the backend using `NEXT_PUBLIC_API_BASE_URL` and candidate token headers.
-  - Recruiter portal uses Next API routes as a BFF that forward to the backend with Auth0 access tokens.
-- **UI**: Tailwind utility classes with shared primitives in `src/components/ui` (Button, Input, CodeEditor, PageHeader).
-- **State**: Local React state plus a candidate session context (`CandidateSessionProvider`) that persists token/bootstrap state in `sessionStorage`; no global store.
+- App Router under `src/app`; shared shell in `src/features/shared/layout/AppShell`.
+- Auth0 for recruiter portal; `src/middleware.ts` redirects unauthenticated recruiters to `/auth/login?returnTo=…`.
+- Candidate portal talks directly to the backend with token headers. Recruiter portal uses Next API routes as a BFF that forward to the backend with Auth0 access tokens.
+- Styling via Tailwind utility classes and shared UI primitives in `src/components/ui`.
 
-## Domain Concepts
+## Routes
 
-- **Simulation**: 5-day scenario with ordered tasks (design, code, debug, handoff, documentation).
-- **Task**: Daily assignment; type drives which input (text vs code) is shown.
-- **Candidate Session**: Invite token–secured session tracking status, current task, and completion.
-- **Submission**: Candidate’s response per task; text and/or code payloads sent to the backend.
-- **Execution Profile**: Referenced in recruiter listings as `hasReport`; not rendered in the UI yet.
+- Marketing: `/` (`src/app/(marketing)/page.tsx`).
+- Auth: `/auth/login`, `/auth/logout`.
+- Candidate portal: `/candidate-sessions/[token]` (wrapped by `CandidateSessionProvider` layout).
+- Recruiter portal: `/dashboard`, `/dashboard/simulations/new`, `/dashboard/simulations/[id]`, `/dashboard/simulations/[id]/candidates/[candidateSessionId]`.
+- API BFF: `/api/simulations` (+ `/[id]/invite`, `/[id]/candidates`), `/api/submissions`, `/api/submissions/[submissionId]`, `/api/dev/access-token`.
 
-## App Overview (UI)
+## Key Components & Features
 
-- Marketing: Signed-in/out homepage variants with CTA links for recruiter login or demo candidate portal.
-- Auth: `/login` and `/logout` pages that link to Auth0 flows; helpers build `/auth/login` and `/auth/logout` URLs.
-- Candidate portal:
-  - `/candidate/[token]` resolves invite, shows intro, starts simulation, fetches current task, saves drafts locally, submits tasks, and advances through the 5-day sequence.
-  - `/candidate/session/[token]` redirects to the main candidate route (shim).
-- Recruiter portal:
-  - `/dashboard` loads recruiter profile and simulations list.
-  - `/dashboard/simulations/new` creates a simulation (title, role, tech stack, seniority, optional focus).
-  - `/dashboard/simulations/[id]` lists candidate sessions with status and links to submissions.
-  - `/dashboard/simulations/[id]/candidates/[candidateSessionId]` shows per-task submission artifacts (text/code/test results if present) with copy/download for code.
+- Candidate session state: `src/features/candidate/session/CandidateSessionProvider` persists token/bootstrap in `sessionStorage`.
+- Candidate flow: bootstrap token → intro → current task fetch → text/code editor with local drafts → submit → progress tracker; friendly error messages and retry hooks.
+- Recruiter dashboard: `DashboardView` + `SimulationList` with invite modal/toast, profile card, and navigation to creation/detail/submission views.
+- Submissions viewer: renders per-day artifacts (prompt, text, code with copy/download, testResults JSON if present).
 
-## API Overview (Frontend usage)
+## API Integration
 
-- Candidate (direct to backend via `NEXT_PUBLIC_API_BASE_URL`):
-  - `GET /candidate/session/{token}` bootstrap invite.
-  - `GET /candidate/session/{id}/current_task` with `x-candidate-token` header.
-  - `POST /tasks/{taskId}/submit` with headers `x-candidate-token` and `x-candidate-session-id`; body includes `contentText` and/or `codeBlob`.
-- Recruiter (via Next API BFF requiring Auth0 session):
-  - `GET /api/auth/me` (server-side in `/dashboard`).
+- Base config: `NEXT_PUBLIC_API_BASE_URL` (defaults to `/api`); BFF targets `BACKEND_BASE_URL` (default `http://localhost:8000`).
+- Candidate calls (direct):
+  - `GET /candidate/session/{token}` bootstrap.
+  - `GET /candidate/session/{id}/current_task` with header `x-candidate-token`.
+  - `POST /tasks/{taskId}/submit` with headers `x-candidate-token`, `x-candidate-session-id`; body `{contentText?, codeBlob?}`.
+- Recruiter calls (via BFF with Auth0 bearer token):
+  - `GET /api/auth/me` (profile).
   - `GET/POST /api/simulations`.
   - `POST /api/simulations/{id}/invite`.
   - `GET /api/simulations/{id}/candidates`.
-  - `GET /api/submissions?candidateSessionId=...`.
-  - `GET /api/submissions/{submissionId}`.
+  - `GET /api/submissions?candidateSessionId=…`, `GET /api/submissions/{submissionId}`.
+- Not implemented: codespace init/status, run-tests polling UI, execution profile fetch.
 
-Auth notes:
+## Configuration / Env Vars
 
-- Recruiter routes depend on Auth0 session; middleware redirects unauthenticated users to `/auth/login?returnTo=...`.
-- Candidate routes rely on the invite token + session id headers; no Auth0.
+- `NEXT_PUBLIC_API_BASE_URL` – backend base for candidate calls (e.g., `https://backend.example.com/api`).
+- `BACKEND_BASE_URL` – backend base for BFF (default `http://localhost:8000`; `/api` suffix trimmed).
+- Auth0: `AUTH0_SECRET`, `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_AUDIENCE`, `AUTH0_SCOPE`, `APP_BASE_URL`.
+- Optional helper script: `./runFrontend.sh` echoes `BACKEND_BASE_URL` then runs `npm run dev`.
 
 ## Local Development
 
-### Prereqs
-
-- Node.js 18+ and npm.
-
-### Setup
-
-```bash
-npm install
-cp .env.example .env.local  # if present; otherwise set vars below
-```
-
-### Run the app
-
-```bash
-npm run dev  # http://localhost:3000
-```
-
-### Tests and checks
-
-```bash
-npm test          # unit (Jest)
-npm run test:e2e  # Playwright (see tests/e2e/playwright.config.ts)
-npm run typecheck
-npm run lint
-npm run build
-./precommit.sh    # runs lint + tests + typecheck + build
-```
-
-## Configuration
-
-Key env vars (set in `.env.local`):
-
-- `NEXT_PUBLIC_API_BASE_URL` – backend base for candidate calls (e.g., `https://backend.example.com/api`).
-- `BACKEND_BASE_URL` – backend base for recruiter BFF forwarding (default `http://localhost:8000`); no trailing slash.
-- Auth0:
-  - `AUTH0_SECRET`, `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`
-  - `AUTH0_AUDIENCE`, `AUTH0_SCOPE` (optional depending on tenant setup)
-  - `APP_BASE_URL` (e.g., `http://localhost:3000`)
-
-## Code Structure
-
-- `src/app` – App Router pages and API routes (BFF forwarders).
-- `src/features/candidate` – session provider, task UI, drafts, submit flow.
-- `src/features/recruiter` – dashboard, simulations, invitations, candidate lists, submissions viewer.
-- `src/features/auth` – login/logout pages and link helpers.
-- `src/features/marketing` – marketing homepage variants.
-- `src/features/shared/layout` – header/nav shell.
-- `src/components/ui` – shared UI primitives (Button, Input, CodeEditor, PageHeader).
-- `src/lib/api` – HTTP client and candidate/recruiter API helpers.
-- `src/lib/server` – BFF forwarding helpers.
-- `src/lib/storage` – candidate draft persistence helpers.
-
-## Quality and Tooling
-
-- TypeScript strictness with Jest for units/integration; Playwright for E2E.
-- ESLint + Prettier enforced via `./precommit.sh`; commit after this script passes.
-- Tailwind for styling with shared UI primitives; prefer reusing `src/components/ui` rather than ad-hoc classes.
-- Avoid adding comments due to repo lint rules (`no-comments/disallowComments`).
+- Install: `npm install`.
+- Run dev: `npm run dev` (<http://localhost:3000>). Build: `npm run build`; start: `npm start`.
+- Tests/checks: `npm test`, `npm run test:coverage`, `npm run test:e2e`, `npm run typecheck`, `npm run lint`, `./precommit.sh`.
+- Point to local backend: set `BACKEND_BASE_URL` and `NEXT_PUBLIC_API_BASE_URL` in `.env.local`.
 
 ## Typical Flows
 
-- **Candidate journey**: Open invite link → bootstrap session → intro → fetch current task → auto-save drafts (text/code) → submit with token + session headers → refresh current task → complete after 5 submissions.
-- **Recruiter journey**: Auth0 login → dashboard lists simulations → create simulation → invite candidate (modal + copy invite URL) → monitor candidate list per simulation → view per-task submissions (copy/download code, view test results if present).
+- Candidate: open invite link → bootstrap session → intro → load current task → auto-save drafts → submit with token/session headers → refresh current task → finish when `isComplete` true.
+- Recruiter: Auth0 login → dashboard loads profile + simulations → create simulation → invite candidate (modal + copy invite URL) → view simulation candidates (status/time) → view per-task submissions (text/code/testResults).
 
-## Future Work / Gaps
+## Planned Roadmap (not yet in code)
 
-- Candidate “Run Tests” UX is not implemented (only submit).
-- Execution profile/comparison/print views are absent; `hasReport` is surfaced but not rendered.
-- Broader notifications/toasts and skeleton states could improve UX.
+- Email verification before unlocking sessions.
+- GitHub-native workflow: codespace init/status, run-tests trigger + duplicate-run prevention UI.
+- Day4 demo capture + transcript; Day5 structured markdown submission.
+- Execution profile/report view, comparison, and print/export.
+- Candidate run-tests panel integration and richer states/loading skeletons.
