@@ -16,12 +16,17 @@ export function MarketingHomeSignedOut() {
       </div>
 
       <ActionRow align="center">
-        <LoginLink returnTo="/dashboard" className={primaryCtaClass}>
+        <LoginLink
+          returnTo="/dashboard"
+          mode="recruiter"
+          className={primaryCtaClass}
+        >
           Recruiter login
         </LoginLink>
 
         <LoginLink
-          returnTo="/candidate-sessions/demo-token"
+          returnTo="/candidate/dashboard"
+          mode="candidate"
           className={secondaryCtaClass}
         >
           Candidate portal

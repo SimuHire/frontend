@@ -4,9 +4,10 @@ import { contentContainer } from './layoutStyles';
 
 type AppHeaderProps = {
   isAuthed: boolean;
+  permissions?: string[];
 };
 
-export function AppHeader({ isAuthed }: AppHeaderProps) {
+export function AppHeader({ isAuthed, permissions = [] }: AppHeaderProps) {
   return (
     <header className="border-b bg-white">
       <div
@@ -15,7 +16,7 @@ export function AppHeader({ isAuthed }: AppHeaderProps) {
         <Link href="/" className="text-lg font-semibold tracking-tight">
           SimuHire
         </Link>
-        <AppNav isAuthed={isAuthed} />
+        <AppNav isAuthed={isAuthed} permissions={permissions} />
       </div>
     </header>
   );

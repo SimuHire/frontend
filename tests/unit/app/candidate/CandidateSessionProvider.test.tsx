@@ -10,7 +10,10 @@ const STORAGE_KEY = 'simuhire:candidate_session_v1';
 function Harness() {
   const {
     state,
+    setInviteToken,
     setToken,
+    setVerifiedEmail,
+    setCandidateSessionId,
     setStarted,
     setTaskLoading,
     setTaskError,
@@ -21,10 +24,20 @@ function Harness() {
 
   return (
     <div>
+      <div data-testid="invite-token">{state.inviteToken ?? 'none'}</div>
       <div data-testid="token">{state.token ?? 'none'}</div>
+      <div data-testid="candidate-session-id">
+        {state.candidateSessionId ?? 'none'}
+      </div>
+      <div data-testid="verified-email">{state.verifiedEmail ?? 'none'}</div>
       <div data-testid="started">{String(state.started)}</div>
       <div data-testid="task-error">{state.taskState.error ?? 'none'}</div>
+      <button onClick={() => setInviteToken('invite_tok')}>set-invite</button>
       <button onClick={() => setToken('tok_abc')}>set-token</button>
+      <button onClick={() => setCandidateSessionId(42)}>set-session</button>
+      <button onClick={() => setVerifiedEmail('user@example.com')}>
+        set-email
+      </button>
       <button onClick={() => setStarted(true)}>start</button>
       <button
         onClick={() => {
@@ -68,7 +81,9 @@ describe('CandidateSessionProvider', () => {
     sessionStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        token: 'persisted-token',
+        inviteToken: 'invite_tok',
+        candidateSessionId: 55,
+        verifiedEmail: 'user@example.com',
         bootstrap: {
           candidateSessionId: 10,
           status: 'in_progress',
@@ -80,19 +95,29 @@ describe('CandidateSessionProvider', () => {
 
     renderHarness();
 
-    expect(screen.getByTestId('token')).toHaveTextContent('persisted-token');
+    expect(screen.getByTestId('invite-token')).toHaveTextContent('invite_tok');
+    expect(screen.getByTestId('candidate-session-id')).toHaveTextContent('55');
+    expect(screen.getByTestId('verified-email')).toHaveTextContent(
+      'user@example.com',
+    );
     expect(screen.getByTestId('started')).toHaveTextContent('true');
   });
 
   it('persists updates to sessionStorage when state changes', () => {
     renderHarness();
 
+    fireEvent.click(screen.getByText('set-invite'));
     fireEvent.click(screen.getByText('set-token'));
+    fireEvent.click(screen.getByText('set-session'));
+    fireEvent.click(screen.getByText('set-email'));
     fireEvent.click(screen.getByText('start'));
     fireEvent.click(screen.getByText('load-task'));
 
     const persisted = JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? '{}');
-    expect(persisted.token).toBe('tok_abc');
+    expect(persisted.inviteToken).toBe('invite_tok');
+    expect(persisted.token).toBeUndefined();
+    expect(persisted.candidateSessionId).toBe(42);
+    expect(persisted.verifiedEmail).toBe('user@example.com');
     expect(persisted.started).toBe(true);
   });
 
@@ -120,10 +145,14 @@ describe('CandidateSessionProvider', () => {
   it('resets state back to initial values', () => {
     renderHarness();
 
+    fireEvent.click(screen.getByText('set-invite'));
     fireEvent.click(screen.getByText('set-token'));
+    fireEvent.click(screen.getByText('set-email'));
     fireEvent.click(screen.getByText('reset'));
 
+    expect(screen.getByTestId('invite-token')).toHaveTextContent('none');
     expect(screen.getByTestId('token')).toHaveTextContent('none');
+    expect(screen.getByTestId('verified-email')).toHaveTextContent('none');
     expect(screen.getByTestId('started')).toHaveTextContent('false');
   });
 });

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=14000}"
+
 echo "Running lint..."
 npm run lint
 
@@ -15,6 +17,7 @@ export RESET_COLOR="$RESET"
 echo "Checking coverage threshold (>=85%)..."
 coverage_summary="coverage/coverage-summary.json"
 
+export COVERAGE_TARGET=85
 node scripts/checkCoverage.js
 
 echo "Running typecheck..."

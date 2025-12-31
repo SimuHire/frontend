@@ -14,23 +14,25 @@ Next.js App Router (React 19 + TypeScript) UI for SimuHire’s 5-day work simula
 - Marketing: `/` (`src/app/(marketing)/page.tsx`).
 - Auth: `/auth/login`, `/auth/logout`.
 - Candidate portal: `/candidate-sessions/[token]` (wrapped by `CandidateSessionProvider` layout).
+- Candidate dashboard: `/candidate/dashboard`.
 - Recruiter portal: `/dashboard`, `/dashboard/simulations/new`, `/dashboard/simulations/[id]`, `/dashboard/simulations/[id]/candidates/[candidateSessionId]`.
 - API BFF: `/api/simulations` (+ `/[id]/invite`, `/[id]/candidates`), `/api/submissions`, `/api/submissions/[submissionId]`, `/api/dev/access-token`.
 
 ## Key Components & Features
 
 - Candidate session state: `src/features/candidate/session/CandidateSessionProvider` persists token/bootstrap in `sessionStorage`.
-- Candidate flow: bootstrap token → intro → current task fetch → text/code editor with local drafts → submit → progress tracker; friendly error messages and retry hooks.
+- Candidate flow: verify invite email → bootstrap session → intro → current task fetch → text/code editor with local drafts → submit → progress tracker; friendly error messages and retry hooks.
 - Recruiter dashboard: `DashboardView` + `SimulationList` with invite modal/toast, profile card, and navigation to creation/detail/submission views.
 - Submissions viewer: renders per-day artifacts (prompt, text, code with copy/download, testResults JSON if present).
 
 ## API Integration
 
 - Base config: `NEXT_PUBLIC_API_BASE_URL` (defaults to `/api`); BFF targets `BACKEND_BASE_URL` (default `http://localhost:8000`).
-- Candidate calls (direct):
-  - `GET /candidate/session/{token}` bootstrap.
-  - `GET /candidate/session/{id}/current_task` with header `x-candidate-token`.
-  - `POST /tasks/{taskId}/submit` with headers `x-candidate-token`, `x-candidate-session-id`; body `{contentText?, codeBlob?}`.
+- Candidate calls (direct with Auth0 bearer + `candidate:access`):
+  - `GET /candidate/session/{token}` bootstrap/resolve invite.
+  - `POST /candidate/session/{token}/verify` with body `{ email }`.
+  - `GET /candidate/session/{id}/current_task` with header `x-candidate-session-id`.
+  - `POST /tasks/{taskId}/submit` with header `x-candidate-session-id`; body `{contentText?, codeBlob?}`.
 - Recruiter calls (via BFF with Auth0 bearer token):
   - `GET /api/auth/me` (profile).
   - `GET/POST /api/simulations`.
@@ -44,6 +46,9 @@ Next.js App Router (React 19 + TypeScript) UI for SimuHire’s 5-day work simula
 - `NEXT_PUBLIC_API_BASE_URL` – backend base for candidate calls (e.g., `https://backend.example.com/api`).
 - `BACKEND_BASE_URL` – backend base for BFF (default `http://localhost:8000`; `/api` suffix trimmed).
 - Auth0: `AUTH0_SECRET`, `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_AUDIENCE`, `AUTH0_SCOPE`, `APP_BASE_URL`.
+- Optional Auth0 connection hints for the login button intent routing:
+  - `NEXT_PUBLIC_AUTH0_CANDIDATE_CONNECTION`
+  - `NEXT_PUBLIC_AUTH0_RECRUITER_CONNECTION`
 - Optional helper script: `./runFrontend.sh` echoes `BACKEND_BASE_URL` then runs `npm run dev`.
 
 ## Local Development
@@ -60,8 +65,18 @@ Next.js App Router (React 19 + TypeScript) UI for SimuHire’s 5-day work simula
 
 ## Planned Roadmap (not yet in code)
 
-- Email verification before unlocking sessions.
 - GitHub-native workflow: codespace init/status, run-tests trigger + duplicate-run prevention UI.
 - Day4 demo capture + transcript; Day5 structured markdown submission.
 - Execution profile/report view, comparison, and print/export.
 - Candidate run-tests panel integration and richer states/loading skeletons.
+
+## Manual QA checklist
+
+- Incognito candidate invite link → Auth0 login → claim → redirect to `/candidate/dashboard` with session stored.
+- Wrong email on claim shows friendly error and blocks task access.
+- Correct email claim stores `candidateSessionId` and allows returning to tasks via the invite link.
+- Candidate signup/login lands on `/candidate/dashboard` from the home CTA.
+- Recruiter signup/login lands on `/dashboard` from the home CTA.
+- Candidate trying recruiter dashboard sees Not authorized with links to the right portal.
+- Recruiter trying candidate portal sees Not authorized with dashboard link.
+- Verify Auth0 `/authorize` request includes the correct `connection` parameter for the candidate flow.

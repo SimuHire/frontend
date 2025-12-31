@@ -45,14 +45,20 @@ type TaskState = {
 };
 
 type CandidateSessionState = {
+  inviteToken: string | null;
   token: string | null;
+  verifiedEmail: string | null;
+  candidateSessionId: number | null;
   bootstrap: CandidateBootstrap | null;
   started: boolean;
   taskState: TaskState;
 };
 
 type Action =
+  | { type: 'SET_INVITE_TOKEN'; inviteToken: string }
   | { type: 'SET_TOKEN'; token: string }
+  | { type: 'SET_VERIFIED_EMAIL'; email: string }
+  | { type: 'SET_CANDIDATE_SESSION_ID'; candidateSessionId: number | null }
   | { type: 'SET_BOOTSTRAP'; bootstrap: CandidateBootstrap }
   | { type: 'SET_STARTED'; started: boolean }
   | { type: 'RESET' }
@@ -77,7 +83,10 @@ const initialTaskState: TaskState = {
 };
 
 const initialState: CandidateSessionState = {
+  inviteToken: null,
   token: null,
+  verifiedEmail: null,
+  candidateSessionId: null,
   bootstrap: null,
   started: false,
   taskState: initialTaskState,
@@ -88,9 +97,21 @@ function reducer(
   action: Action,
 ): CandidateSessionState {
   switch (action.type) {
+    case 'SET_INVITE_TOKEN':
+      if (state.inviteToken === action.inviteToken) return state;
+      return { ...state, inviteToken: action.inviteToken };
+
     case 'SET_TOKEN':
       if (state.token === action.token) return state;
       return { ...state, token: action.token };
+
+    case 'SET_VERIFIED_EMAIL':
+      if (state.verifiedEmail === action.email) return state;
+      return { ...state, verifiedEmail: action.email };
+
+    case 'SET_CANDIDATE_SESSION_ID':
+      if (state.candidateSessionId === action.candidateSessionId) return state;
+      return { ...state, candidateSessionId: action.candidateSessionId };
 
     case 'SET_BOOTSTRAP':
       if (state.bootstrap === action.bootstrap) return state;
@@ -139,7 +160,10 @@ function reducer(
 
 type Ctx = {
   state: CandidateSessionState;
+  setInviteToken: (token: string) => void;
   setToken: (token: string) => void;
+  setVerifiedEmail: (email: string) => void;
+  setCandidateSessionId: (id: number | null) => void;
   setBootstrap: (b: CandidateBootstrap) => void;
   setStarted: (started: boolean) => void;
   reset: () => void;
@@ -159,7 +183,9 @@ const CandidateSessionContext = createContext<Ctx | null>(null);
 const STORAGE_KEY = 'simuhire:candidate_session_v1';
 
 type PersistedState = {
-  token: string | null;
+  inviteToken: string | null;
+  verifiedEmail: string | null;
+  candidateSessionId: number | null;
   bootstrap: CandidateBootstrap | null;
   started: boolean;
 };
@@ -171,8 +197,22 @@ export function CandidateSessionProvider({
 }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  const setInviteToken = useCallback(
+    (token: string) =>
+      dispatch({ type: 'SET_INVITE_TOKEN', inviteToken: token }),
+    [],
+  );
   const setToken = useCallback(
     (token: string) => dispatch({ type: 'SET_TOKEN', token }),
+    [],
+  );
+  const setVerifiedEmail = useCallback(
+    (email: string) => dispatch({ type: 'SET_VERIFIED_EMAIL', email }),
+    [],
+  );
+  const setCandidateSessionId = useCallback(
+    (candidateSessionId: number | null) =>
+      dispatch({ type: 'SET_CANDIDATE_SESSION_ID', candidateSessionId }),
     [],
   );
   const setBootstrap = useCallback(
@@ -213,8 +253,23 @@ export function CandidateSessionProvider({
       if (!raw) return;
 
       const parsed = JSON.parse(raw) as Partial<PersistedState>;
-      if (typeof parsed?.token === 'string' && parsed.token) {
-        dispatch({ type: 'SET_TOKEN', token: parsed.token });
+      if (typeof parsed?.inviteToken === 'string' && parsed.inviteToken) {
+        dispatch({ type: 'SET_INVITE_TOKEN', inviteToken: parsed.inviteToken });
+      }
+      if (
+        typeof parsed?.verifiedEmail === 'string' &&
+        parsed.verifiedEmail.trim()
+      ) {
+        dispatch({
+          type: 'SET_VERIFIED_EMAIL',
+          email: parsed.verifiedEmail.trim(),
+        });
+      }
+      if (typeof parsed?.candidateSessionId === 'number') {
+        dispatch({
+          type: 'SET_CANDIDATE_SESSION_ID',
+          candidateSessionId: parsed.candidateSessionId,
+        });
       }
       if (parsed?.bootstrap) {
         dispatch({
@@ -231,18 +286,29 @@ export function CandidateSessionProvider({
   useEffect(() => {
     try {
       const toPersist: PersistedState = {
-        token: state.token,
+        inviteToken: state.inviteToken,
+        verifiedEmail: state.verifiedEmail,
+        candidateSessionId: state.candidateSessionId,
         bootstrap: state.bootstrap,
         started: state.started,
       };
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(toPersist));
     } catch {}
-  }, [state.token, state.bootstrap, state.started]);
+  }, [
+    state.bootstrap,
+    state.inviteToken,
+    state.started,
+    state.candidateSessionId,
+    state.verifiedEmail,
+  ]);
 
   const value = useMemo<Ctx>(
     () => ({
       state,
+      setInviteToken,
       setToken,
+      setVerifiedEmail,
+      setCandidateSessionId,
       setBootstrap,
       setStarted,
       reset,
@@ -254,6 +320,8 @@ export function CandidateSessionProvider({
     }),
     [
       clearTaskError,
+      setInviteToken,
+      setCandidateSessionId,
       reset,
       setBootstrap,
       setStarted,
@@ -261,6 +329,7 @@ export function CandidateSessionProvider({
       setTaskLoaded,
       setTaskLoading,
       setToken,
+      setVerifiedEmail,
       state,
     ],
   );
