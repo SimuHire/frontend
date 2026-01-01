@@ -1,18 +1,20 @@
 import { ReactNode } from 'react';
-import { buildLoginHref } from './authPaths';
+import { buildLoginHref, type LoginMode } from './authPaths';
 
 type LoginLinkProps = {
   returnTo?: string;
+  mode?: LoginMode;
   className?: string;
   children: ReactNode;
 };
 
 export default function LoginLink({
   returnTo,
+  mode,
   className,
   children,
 }: LoginLinkProps) {
-  const href = buildLoginHref(returnTo);
+  const href = buildLoginHref(returnTo, mode);
   return (
     <a href={href} className={className}>
       {children}

@@ -10,8 +10,8 @@ describe('PublicHomeContent', () => {
       screen.getByRole('link', { name: 'Go to dashboard' }),
     ).toHaveAttribute('href', '/dashboard');
     expect(
-      screen.getByRole('link', { name: 'Open candidate simulation (demo)' }),
-    ).toHaveAttribute('href', '/candidate-sessions/demo-token');
+      screen.getByRole('link', { name: 'Candidate portal' }),
+    ).toHaveAttribute('href', '/candidate/dashboard');
     expect(screen.getByRole('link', { name: 'Logout' })).toHaveAttribute(
       'href',
       '/auth/logout',
@@ -24,12 +24,15 @@ describe('PublicHomeContent', () => {
     expect(screen.getByText('Welcome to SimuHire')).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Recruiter login' }),
-    ).toHaveAttribute('href', '/auth/login?returnTo=%2Fdashboard');
+    ).toHaveAttribute(
+      'href',
+      '/auth/login?returnTo=%2Fdashboard&mode=recruiter',
+    );
     expect(
       screen.getByRole('link', { name: 'Candidate portal' }),
     ).toHaveAttribute(
       'href',
-      '/auth/login?returnTo=%2Fcandidate-sessions%2Fdemo-token',
+      '/auth/login?returnTo=%2Fcandidate%2Fdashboard&mode=candidate',
     );
   });
 

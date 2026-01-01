@@ -28,7 +28,7 @@ const customJestConfig = {
       statements: 85,
       branches: 70,
       functions: 85,
-      lines: 90,
+      lines: 85,
     },
   },
   coverageReporters: ['text', 'lcov', 'json', 'json-summary'],

@@ -1,25 +1,25 @@
-import { act, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import CandidateSessionPage from '@/features/candidate/session/CandidateSessionPage';
-import { jsonResponse } from '../../setup/responseHelpers';
 import { renderCandidateWithProviders } from '../../setup';
+import { jsonResponse } from '../../setup/responseHelpers';
 
-jest.mock('@/components/ui/CodeEditor', () => ({
-  __esModule: true,
-  default: ({
-    value,
-    onChange,
-  }: {
-    value: string;
-    onChange: (v: string) => void;
-  }) => (
-    <textarea
-      data-testid="code-editor"
-      aria-label="Code editor"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  ),
+const routerMock = {
+  push: jest.fn(),
+  refresh: jest.fn(),
+  replace: jest.fn(),
+  prefetch: jest.fn(),
+  back: jest.fn(),
+  forward: jest.fn(),
+};
+
+jest.mock('next/navigation', () => ({
+  useRouter: () => routerMock,
+}));
+
+jest.mock('@auth0/nextjs-auth0/client', () => ({
+  getAccessToken: jest.fn().mockResolvedValue('auth-token'),
+  useUser: () => ({ user: { email: 'prefill@example.com' } }),
 }));
 
 const fetchMock = jest.fn();
@@ -28,110 +28,81 @@ const realFetch = global.fetch;
 beforeEach(() => {
   fetchMock.mockReset();
   global.fetch = fetchMock as unknown as typeof fetch;
+  Object.values(routerMock).forEach((fn) => fn.mockReset());
   sessionStorage.clear();
-});
-
-afterEach(() => {
-  jest.useRealTimers();
 });
 
 afterAll(() => {
   global.fetch = realFetch;
 });
 
-describe('CandidateSessionPage (real task view)', () => {
-  it('loads bootstrap, walks Day 1 → Day 2 progression, and validates code submissions', async () => {
-    jest.useFakeTimers();
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-
-    fetchMock
-      .mockImplementationOnce(async () =>
-        jsonResponse({
+describe('CandidateSessionPage (auth flow)', () => {
+  it('auto-claims the invite and loads the current task', async () => {
+    fetchMock.mockImplementation(async (url: RequestInfo | URL) => {
+      if (String(url).includes('/claim')) {
+        return jsonResponse({
           candidateSessionId: 321,
           status: 'in_progress',
           simulation: { title: 'Infra Simulation', role: 'Backend Engineer' },
-        }),
-      )
-      .mockImplementationOnce(async () =>
-        jsonResponse({
+        });
+      }
+      if (String(url).includes('/current_task')) {
+        return jsonResponse({
           isComplete: false,
           completedTaskIds: [],
           currentTask: {
-            id: 101,
+            id: 10,
             dayIndex: 1,
             type: 'design',
-            title: 'Day 1 — Architecture',
-            description: 'Describe your plan.',
+            title: 'Task One',
+            description: 'Do it',
           },
-        }),
-      )
-      .mockImplementationOnce(async (_input, init) => {
-        const body = JSON.parse((init?.body as string) ?? '{}') as {
-          contentText?: string;
-        };
-        return jsonResponse({
-          submissionId: 1,
-          taskId: 101,
-          candidateSessionId: 321,
-          submittedAt: '2025-01-01T00:00:00Z',
-          progress: { completed: 1, total: 5 },
-          isComplete: false,
-          received: body.contentText,
         });
-      })
-      .mockImplementationOnce(async () =>
-        jsonResponse({
-          isComplete: false,
-          completedTaskIds: [101],
-          currentTask: {
-            id: 202,
-            dayIndex: 2,
-            type: 'debug',
-            title: 'Day 2 — Debug',
-            description: 'Fix the failing tests.',
-          },
+      }
+      throw new Error(`Unexpected fetch ${String(url)}`);
+    });
+
+    const user = userEvent.setup();
+    renderCandidateWithProviders(<CandidateSessionPage token="valid-token" />);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/candidate/session/valid-token/claim',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer auth-token',
         }),
-      );
+      }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/candidate/session/321/current_task',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer auth-token',
+        }),
+      }),
+    );
+
+    const startBtn = await screen.findByRole('button', {
+      name: /Start simulation/i,
+    });
+    await user.click(startBtn);
+
+    expect(await screen.findByText('Task One')).toBeInTheDocument();
+  });
+
+  it('surfaces wrong-account state on claim 403', async () => {
+    fetchMock.mockImplementation(async () =>
+      jsonResponse({ message: 'invite@example.com' }, 403),
+    );
 
     renderCandidateWithProviders(<CandidateSessionPage token="valid-token" />);
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    expect(await screen.findByText('Infra Simulation')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /start simulation/i }));
-
-    expect(await screen.findByText('Day 1 — Architecture')).toBeInTheDocument();
-
-    await user.type(
-      screen.getByPlaceholderText(/write your response here/i),
-      'Day 1 answer',
-    );
-    await user.click(
-      screen.getByRole('button', { name: /submit & continue/i }),
-    );
-
-    const submitCall = fetchMock.mock.calls[2];
-    expect(submitCall?.[1]).toMatchObject({ method: 'POST' });
-    expect(JSON.parse((submitCall?.[1]?.body as string) ?? '{}')).toMatchObject(
-      { contentText: 'Day 1 answer' },
-    );
-
-    await act(async () => {
-      jest.advanceTimersByTime(900);
-    });
-
-    expect(await screen.findByText('Day 2 — Debug')).toBeInTheDocument();
-    expect(screen.getAllByText(/Completed/i)).toHaveLength(1);
-    expect(screen.getByText(/Current/i)).toBeInTheDocument();
-
-    await user.clear(screen.getByTestId('code-editor'));
-    await user.type(screen.getByTestId('code-editor'), '   ');
-    await user.click(
-      screen.getByRole('button', { name: /submit & continue/i }),
-    );
-
+    expect(await screen.findByText(/invite@example.com/i)).toBeInTheDocument();
     expect(
-      await screen.findByText(/Please write some code before submitting/i),
+      screen.getByRole('button', { name: /Log out/i }),
     ).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

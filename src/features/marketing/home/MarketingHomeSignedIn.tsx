@@ -19,11 +19,8 @@ export function MarketingHomeSignedIn({ name }: { name?: string | null }) {
           Go to dashboard
         </Link>
 
-        <Link
-          href="/candidate-sessions/demo-token"
-          className={secondaryCtaClass}
-        >
-          Open candidate simulation (demo)
+        <Link href="/candidate/dashboard" className={secondaryCtaClass}>
+          Candidate portal
         </Link>
 
         <Link href="/auth/logout" className={secondaryCtaClass}>
