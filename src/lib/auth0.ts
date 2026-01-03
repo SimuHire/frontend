@@ -1,18 +1,87 @@
 import { Buffer } from 'buffer';
 import { Auth0Client } from '@auth0/nextjs-auth0/server';
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
+import { normalizeUserClaims } from '@/lib/auth0-claims';
+import {
+  CUSTOM_CLAIM_PERMISSIONS,
+  CUSTOM_CLAIM_PERMISSIONS_STR,
+  CUSTOM_CLAIM_ROLES,
+} from '@/lib/brand';
 
-function hasAuth0Env() {
+type Auth0EnvConfig = {
+  secret?: string;
+  domain?: string;
+  clientId?: string;
+  clientSecret?: string;
+  appBaseUrl?: string;
+  audience?: string;
+  scope?: string;
+};
+
+function trimOrUndefined(value?: string | null) {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function issuerToDomain(issuer?: string) {
+  if (!issuer) return undefined;
+  try {
+    const url = new URL(issuer);
+    return url.host || undefined;
+  } catch {
+    return issuer.replace(/^https?:\/\//, '').replace(/\/+$/, '') || undefined;
+  }
+}
+
+function loadAuth0Env(): Auth0EnvConfig {
+  const issuerRaw =
+    trimOrUndefined(process.env.TENON_AUTH0_ISSUER_BASE_URL) ??
+    trimOrUndefined(process.env.AUTH0_ISSUER_BASE_URL);
+  const appBaseUrl =
+    trimOrUndefined(process.env.TENON_APP_BASE_URL) ??
+    trimOrUndefined(process.env.AUTH0_BASE_URL) ??
+    trimOrUndefined(process.env.APP_BASE_URL);
+
+  const domainFromIssuer = issuerToDomain(issuerRaw);
+
+  return {
+    secret:
+      trimOrUndefined(process.env.TENON_AUTH0_SECRET) ??
+      trimOrUndefined(process.env.AUTH0_SECRET),
+    domain:
+      trimOrUndefined(process.env.TENON_AUTH0_DOMAIN) ??
+      domainFromIssuer ??
+      trimOrUndefined(process.env.AUTH0_DOMAIN),
+    clientId:
+      trimOrUndefined(process.env.TENON_AUTH0_CLIENT_ID) ??
+      trimOrUndefined(process.env.AUTH0_CLIENT_ID),
+    clientSecret:
+      trimOrUndefined(process.env.TENON_AUTH0_CLIENT_SECRET) ??
+      trimOrUndefined(process.env.AUTH0_CLIENT_SECRET),
+    appBaseUrl,
+    audience:
+      trimOrUndefined(process.env.TENON_AUTH0_AUDIENCE) ??
+      trimOrUndefined(process.env.AUTH0_AUDIENCE),
+    scope:
+      trimOrUndefined(process.env.TENON_AUTH0_SCOPE) ??
+      trimOrUndefined(process.env.AUTH0_SCOPE),
+  };
+}
+
+const auth0Env = loadAuth0Env();
+
+function hasAuth0Env(config: Auth0EnvConfig) {
   return Boolean(
-    process.env.AUTH0_SECRET &&
-    process.env.AUTH0_DOMAIN &&
-    process.env.AUTH0_CLIENT_ID &&
-    process.env.AUTH0_CLIENT_SECRET &&
-    process.env.APP_BASE_URL,
+    config.secret &&
+    config.domain &&
+    config.clientId &&
+    config.clientSecret &&
+    config.appBaseUrl,
   );
 }
 
-function createClient() {
+function createClient(config: Auth0EnvConfig) {
   const toStringArray = (value: unknown): string[] =>
     Array.isArray(value)
       ? (value.filter((v) => typeof v === 'string') as string[])
@@ -67,20 +136,27 @@ function createClient() {
   };
 
   return new Auth0Client({
+    appBaseUrl: config.appBaseUrl,
+    domain: config.domain,
+    clientId: config.clientId,
+    clientSecret: config.clientSecret,
+    secret: config.secret,
     authorizationParameters: {
-      audience: process.env.AUTH0_AUDIENCE,
-      scope: process.env.AUTH0_SCOPE,
+      audience: config.audience,
+      scope: config.scope || 'openid profile email',
     },
     signInReturnToPath: '/dashboard',
     beforeSessionSaved: async (session, idToken) => {
-      const user = (session.user ?? {}) as Record<string, unknown>;
+      const user = normalizeUserClaims(
+        (session.user ?? {}) as Record<string, unknown>,
+      );
       const userPerms = [
-        ...toStringArray(user['https://simuhire.com/permissions']),
+        ...toStringArray(user[CUSTOM_CLAIM_PERMISSIONS]),
         ...toStringArray(user.permissions),
-        ...parsePermissionsString(user['https://simuhire.com/permissions_str']),
+        ...parsePermissionsString(user[CUSTOM_CLAIM_PERMISSIONS_STR]),
       ];
       const userRoles = toStringArray(
-        user['https://simuhire.com/roles'] ?? (user.roles as unknown),
+        user[CUSTOM_CLAIM_ROLES] ?? (user.roles as unknown),
       );
 
       const accessToken = normalizeAccessToken(
@@ -88,15 +164,12 @@ function createClient() {
       );
       const tokenClaims = decodeJwt(accessToken) ?? decodeJwt(idToken) ?? {};
       const tokenPerms = [
-        ...toStringArray(tokenClaims['https://simuhire.com/permissions']),
+        ...toStringArray(tokenClaims[CUSTOM_CLAIM_PERMISSIONS]),
         ...toStringArray(tokenClaims.permissions as unknown),
-        ...parsePermissionsString(
-          tokenClaims['https://simuhire.com/permissions_str'],
-        ),
+        ...parsePermissionsString(tokenClaims[CUSTOM_CLAIM_PERMISSIONS_STR]),
       ];
       const tokenRoles = toStringArray(
-        tokenClaims['https://simuhire.com/roles'] ??
-          (tokenClaims.roles as unknown),
+        tokenClaims[CUSTOM_CLAIM_ROLES] ?? (tokenClaims.roles as unknown),
       );
 
       const normalizedPerms =
@@ -109,27 +182,26 @@ function createClient() {
             ];
       const normalizedRoles = userRoles.length > 0 ? userRoles : tokenRoles;
 
+      const merged: Record<string, unknown> = {
+        ...user,
+        permissions:
+          normalizedPerms.length > 0 ? normalizedPerms : user.permissions,
+        roles: normalizedRoles.length > 0 ? normalizedRoles : user.roles,
+      };
       if (normalizedPerms.length > 0) {
-        session.user = {
-          ...session.user,
-          'https://simuhire.com/permissions': normalizedPerms,
-        };
+        merged[CUSTOM_CLAIM_PERMISSIONS] = normalizedPerms;
       }
-
       if (normalizedRoles.length > 0) {
-        session.user = {
-          ...session.user,
-          'https://simuhire.com/roles': normalizedRoles,
-        };
+        merged[CUSTOM_CLAIM_ROLES] = normalizedRoles;
       }
-
+      session.user = merged as typeof session.user;
       return session;
     },
   });
 }
 
-export const auth0 = hasAuth0Env()
-  ? createClient()
+export const auth0 = hasAuth0Env(auth0Env)
+  ? createClient(auth0Env)
   : {
       middleware: async () => NextResponse.next(),
       getSession: async () => null,
@@ -142,10 +214,35 @@ export const auth0 = hasAuth0Env()
 
 export const getAccessToken = async () => {
   const tokenResult = await auth0.getAccessToken();
+  const token =
+    typeof tokenResult === 'string'
+      ? tokenResult
+      : ((tokenResult as { token?: unknown })?.token ??
+        (tokenResult as { accessToken?: unknown })?.accessToken);
 
-  if (!tokenResult?.token) {
+  if (typeof token !== 'string' || !token) {
     throw new Error('No access token found in Auth0 session');
   }
 
-  return tokenResult.token;
+  return token;
+};
+
+export const getSessionNormalized = async (
+  request?: NextRequest,
+): Promise<
+  | (Awaited<ReturnType<typeof auth0.getSession>> & {
+      user?: Record<string, unknown>;
+    })
+  | null
+> => {
+  const session = request
+    ? await auth0.getSession(request)
+    : await auth0.getSession();
+  if (!session?.user) return session;
+  return {
+    ...session,
+    user: normalizeUserClaims(
+      session.user as Record<string, unknown>,
+    ) as typeof session.user,
+  };
 };
