@@ -13,6 +13,7 @@ const PUBLIC_PATHS = new Set([
 const PUBLIC_PREFIXES = ['/auth'];
 const CANDIDATE_PREFIXES = ['/candidate-sessions', '/candidate'];
 const RECRUITER_PREFIXES = ['/dashboard'];
+const IS_PROD = process.env.NODE_ENV === 'production';
 
 function isPublicPath(pathname: string) {
   if (PUBLIC_PATHS.has(pathname)) return true;
@@ -97,6 +98,14 @@ export async function proxy(request: NextRequest) {
   if (shouldSkipAuth(pathname)) return authResponse;
 
   const session = await getSessionNormalized(request);
+
+  if (IS_PROD) {
+    // eslint-disable-next-line no-console
+    console.info(
+      `[auth-proxy] path=${pathname} session=${session ? 'present' : 'missing'}`,
+    );
+  }
+
   if (!session) return buildLoginRedirect(request);
 
   const fallbackAccessToken =
