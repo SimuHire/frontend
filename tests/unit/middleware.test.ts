@@ -1,4 +1,5 @@
-import { middleware } from '@/middleware';
+import { proxy } from '@/proxy';
+import { CUSTOM_CLAIM_PERMISSIONS, CUSTOM_CLAIM_ROLES } from '@/lib/brand';
 
 jest.mock('next/server', () => {
   const buildHeaders = (location?: string) => {
@@ -40,6 +41,7 @@ jest.mock('@/lib/auth0', () => ({
     getSession: jest.fn(),
     getAccessToken: jest.fn(),
   },
+  getSessionNormalized: jest.fn(),
 }));
 
 const mockAuth0 = jest.requireMock('@/lib/auth0').auth0 as {
@@ -47,60 +49,63 @@ const mockAuth0 = jest.requireMock('@/lib/auth0').auth0 as {
   getSession: jest.Mock;
   getAccessToken: jest.Mock;
 };
+const getSessionNormalizedMock = jest.requireMock('@/lib/auth0')
+  .getSessionNormalized as jest.Mock;
 
-describe('middleware', () => {
+describe('proxy', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    getSessionNormalizedMock.mockReset();
     mockAuth0.getAccessToken.mockResolvedValue({ token: 'auth' });
   });
 
   it('redirects unauthenticated candidate dashboard to login with mode', async () => {
-    mockAuth0.getSession.mockResolvedValue(null);
+    getSessionNormalizedMock.mockResolvedValue(null);
 
     const req = new NextRequest(
       new URL('http://localhost/candidate/dashboard'),
     );
-    const res = await middleware(req);
+    const res = await proxy(req);
 
     expect(res?.status).toBe(307);
     expect(res?.headers.get('location')).toBe(
-      'http://localhost/auth/login?returnTo=%2Fcandidate%2Fdashboard&mode=candidate',
+      'http://localhost/login?returnTo=%2Fcandidate%2Fdashboard&mode=candidate',
     );
   });
 
   it('redirects unauthenticated recruiter dashboard to login with mode', async () => {
-    mockAuth0.getSession.mockResolvedValue(null);
+    getSessionNormalizedMock.mockResolvedValue(null);
 
     const req = new NextRequest(new URL('http://localhost/dashboard'));
-    const res = await middleware(req);
+    const res = await proxy(req);
 
     expect(res?.status).toBe(307);
     expect(res?.headers.get('location')).toBe(
-      'http://localhost/auth/login?returnTo=%2Fdashboard&mode=recruiter',
+      'http://localhost/login?returnTo=%2Fdashboard&mode=recruiter',
     );
   });
 
   it('sends authorized candidates through candidate routes', async () => {
-    mockAuth0.getSession.mockResolvedValue({
+    getSessionNormalizedMock.mockResolvedValue({
       user: { permissions: ['candidate:access'] },
     });
 
     const req = new NextRequest(
       new URL('http://localhost/candidate/session/tok_123'),
     );
-    const res = await middleware(req);
+    const res = await proxy(req);
 
     expect(res?.headers.get('location')).toBeNull();
     expect(mockAuth0.middleware).toHaveBeenCalled();
   });
 
   it('redirects candidates hitting recruiter pages to not authorized', async () => {
-    mockAuth0.getSession.mockResolvedValue({
+    getSessionNormalizedMock.mockResolvedValue({
       user: { permissions: ['candidate:access'] },
     });
 
     const req = new NextRequest(new URL('http://localhost/dashboard'));
-    const res = await middleware(req);
+    const res = await proxy(req);
 
     expect(res?.status).toBe(307);
     expect(res?.headers.get('location')).toBe(
@@ -109,48 +114,62 @@ describe('middleware', () => {
   });
 
   it('allows recruiter when permissions claim present on user', async () => {
-    mockAuth0.getSession.mockResolvedValue({
-      user: { 'https://simuhire.com/permissions': ['recruiter:access'] },
+    getSessionNormalizedMock.mockResolvedValue({
+      user: { [CUSTOM_CLAIM_PERMISSIONS]: ['recruiter:access'] },
     });
 
     const req = new NextRequest(new URL('http://localhost/dashboard'));
-    const res = await middleware(req);
+    const res = await proxy(req);
+
+    expect(res?.status).toBe(200);
+  });
+
+  it('allows recruiter when standard permissions are empty but namespaced exist', async () => {
+    getSessionNormalizedMock.mockResolvedValue({
+      user: {
+        permissions: [],
+        [CUSTOM_CLAIM_PERMISSIONS]: ['recruiter:access'],
+      },
+    });
+
+    const req = new NextRequest(new URL('http://localhost/dashboard'));
+    const res = await proxy(req);
 
     expect(res?.status).toBe(200);
   });
 
   it('denies recruiter dashboard when user has candidate permission only', async () => {
-    mockAuth0.getSession.mockResolvedValue({
-      user: { 'https://simuhire.com/permissions': ['candidate:access'] },
+    getSessionNormalizedMock.mockResolvedValue({
+      user: { [CUSTOM_CLAIM_PERMISSIONS]: ['candidate:access'] },
     });
 
     const req = new NextRequest(new URL('http://localhost/dashboard'));
-    const res = await middleware(req);
+    const res = await proxy(req);
 
     expect(res?.status).toBe(307);
     expect(res?.headers.get('location')).toContain('/not-authorized');
   });
 
   it('maps roles to permissions allowing recruiter access', async () => {
-    mockAuth0.getSession.mockResolvedValue({
-      user: { 'https://simuhire.com/roles': ['Recruiter'] },
+    getSessionNormalizedMock.mockResolvedValue({
+      user: { [CUSTOM_CLAIM_ROLES]: ['Recruiter'] },
     });
 
     const req = new NextRequest(new URL('http://localhost/dashboard'));
-    const res = await middleware(req);
+    const res = await proxy(req);
 
     expect(res?.status).toBe(200);
   });
 
   it('redirects recruiters hitting candidate pages to not authorized', async () => {
-    mockAuth0.getSession.mockResolvedValue({
+    getSessionNormalizedMock.mockResolvedValue({
       user: { permissions: ['recruiter:access'] },
     });
 
     const req = new NextRequest(
       new URL('http://localhost/candidate/dashboard'),
     );
-    const res = await middleware(req);
+    const res = await proxy(req);
 
     expect(res?.status).toBe(307);
     expect(res?.headers.get('location')).toBe(

@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   const session = await auth0.getSession();
 
   if (!session) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   const { profile, error } = await fetchRecruiterProfile();
