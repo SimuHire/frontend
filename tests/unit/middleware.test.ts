@@ -176,4 +176,48 @@ describe('proxy', () => {
       'http://localhost/not-authorized?mode=candidate&returnTo=%2Fcandidate%2Fdashboard',
     );
   });
+
+  it('allows recruiter to load nested dashboard routes without bouncing to login', async () => {
+    getSessionNormalizedMock.mockResolvedValue({
+      user: { permissions: ['recruiter:access'] },
+    });
+
+    const req = new NextRequest(
+      new URL('http://localhost/dashboard/simulations/new'),
+    );
+    const res = await proxy(req);
+
+    expect(res?.status).toBe(200);
+    expect(res?.headers.get('location')).toBeNull();
+  });
+
+  it('redirects missing session on nested recruiter routes to login with returnTo and mode', async () => {
+    getSessionNormalizedMock.mockResolvedValue(null);
+
+    const req = new NextRequest(
+      new URL('http://localhost/dashboard/simulations/new'),
+    );
+    const res = await proxy(req);
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('location')).toBe(
+      'http://localhost/login?returnTo=%2Fdashboard%2Fsimulations%2Fnew&mode=recruiter',
+    );
+  });
+
+  it('redirects recruiter routes to not authorized when recruiter permission missing', async () => {
+    getSessionNormalizedMock.mockResolvedValue({
+      user: { permissions: ['candidate:access'] },
+    });
+
+    const req = new NextRequest(
+      new URL('http://localhost/dashboard/simulations/new'),
+    );
+    const res = await proxy(req);
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('location')).toBe(
+      'http://localhost/not-authorized?mode=recruiter&returnTo=%2Fdashboard%2Fsimulations%2Fnew',
+    );
+  });
 });

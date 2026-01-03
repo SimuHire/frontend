@@ -45,7 +45,7 @@ Next.js App Router (React 19 + TypeScript) UI for Tenon’s 5-day work simulatio
 
 - `NEXT_PUBLIC_TENON_API_BASE_URL` – backend base for candidate calls (e.g., `https://backend.example.com/api`).
 - `TENON_BACKEND_BASE_URL` – backend base for BFF (default `http://localhost:8000`; `/api` suffix trimmed).
-- Auth0 (Tenon-only): `TENON_AUTH0_SECRET`, `TENON_AUTH0_DOMAIN`, `TENON_AUTH0_CLIENT_ID`, `TENON_AUTH0_CLIENT_SECRET`, `TENON_AUTH0_AUDIENCE`, `TENON_AUTH0_SCOPE`, `TENON_APP_BASE_URL`.
+- Auth0 (server): `TENON_AUTH0_SECRET`, `TENON_AUTH0_DOMAIN` (or `TENON_AUTH0_ISSUER_BASE_URL`), `TENON_AUTH0_CLIENT_ID`, `TENON_AUTH0_CLIENT_SECRET`, `TENON_AUTH0_AUDIENCE`, `TENON_AUTH0_SCOPE`, `TENON_APP_BASE_URL` (prod: `https://tenon-hire.vercel.app`). `AUTH0_*` variants are still read as a fallback for compatibility.
 - Auth0 custom claims namespace (Tenon-only): `NEXT_PUBLIC_TENON_AUTH0_CLAIM_NAMESPACE` (defaults to `https://tenon.ai` when unset).
 - Optional Auth0 connection hints for the login button intent routing:
   - `NEXT_PUBLIC_TENON_AUTH0_CANDIDATE_CONNECTION`
