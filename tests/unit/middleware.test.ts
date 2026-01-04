@@ -1,4 +1,4 @@
-import { proxy } from '@/proxy';
+import { proxy, config as proxyConfig } from '@/proxy';
 import { CUSTOM_CLAIM_PERMISSIONS, CUSTOM_CLAIM_ROLES } from '@/lib/brand';
 
 jest.mock('next/server', () => {
@@ -57,6 +57,12 @@ describe('proxy', () => {
     jest.clearAllMocks();
     getSessionNormalizedMock.mockReset();
     mockAuth0.getAccessToken.mockResolvedValue({ token: 'auth' });
+  });
+
+  it('enables auth middleware on API routes via matcher config', () => {
+    expect(proxyConfig.matcher).toContain(
+      '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+    );
   });
 
   it('redirects unauthenticated candidate dashboard to login with mode', async () => {
