@@ -1,3 +1,5 @@
+import { buildLoginHref } from '@/features/auth/authPaths';
+import { loginModeForPath } from '@/lib/auth/access';
 import { getAuthToken } from '../auth';
 import type { Result } from './types';
 
@@ -21,6 +23,8 @@ type RequestOptions = {
 };
 
 const DEFAULT_BASE_PATH = process.env.NEXT_PUBLIC_TENON_API_BASE_URL ?? '/api';
+const NOT_AUTHORIZED_PATH = '/not-authorized';
+let authRedirectInFlight = false;
 
 function normalizeUrl(basePath: string, path: string): string {
   const base = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
@@ -66,6 +70,63 @@ function isApiClientOptions(value: unknown): value is ApiClientOptions {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
   return 'basePath' in v || 'authToken' in v || 'skipAuth' in v;
+}
+
+function buildNotAuthorizedHref(
+  returnTo: string,
+  mode: 'candidate' | 'recruiter',
+): string {
+  const params = new URLSearchParams();
+  params.set('mode', mode);
+  if (returnTo) params.set('returnTo', returnTo);
+  const query = params.toString();
+  return `${NOT_AUTHORIZED_PATH}${query ? `?${query}` : ''}`;
+}
+
+function safeAssign(url: string) {
+  const userAgent =
+    typeof navigator !== 'undefined' && typeof navigator.userAgent === 'string'
+      ? navigator.userAgent.toLowerCase()
+      : '';
+  const isJsdom = userAgent.includes('jsdom');
+  const assignFn = window.location?.assign as
+    | undefined
+    | ((nextUrl: string) => void)
+    | { mock?: unknown };
+  const isMocked =
+    assignFn &&
+    typeof assignFn === 'function' &&
+    Boolean((assignFn as { _isMockFunction?: boolean })._isMockFunction);
+
+  if (isJsdom && !isMocked) return;
+
+  try {
+    if (typeof window.location?.assign === 'function') {
+      window.location.assign(url);
+    }
+  } catch {}
+}
+
+function handleAuthRedirect(status: number) {
+  if (typeof window === 'undefined') return;
+  if (status !== 401 && status !== 403) return;
+  if (authRedirectInFlight) return;
+
+  const pathname = window.location.pathname || '/';
+  const search = window.location.search || '';
+  const mode = loginModeForPath(pathname);
+  const returnTo = `${pathname}${search}`;
+  const target =
+    status === 401
+      ? buildLoginHref(returnTo, mode)
+      : buildNotAuthorizedHref(returnTo, mode);
+
+  authRedirectInFlight = true;
+  safeAssign(target);
+}
+
+export function __resetAuthRedirectForTests() {
+  authRedirectInFlight = false;
 }
 
 async function request<TResponse = unknown>(
@@ -120,6 +181,7 @@ async function request<TResponse = unknown>(
   });
 
   if (!response.ok) {
+    handleAuthRedirect(response.status);
     const errorBody = await parseResponseBody(response);
     const error: ApiErrorShape = {
       message: extractErrorMessage(errorBody, response.status),
