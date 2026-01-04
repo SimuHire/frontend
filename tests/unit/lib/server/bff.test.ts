@@ -65,8 +65,7 @@ jest.mock('@/lib/auth0', () => ({
   },
 }));
 
-const mockAuth0 = jest.requireMock('@/lib/auth0')
-  .auth0 as unknown as {
+const mockAuth0 = jest.requireMock('@/lib/auth0').auth0 as unknown as {
   getAccessToken: jest.Mock;
 };
 const { getAccessToken } = mockAuth0;

@@ -270,11 +270,11 @@ describe('apiClient request helpers', () => {
     const success = await safeRequest<{ value: number }>('/path');
     expect(success).toMatchObject({ data: { value: 1 }, error: null });
 
-  const failure = await safeRequest('/oops');
-  expect(failure.data).toBeNull();
-  expect(failure.error).toBeInstanceOf(Error);
-  expect(failure.error?.message).toBe('bad');
-});
+    const failure = await safeRequest('/oops');
+    expect(failure.data).toBeNull();
+    expect(failure.error).toBeInstanceOf(Error);
+    expect(failure.error?.message).toBe('bad');
+  });
 
   it('retries a 401 from BFF once before redirecting', async () => {
     let apiCalls = 0;
@@ -371,10 +371,7 @@ describe('apiClient request helpers', () => {
       if (url === '/api/simulations') {
         apiCalls += 1;
         return Promise.resolve(
-          responseHelpers.jsonResponse(
-            { message: `Nope ${apiCalls}` },
-            401,
-          ),
+          responseHelpers.jsonResponse({ message: `Nope ${apiCalls}` }, 401),
         );
       }
       throw new Error(`Unexpected fetch to ${url}`);
