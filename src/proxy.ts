@@ -2,6 +2,11 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { auth0, getSessionNormalized } from './lib/auth0';
 import { extractPermissions, hasPermission } from './lib/auth0-claims';
+import {
+  loginModeForPath,
+  requiresCandidateAccess,
+  requiresRecruiterAccess,
+} from './lib/auth/access';
 
 const PUBLIC_PATHS = new Set([
   '/',
@@ -11,8 +16,6 @@ const PUBLIC_PATHS = new Set([
   '/not-authorized',
 ]);
 const PUBLIC_PREFIXES = ['/auth'];
-const CANDIDATE_PREFIXES = ['/candidate-sessions', '/candidate'];
-const RECRUITER_PREFIXES = ['/dashboard'];
 const IS_PROD = process.env.NODE_ENV === 'production';
 
 function isPublicPath(pathname: string) {
@@ -38,18 +41,6 @@ function shouldSkipAuth(pathname: string) {
   if (pathname.startsWith('/api/')) return true;
   if (isPublicPath(pathname)) return true;
   return false;
-}
-
-function requiresCandidateAccess(pathname: string) {
-  return CANDIDATE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-}
-
-function requiresRecruiterAccess(pathname: string) {
-  return RECRUITER_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-}
-
-function loginModeForPath(pathname: string): 'candidate' | 'recruiter' {
-  return requiresCandidateAccess(pathname) ? 'candidate' : 'recruiter';
 }
 
 function redirectNotAuthorized(
@@ -137,6 +128,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
   ],
 };
