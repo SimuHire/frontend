@@ -104,9 +104,7 @@ function safeAssign(url: string) {
     if (typeof window.location?.assign === 'function') {
       window.location.assign(url);
     }
-  } catch {
-    // Swallow navigation errors (e.g. jsdom) to avoid noisy logs/tests
-  }
+  } catch {}
 }
 
 function handleAuthRedirect(status: number) {

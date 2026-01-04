@@ -323,10 +323,7 @@ describe('apiClient request helpers', () => {
       responseHelpers.jsonResponse({ message: 'Not authorized' }, 401),
     );
 
-    const { assign, restore } = mockLocation(
-      '/dashboard/simulations/new',
-      '',
-    );
+    const { assign, restore } = mockLocation('/dashboard/simulations/new', '');
 
     await expect(apiClient.get('/simulations')).rejects.toMatchObject({
       status: 401,
@@ -363,9 +360,9 @@ describe('apiClient request helpers', () => {
   });
 
   it('is a no-op for redirects when window is unavailable (SSR/RSC)', async () => {
-    const realWindow = (global as unknown as { window?: unknown }).window;
-    // @ts-expect-error - simulate server environment
-    delete (global as unknown as { window?: unknown }).window;
+    const globalAny = global as unknown as { window?: unknown };
+    const realWindow = globalAny.window;
+    delete globalAny.window;
 
     fetchMock.mockResolvedValue(
       responseHelpers.jsonResponse({ message: 'Not authorized' }, 401),
@@ -374,10 +371,6 @@ describe('apiClient request helpers', () => {
     await expect(apiClient.get('/simulations')).rejects.toMatchObject({
       status: 401,
     });
-
-    Object.defineProperty(global, 'window', {
-      configurable: true,
-      value: realWindow,
-    });
+    globalAny.window = realWindow;
   });
 });

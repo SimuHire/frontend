@@ -9,9 +9,7 @@ export function requiresRecruiterAccess(pathname: string): boolean {
   return RECRUITER_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
-export function loginModeForPath(
-  pathname: string,
-): 'candidate' | 'recruiter' {
+export function loginModeForPath(pathname: string): 'candidate' | 'recruiter' {
   return requiresCandidateAccess(pathname) ? 'candidate' : 'recruiter';
 }
 
