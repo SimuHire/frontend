@@ -4,6 +4,7 @@ import { extractPermissions, hasPermission } from '@/lib/auth0-claims';
 import { BRAND_SLUG } from '@/lib/brand';
 
 export const UPSTREAM_HEADER = `x-${BRAND_SLUG}-upstream-status`;
+const DEBUG_PERF = process.env.TENON_DEBUG_PERF;
 
 function stripTrailingApi(raw: string) {
   const trimmed = raw.replace(/\/+$/, '');
@@ -84,6 +85,7 @@ type ForwardOptions = {
 export async function forwardJson(options: ForwardOptions) {
   const { path, method = 'GET', headers = {}, body, accessToken } = options;
   const backendBase = getBackendBaseUrl();
+  const start = DEBUG_PERF ? Date.now() : null;
 
   const upstream = await fetch(`${backendBase}${path}`, {
     method,
@@ -99,6 +101,14 @@ export async function forwardJson(options: ForwardOptions) {
           : JSON.stringify(body),
     cache: options.cache ?? 'no-store',
   });
+
+  if (DEBUG_PERF && start !== null) {
+    const elapsed = Date.now() - start;
+    // eslint-disable-next-line no-console
+    console.log(
+      `[perf:bff] ${method} ${path} -> ${upstream.status} ${elapsed}ms`,
+    );
+  }
 
   const parsed = await parseUpstreamBody(upstream);
   return NextResponse.json(parsed, {

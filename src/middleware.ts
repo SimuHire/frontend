@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { auth0, getSessionNormalized } from './lib/auth0';
 import { extractPermissions, hasPermission } from './lib/auth0-claims';
+import { mergeResponseCookies } from './lib/server/bffAuth';
 
 const PUBLIC_PATHS = new Set([
   '/',
@@ -33,7 +34,6 @@ function buildLoginRedirect(request: NextRequest) {
 }
 
 function shouldSkipAuth(pathname: string) {
-  if (pathname.startsWith('/api/')) return true;
   if (isPublicPath(pathname)) return true;
   return false;
 }
@@ -63,20 +63,6 @@ function redirectNotAuthorized(
   return NextResponse.redirect(url);
 }
 
-async function optionalAccessToken(): Promise<string | null> {
-  try {
-    const tokenResult = await auth0.getAccessToken();
-    if (!tokenResult) return null;
-    if (typeof tokenResult === 'string') return tokenResult;
-    const maybeToken =
-      (tokenResult as { token?: string }).token ??
-      (tokenResult as { accessToken?: string }).accessToken;
-    return typeof maybeToken === 'string' ? maybeToken : null;
-  } catch {
-    return null;
-  }
-}
-
 function normalizeAccessToken(raw: unknown): string | null {
   if (typeof raw === 'string') return raw;
   if (raw && typeof raw === 'object') {
@@ -88,41 +74,91 @@ function normalizeAccessToken(raw: unknown): string | null {
   return null;
 }
 
+function isNextResponse(value: unknown): value is NextResponse {
+  return Boolean(
+    value &&
+    typeof value === 'object' &&
+    'status' in (value as Record<string, unknown>) &&
+    typeof (value as { status: unknown }).status === 'number' &&
+    'cookies' in (value as Record<string, unknown>) &&
+    typeof (value as { cookies?: unknown }).cookies === 'object' &&
+    typeof (value as { cookies: { getAll?: unknown } }).cookies.getAll ===
+      'function' &&
+    'headers' in (value as Record<string, unknown>) &&
+    typeof (value as { headers?: unknown }).headers === 'object' &&
+    typeof (value as { headers: { get?: unknown } }).headers.get === 'function',
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const isApiPath = pathname === '/api' || pathname.startsWith('/api/');
 
   const authResponse = await auth0.middleware(request);
-  if (pathname.startsWith('/api/')) return authResponse;
-  if (shouldSkipAuth(pathname)) return authResponse;
+  const responder = (resp: NextResponse) => {
+    if (isNextResponse(authResponse)) {
+      mergeResponseCookies(authResponse, resp);
+    }
+    return resp;
+  };
+
+  if (isApiPath) {
+    return responder(NextResponse.next());
+  }
+
+  const isRootOrLogin = pathname === '/' || pathname === '/auth/login';
+
+  if (shouldSkipAuth(pathname) && !isRootOrLogin) {
+    const pass = isNextResponse(authResponse)
+      ? (authResponse as NextResponse)
+      : NextResponse.next();
+    return responder(pass);
+  }
 
   const session = await getSessionNormalized(request);
-  if (!session) return buildLoginRedirect(request);
 
-  const fallbackAccessToken =
-    normalizeAccessToken((session as { accessToken?: unknown }).accessToken) ??
-    (await optionalAccessToken());
+  if (shouldSkipAuth(pathname)) {
+    if (session && isRootOrLogin) {
+      const perms = extractPermissions(
+        session.user,
+        normalizeAccessToken(
+          (session as { accessToken?: unknown }).accessToken,
+        ),
+      );
+      if (hasPermission(perms, 'recruiter:access')) {
+        return responder(redirect('/dashboard', request));
+      }
+      if (hasPermission(perms, 'candidate:access')) {
+        return responder(redirect('/candidate/dashboard', request));
+      }
+    }
+    const pass = isNextResponse(authResponse)
+      ? (authResponse as NextResponse)
+      : NextResponse.next();
+    return responder(pass);
+  }
+
+  if (!session) return responder(buildLoginRedirect(request));
+
+  const fallbackAccessToken = normalizeAccessToken(
+    (session as { accessToken?: unknown }).accessToken,
+  );
   const permissions = extractPermissions(session.user, fallbackAccessToken);
   const wantsRecruiter = requiresRecruiterAccess(pathname);
   const wantsCandidate = requiresCandidateAccess(pathname);
 
   if (wantsRecruiter && !hasPermission(permissions, 'recruiter:access')) {
-    return redirectNotAuthorized('recruiter', request);
+    return responder(redirectNotAuthorized('recruiter', request));
   }
 
   if (wantsCandidate && !hasPermission(permissions, 'candidate:access')) {
-    return redirectNotAuthorized('candidate', request);
+    return responder(redirectNotAuthorized('candidate', request));
   }
 
-  if (pathname === '/' || pathname === '/auth/login') {
-    if (hasPermission(permissions, 'recruiter:access')) {
-      return redirect('/dashboard', request);
-    }
-    if (hasPermission(permissions, 'candidate:access')) {
-      return redirect('/candidate/dashboard', request);
-    }
-  }
-
-  return authResponse;
+  const pass = isNextResponse(authResponse)
+    ? (authResponse as NextResponse)
+    : NextResponse.next();
+  return responder(pass);
 }
 
 export const config = {

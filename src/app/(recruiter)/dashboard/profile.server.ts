@@ -3,8 +3,10 @@ import { getAccessToken } from '@/lib/auth0';
 import { getBackendBaseUrl } from '@/lib/server/bff';
 
 type ProfileResult = { profile: RecruiterProfile | null; error: string | null };
+const DEBUG_PERF = process.env.TENON_DEBUG_PERF;
 
 export async function fetchRecruiterProfile(): Promise<ProfileResult> {
+  const start = DEBUG_PERF ? Date.now() : null;
   try {
     const accessToken = await getAccessToken();
     const backendBase = getBackendBaseUrl();
@@ -13,6 +15,13 @@ export async function fetchRecruiterProfile(): Promise<ProfileResult> {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: 'no-store',
     });
+
+    if (start !== null) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[perf:profile] /api/auth/me -> ${response.status} ${Date.now() - start}ms`,
+      );
+    }
 
     if (!response.ok) {
       const bodyText = await response.text().catch(() => '');

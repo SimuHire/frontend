@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
-import { forwardJson, withAuthGuard } from '@/lib/server/bff';
+import { NextRequest, NextResponse } from 'next/server';
+import { forwardJson } from '@/lib/server/bff';
 import { BRAND_SLUG } from '@/lib/brand';
+import { mergeResponseCookies, requireBffAuth } from '@/lib/server/bffAuth';
 
 export const BFF_HEADER = `x-${BRAND_SLUG}-bff`;
 
@@ -11,17 +12,31 @@ type ForwardArgs = {
   body?: unknown;
   cache?: RequestCache;
   tag?: string;
+  requirePermission?: string;
 };
 
-export async function forwardWithAuth({
-  tag,
-  ...args
-}: ForwardArgs): Promise<NextResponse> {
-  const resp = await withAuthGuard((accessToken) =>
-    forwardJson({ ...args, accessToken }),
-  );
+export async function forwardWithAuth(
+  { tag, requirePermission, ...args }: ForwardArgs,
+  req: NextRequest,
+): Promise<NextResponse> {
+  const auth = await requireBffAuth(req, {
+    requirePermission: requirePermission,
+  });
+  if (!auth.ok) {
+    const resp = auth.response;
+    mergeResponseCookies(auth.cookies, resp);
+    return resp;
+  }
 
-  if (resp instanceof NextResponse && tag) {
+  const resp = await forwardJson({
+    ...args,
+    accessToken: auth.accessToken,
+    cache: args.cache ?? 'no-store',
+  });
+
+  mergeResponseCookies(auth.cookies, resp);
+
+  if (tag) {
     resp.headers.set(BFF_HEADER, tag);
   }
 

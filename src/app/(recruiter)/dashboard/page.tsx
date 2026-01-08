@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { getSessionNormalized } from '@/lib/auth0';
+import { getCachedSessionNormalized } from '@/lib/auth0';
 import { BRAND_NAME } from '@/lib/brand';
 import RecruiterDashboardPage from '@/features/recruiter/dashboard/RecruiterDashboardPage';
 import { fetchRecruiterProfile } from './profile.server';
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const session = await getSessionNormalized();
+  const session = await getCachedSessionNormalized();
 
   if (!session) {
     redirect('/auth/login?mode=recruiter&returnTo=/dashboard');
