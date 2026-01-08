@@ -206,7 +206,7 @@ describe('middleware', () => {
 
     expect(res?.status).toBe(307);
     expect(res?.headers.get('location')).toBe(
-      'http://localhost/auth/login?returnTo=%2Fcandidate%2Fdashboard&mode=candidate',
+      'http://localhost/auth/login?mode=candidate&returnTo=%2Fcandidate%2Fdashboard',
     );
   });
 
@@ -218,7 +218,7 @@ describe('middleware', () => {
 
     expect(res?.status).toBe(307);
     expect(res?.headers.get('location')).toBe(
-      'http://localhost/auth/login?returnTo=%2Fdashboard&mode=recruiter',
+      'http://localhost/auth/login?mode=recruiter&returnTo=%2Fdashboard',
     );
   });
 

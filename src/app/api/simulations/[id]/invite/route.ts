@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import { forwardJson } from '@/lib/server/bff';
-import { BFF_HEADER } from '@/app/api/utils';
-import { mergeResponseCookies, requireBffAuth } from '@/lib/server/bffAuth';
+import { withRecruiterAuth } from '@/app/api/utils';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -13,25 +12,18 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-
   const payload: unknown = await req.json().catch(() => undefined);
 
-  const auth = await requireBffAuth(req, {
-    requirePermission: 'recruiter:access',
-  });
-  if (!auth.ok) {
-    mergeResponseCookies(auth.cookies, auth.response);
-    return auth.response;
-  }
-
-  const resp = await forwardJson({
-    path: `/api/simulations/${encodeURIComponent(id)}/invite`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: payload ?? {},
-    accessToken: auth.accessToken,
-  });
-  mergeResponseCookies(auth.cookies, resp);
-  resp.headers.set(BFF_HEADER, 'invite');
-  return resp;
+  return withRecruiterAuth(
+    req,
+    { tag: 'invite', requirePermission: 'recruiter:access' },
+    async (auth) =>
+      forwardJson({
+        path: `/api/simulations/${encodeURIComponent(id)}/invite`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload ?? {},
+        accessToken: auth.accessToken,
+      }),
+  );
 }

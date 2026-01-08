@@ -7,6 +7,7 @@ jest.mock('next/server', () => {
     return {
       get: (key: string) => store.get(key.toLowerCase()) ?? null,
       set: (key: string, value: string) => store.set(key.toLowerCase(), value),
+      delete: (key: string) => store.delete(key.toLowerCase()),
     };
   };
 
@@ -78,12 +79,16 @@ describe('forwardJson', () => {
       accessToken: 'token-123',
     });
 
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:8000/api/test', {
-      method: 'GET',
-      headers: { Authorization: 'Bearer token-123' },
-      body: undefined,
-      cache: 'no-store',
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/test',
+      expect.objectContaining({
+        method: 'GET',
+        headers: { Authorization: 'Bearer token-123' },
+        body: undefined,
+        cache: 'no-store',
+        redirect: 'manual',
+      }),
+    );
     expect(res.headers.get(upstreamHeader)).toBe('200');
   });
 
@@ -101,11 +106,15 @@ describe('forwardJson', () => {
       accessToken: 'token-123',
     });
 
-    expect(fetchMock).toHaveBeenCalledWith('https://api.example.com/api/test', {
-      method: 'GET',
-      headers: { Authorization: 'Bearer token-123' },
-      body: undefined,
-      cache: 'no-store',
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.com/api/test',
+      expect.objectContaining({
+        method: 'GET',
+        headers: { Authorization: 'Bearer token-123' },
+        body: undefined,
+        cache: 'no-store',
+        redirect: 'manual',
+      }),
+    );
   });
 });

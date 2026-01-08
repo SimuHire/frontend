@@ -7,6 +7,7 @@ jest.mock('next/server', () => {
     return {
       get: (key: string) => store.get(key.toLowerCase()) ?? null,
       set: (key: string, value: string) => store.set(key.toLowerCase(), value),
+      delete: (key: string) => store.delete(key.toLowerCase()),
     };
   };
 
@@ -39,14 +40,14 @@ jest.mock('next/server', () => {
 
   return {
     NextResponse: {
-      json: (body: unknown, init?: { status?: number }) =>
-        buildResponse(
-          init?.status ?? 200,
-          body,
-          (init?.status ?? 200) === 204
-            ? undefined
-            : { 'content-type': 'application/json' },
-        ),
+      json: (
+        body: unknown,
+        init?: { status?: number; headers?: Record<string, string> },
+      ) =>
+        buildResponse(init?.status ?? 200, body, {
+          'content-type': 'application/json',
+          ...(init?.headers ?? {}),
+        }),
       next: () => buildResponse(200),
     },
     NextRequest: class {
@@ -56,12 +57,15 @@ jest.mock('next/server', () => {
         this.url = url.toString();
         this.nextUrl = new URL(this.url);
       }
+      async json() {
+        return {};
+      }
     },
   };
 });
 
-import { NextResponse } from 'next/server';
-import { GET } from '@/app/api/auth/me/route';
+import { NextRequest, NextResponse } from 'next/server';
+import { POST } from '@/app/api/simulations/route';
 
 jest.mock('@/lib/server/bffAuth', () => {
   const mergeResponseCookies = (
@@ -72,18 +76,14 @@ jest.mock('@/lib/server/bffAuth', () => {
       cookies?: { set?: (cookie: { name: string; value: string }) => void };
     },
   ) => {
-    if (
-      !from ||
-      !from.cookies ||
-      typeof from.cookies.getAll !== 'function' ||
-      !into?.cookies?.set
-    ) {
-      return;
-    }
-    from.cookies.getAll().forEach((cookie: { name: string; value: string }) => {
-      into.cookies.set(cookie);
-    });
+    if (!from?.cookies?.getAll || !into?.cookies?.set) return;
+    from.cookies
+      .getAll()
+      .forEach((cookie: { name: string; value: string }) =>
+        into.cookies?.set?.(cookie),
+      );
   };
+
   return {
     requireBffAuth: jest.fn(),
     mergeResponseCookies,
@@ -94,48 +94,21 @@ jest.mock('@/lib/server/bff', () => ({
   forwardJson: jest.fn(),
 }));
 
-const { BFF_HEADER } = jest.requireActual('@/app/api/utils');
-
 const requireBffAuthMock = jest.requireMock('@/lib/server/bffAuth')
   .requireBffAuth as jest.Mock;
 const forwardJsonMock = jest.requireMock('@/lib/server/bff')
   .forwardJson as jest.Mock;
 
-describe('/api/auth/me route', () => {
+const { BFF_HEADER } = jest.requireActual('@/app/api/utils');
+
+describe('/api/simulations route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('returns JSON 401 and merges cookies when auth fails', async () => {
+  it('merges cookies and returns upstream status for POST', async () => {
     const cookies = NextResponse.next();
-    cookies.cookies.set('edge', 'refresh');
-
-    const authResponse = NextResponse.json(
-      { message: 'Not authenticated' },
-      { status: 401 },
-    );
-    requireBffAuthMock.mockResolvedValue({
-      ok: false,
-      response: authResponse,
-      cookies,
-    });
-
-    const req = new (jest.requireMock('next/server').NextRequest)(
-      'http://localhost/api/auth/me',
-    );
-    const res = await GET(req as never);
-
-    expect(res.status).toBe(401);
-    expect(res.cookies.get('edge')?.value).toBe('refresh');
-    expect(res.headers.get('content-type')).toBe('application/json');
-    expect(requireBffAuthMock).toHaveBeenCalledWith(req, {
-      requirePermission: 'recruiter:access',
-    });
-  });
-
-  it('forwards to backend and merges cookies on success', async () => {
-    const cookies = NextResponse.next();
-    cookies.cookies.set('edge', 'refresh');
+    cookies.cookies.set('edge', 'merged');
 
     requireBffAuthMock.mockResolvedValue({
       ok: true,
@@ -146,26 +119,17 @@ describe('/api/auth/me route', () => {
     });
 
     forwardJsonMock.mockResolvedValue(
-      NextResponse.json({ id: 1, name: 'Recruiter' }, { status: 200 }),
+      NextResponse.json({ id: 'sim_123' }, { status: 201 }),
     );
 
-    const req = new (jest.requireMock('next/server').NextRequest)(
-      'http://localhost/api/auth/me',
-    );
-    const res = await GET(req as never);
+    const req = new NextRequest(new URL('http://localhost/api/simulations'));
+    const res = await POST(req as never);
 
-    expect(forwardJsonMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        path: '/api/auth/me',
-        accessToken: 'tok',
-      }),
-    );
-    expect(res.status).toBe(200);
-    expect(res.cookies.get('edge')?.value).toBe('refresh');
+    expect(res.status).toBe(201);
+    expect(res.cookies.get('edge')?.value).toBe('merged');
+    expect(res.headers.get(BFF_HEADER)).toBe('simulations-create');
     expect(requireBffAuthMock).toHaveBeenCalledWith(req, {
       requirePermission: 'recruiter:access',
     });
-    expect(res.headers.get(BFF_HEADER)).toBe('auth-me');
-    expect(res.headers.get('content-type')).toBe('application/json');
   });
 });

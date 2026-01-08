@@ -7,6 +7,7 @@ import {
   type TokenParams,
 } from '../../../candidate-sessions/token-params';
 import { getCachedSessionNormalized } from '@/lib/auth0';
+import { buildLoginUrl } from '@/lib/auth/routing';
 
 export const metadata: Metadata = {
   title: `Candidate simulation | ${BRAND_NAME}`,
@@ -22,9 +23,7 @@ export default async function CandidateSessionRoute({
 
   const session = await getCachedSessionNormalized();
   if (!session) {
-    redirect(
-      `/auth/login?mode=candidate&returnTo=${encodeURIComponent(`/candidate/session/${token}`)}`,
-    );
+    redirect(buildLoginUrl('candidate', `/candidate/session/${token}`));
   }
 
   return <CandidateSessionPage token={token} />;

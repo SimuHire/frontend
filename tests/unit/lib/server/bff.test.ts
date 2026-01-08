@@ -15,6 +15,13 @@ jest.mock('next/server', () => {
           // @ts-expect-error loose lookup for tests
           return rawHeaders[name.toLowerCase()] ?? rawHeaders[name] ?? null;
         },
+        set: (name: string, value: string) => {
+          // @ts-expect-error mutate test headers
+          rawHeaders[name.toLowerCase()] = value;
+        },
+        delete: () => {
+          /* no-op for tests */
+        },
       };
     }
 
@@ -175,12 +182,13 @@ describe('bff helpers', () => {
 
       expect(fetchMock).toHaveBeenCalledWith(
         'http://backend.example.com/api/test',
-        {
+        expect.objectContaining({
           method: 'POST',
           headers: { Authorization: 'Bearer abc', 'X-Test': 'yes' },
           body: JSON.stringify({ hello: 'world' }),
           cache: 'no-cache',
-        },
+          redirect: 'manual',
+        }),
       );
 
       expect(resp.status).toBe(201);

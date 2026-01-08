@@ -46,9 +46,18 @@ export async function requireBffAuth(
 ): Promise<AuthResult> {
   const cookieCarrier = NextResponse.next();
   const start = process.env.TENON_DEBUG_PERF ? Date.now() : null;
+  const logPerf = (status: string) => {
+    if (start !== null) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[perf:bff-auth] permission=${options?.requirePermission ?? 'any'} status=${status} ${Date.now() - start}ms`,
+      );
+    }
+  };
 
   const session = await getSessionNormalized(req);
   if (!session) {
+    logPerf('unauthenticated');
     return {
       ok: false,
       response: NextResponse.json(
@@ -67,6 +76,7 @@ export async function requireBffAuth(
     options?.requirePermission &&
     !hasPermission(permissions, options.requirePermission)
   ) {
+    logPerf('forbidden');
     return {
       ok: false,
       response: NextResponse.json({ message: 'Forbidden' }, { status: 403 }),
@@ -80,6 +90,7 @@ export async function requireBffAuth(
     });
     const accessToken = normalizeAccessToken(tokenResult);
     if (!accessToken) {
+      logPerf('missing-token');
       return {
         ok: false,
         response: NextResponse.json(
@@ -97,16 +108,12 @@ export async function requireBffAuth(
       session,
       cookies: cookieCarrier,
     };
-    if (start !== null) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `[perf:bff-auth] permission=${options?.requirePermission ?? 'any'} ${Date.now() - start}ms`,
-      );
-    }
+    logPerf('ok');
     return result;
   } catch (e: unknown) {
     const message =
       e instanceof Error ? e.message : 'Unable to obtain access token';
+    logPerf('token-error');
     return {
       ok: false,
       response: NextResponse.json(

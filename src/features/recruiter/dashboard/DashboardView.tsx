@@ -6,8 +6,8 @@ import { InviteCandidateModal } from '@/features/recruiter/invitations/InviteCan
 import { InviteToast } from '@/features/recruiter/invitations/InviteToast';
 import { ProfileCard } from './components/ProfileCard';
 import { useInviteCandidateFlow } from './hooks/useInviteCandidateFlow';
-import { useSimulations } from './hooks/useSimulations';
 import type { InviteModalState, RecruiterProfile } from './types';
+import type { SimulationListItem } from '@/types/recruiter';
 import { DashboardHeader } from './components/DashboardHeader';
 import { SimulationSection } from './components/SimulationSection';
 
@@ -15,16 +15,22 @@ type DashboardViewProps = {
   profile: RecruiterProfile | null;
   error: string | null;
   profileLoading?: boolean;
+  simulations: SimulationListItem[];
+  simulationsError: string | null;
+  simulationsLoading: boolean;
+  onRefresh: () => void;
 };
 
 export default function DashboardView({
   profile,
   error,
   profileLoading = false,
+  simulations,
+  simulationsError,
+  simulationsLoading,
+  onRefresh,
 }: DashboardViewProps) {
   const router = useRouter();
-
-  const { simulations, loading, error: simError, refresh } = useSimulations();
 
   const [modal, setModal] = useState<InviteModalState>({
     open: false,
@@ -81,7 +87,7 @@ export default function DashboardView({
       toastTimerRef.current = null;
     }, 6500);
 
-    void refresh();
+    void onRefresh();
   };
 
   return (
@@ -128,8 +134,8 @@ export default function DashboardView({
 
       <SimulationSection
         simulations={simulations}
-        loading={loading}
-        error={simError}
+        loading={simulationsLoading}
+        error={simulationsError}
         onInvite={(sim) => openInvite(sim.id, sim.title)}
       />
 

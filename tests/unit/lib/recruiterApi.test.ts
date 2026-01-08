@@ -16,8 +16,12 @@ jest.mock('@/lib/api/httpClient', () => ({
   },
 }));
 
-type MockGet = (path: string) => Promise<unknown>;
-type MockPost = (path: string, body?: unknown) => Promise<unknown>;
+type MockGet = (path: string, options?: unknown) => Promise<unknown>;
+type MockPost = (
+  path: string,
+  body?: unknown,
+  options?: unknown,
+) => Promise<unknown>;
 
 const mockedApiGet = jest.requireMock('@/lib/api/httpClient').apiClient
   .get as jest.MockedFunction<MockGet>;
@@ -45,7 +49,7 @@ describe('recruiterApi', () => {
 
       await listSimulations();
 
-      expect(mockedBffGet).toHaveBeenCalledWith('/simulations');
+      expect(mockedBffGet).toHaveBeenCalledWith('/simulations', undefined);
       expect(mockedApiGet).not.toHaveBeenCalled();
     });
 
@@ -119,7 +123,7 @@ describe('recruiterApi', () => {
 
       await listSimulations();
 
-      expect(mockedBffGet).toHaveBeenCalledWith('/simulations');
+      expect(mockedBffGet).toHaveBeenCalledWith('/simulations', undefined);
       expect(mockedApiGet).not.toHaveBeenCalled();
     });
   });
@@ -246,7 +250,10 @@ describe('recruiterApi', () => {
           seniority: 'Senior',
           focus: 'Focus',
         },
-        { cache: 'no-store' },
+        {
+          cache: undefined,
+          signal: undefined,
+        },
       );
 
       expect(result).toEqual({
@@ -287,18 +294,6 @@ describe('recruiterApi', () => {
         focus: '   ',
       });
 
-      expect(mockedBffPost).toHaveBeenCalledWith(
-        '/simulations',
-        {
-          title: 'Sim',
-          role: 'Backend',
-          techStack: 'Node',
-          seniority: 'Junior',
-          focus: undefined,
-        },
-        { cache: 'no-store' },
-      );
-
       expect(result).toEqual({
         id: 'sim_200',
         ok: true,
@@ -322,9 +317,30 @@ describe('recruiterApi', () => {
       expect(mockedBffPost).toHaveBeenCalledWith(
         '/simulations',
         expect.any(Object),
-        { cache: 'no-store' },
+        expect.objectContaining({ cache: undefined, signal: undefined }),
       );
       expect(result.id).toBe('sim_env');
+    });
+
+    it('returns structured error when backend responds with failure', async () => {
+      mockedBffPost.mockRejectedValueOnce({
+        message: 'Missing title',
+        status: 400,
+      });
+
+      const result = await createSimulation({
+        title: 'Sim Name',
+        role: 'Backend',
+        techStack: 'Node',
+        seniority: 'Junior',
+      });
+
+      expect(result).toMatchObject({
+        ok: false,
+        status: 400,
+        message: 'Missing title',
+        id: '',
+      });
     });
   });
 

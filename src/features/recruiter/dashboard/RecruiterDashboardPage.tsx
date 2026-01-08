@@ -1,33 +1,28 @@
 'use client';
 
 import DashboardView from '@/features/recruiter/dashboard/DashboardView';
-import type { RecruiterProfile } from '@/types/recruiter';
-import { useRecruiterProfile } from './hooks/useRecruiterProfile';
+import { useDashboardData } from './hooks/useDashboardData';
 
-type RecruiterDashboardPageProps = {
-  profile?: RecruiterProfile | null;
-  error?: string | null;
-};
-
-export default function RecruiterDashboardPage({
-  profile,
-  error,
-}: RecruiterDashboardPageProps) {
+export default function RecruiterDashboardPage() {
   const {
-    profile: resolvedProfile,
-    error: profileError,
-    loading,
-  } = useRecruiterProfile({
-    initialProfile: profile,
-    initialError: error,
-    fetchOnMount: profile === undefined && error === undefined,
-  });
+    profile,
+    profileError,
+    simulations,
+    simError,
+    loadingProfile,
+    loadingSimulations,
+    refresh,
+  } = useDashboardData();
 
   return (
     <DashboardView
-      profile={resolvedProfile}
+      profile={profile}
       error={profileError}
-      profileLoading={loading}
+      profileLoading={loadingProfile}
+      simulations={simulations}
+      simulationsError={simError}
+      simulationsLoading={loadingSimulations}
+      onRefresh={() => void refresh()}
     />
   );
 }

@@ -28,11 +28,18 @@ export async function forwardWithAuth(
     return resp;
   }
 
-  const resp = await forwardJson({
-    ...args,
-    accessToken: auth.accessToken,
-    cache: args.cache ?? 'no-store',
-  });
+  let resp: NextResponse;
+  try {
+    resp = await forwardJson({
+      ...args,
+      accessToken: auth.accessToken,
+      cache: args.cache ?? 'no-store',
+    });
+  } catch (e: unknown) {
+    const error = errorResponse(e);
+    mergeResponseCookies(auth.cookies, error);
+    return error;
+  }
 
   mergeResponseCookies(auth.cookies, resp);
 
@@ -46,4 +53,36 @@ export async function forwardWithAuth(
 export function errorResponse(e: unknown, fallback = 'Upstream error') {
   const message = e instanceof Error ? `${fallback}: ${e.message}` : fallback;
   return NextResponse.json({ message }, { status: 500 });
+}
+
+type RecruiterAuthHandler = (auth: {
+  accessToken: string;
+  cookies: NextResponse;
+}) => Promise<NextResponse>;
+
+export async function withRecruiterAuth(
+  req: NextRequest,
+  options: { tag: string; requirePermission?: string },
+  handler: RecruiterAuthHandler,
+): Promise<NextResponse> {
+  const auth = await requireBffAuth(req, {
+    requirePermission: options.requirePermission ?? 'recruiter:access',
+  });
+
+  if (!auth.ok) {
+    mergeResponseCookies(auth.cookies, auth.response);
+    return auth.response;
+  }
+
+  try {
+    const resp = await handler(auth);
+    mergeResponseCookies(auth.cookies, resp);
+    resp.headers.set(BFF_HEADER, options.tag);
+    return resp;
+  } catch (e: unknown) {
+    const error = errorResponse(e);
+    mergeResponseCookies(auth.cookies, error);
+    error.headers.set(BFF_HEADER, options.tag);
+    return error;
+  }
 }

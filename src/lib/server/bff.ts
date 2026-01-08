@@ -87,34 +87,47 @@ export async function forwardJson(options: ForwardOptions) {
   const backendBase = getBackendBaseUrl();
   const start = DEBUG_PERF ? Date.now() : null;
 
-  const upstream = await fetch(`${backendBase}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      ...headers,
-    },
-    body:
-      body === undefined
-        ? undefined
-        : typeof body === 'string'
-          ? body
-          : JSON.stringify(body),
-    cache: options.cache ?? 'no-store',
-  });
+  try {
+    const upstream = await fetch(`${backendBase}${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        ...headers,
+      },
+      body:
+        body === undefined
+          ? undefined
+          : typeof body === 'string'
+            ? body
+            : JSON.stringify(body),
+      cache: options.cache ?? 'no-store',
+      redirect: 'manual',
+    });
 
-  if (DEBUG_PERF && start !== null) {
-    const elapsed = Date.now() - start;
-    // eslint-disable-next-line no-console
-    console.log(
-      `[perf:bff] ${method} ${path} -> ${upstream.status} ${elapsed}ms`,
-    );
+    if (DEBUG_PERF && start !== null) {
+      const elapsed = Date.now() - start;
+      // eslint-disable-next-line no-console
+      console.log(
+        `[perf:bff] ${method} ${path} -> ${upstream.status} ${elapsed}ms`,
+      );
+    }
+
+    const parsed = await parseUpstreamBody(upstream);
+    const response = NextResponse.json(parsed, {
+      status: upstream.status,
+      headers: { [UPSTREAM_HEADER]: String(upstream.status) },
+    });
+    response.headers.delete('location');
+    return response;
+  } catch (e) {
+    if (DEBUG_PERF && start !== null) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[perf:bff] ${method} ${path} -> error ${Date.now() - start}ms`,
+      );
+    }
+    throw e;
   }
-
-  const parsed = await parseUpstreamBody(upstream);
-  return NextResponse.json(parsed, {
-    status: upstream.status,
-    headers: { [UPSTREAM_HEADER]: String(upstream.status) },
-  });
 }
 
 export async function withAuthGuard(

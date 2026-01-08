@@ -2,6 +2,11 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { auth0, getSessionNormalized } from './lib/auth0';
 import { extractPermissions, hasPermission } from './lib/auth0-claims';
+import {
+  buildLoginUrl,
+  buildNotAuthorizedUrl,
+  modeForPath,
+} from './lib/auth/routing';
 import { mergeResponseCookies } from './lib/server/bffAuth';
 
 const PUBLIC_PATHS = new Set([
@@ -23,14 +28,23 @@ function redirect(to: string, request: NextRequest) {
   return NextResponse.redirect(new URL(to, request.url));
 }
 
-function buildLoginRedirect(request: NextRequest) {
-  const url = new URL('/auth/login', request.url);
-  url.searchParams.set(
-    'returnTo',
-    request.nextUrl.pathname + request.nextUrl.search,
+function redirectToLogin(
+  request: NextRequest,
+  mode?: 'candidate' | 'recruiter',
+) {
+  const url = buildLoginUrl(
+    mode ?? modeForPath(request.nextUrl.pathname),
+    request,
   );
-  url.searchParams.set('mode', loginModeForPath(request.nextUrl.pathname));
-  return NextResponse.redirect(url);
+  return redirect(url, request);
+}
+
+function redirectNotAuthorized(
+  request: NextRequest,
+  mode: 'candidate' | 'recruiter',
+) {
+  const url = buildNotAuthorizedUrl(mode, request);
+  return redirect(url, request);
 }
 
 function shouldSkipAuth(pathname: string) {
@@ -44,23 +58,6 @@ function requiresCandidateAccess(pathname: string) {
 
 function requiresRecruiterAccess(pathname: string) {
   return RECRUITER_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-}
-
-function loginModeForPath(pathname: string): 'candidate' | 'recruiter' {
-  return requiresCandidateAccess(pathname) ? 'candidate' : 'recruiter';
-}
-
-function redirectNotAuthorized(
-  mode: 'candidate' | 'recruiter',
-  request: NextRequest,
-) {
-  const url = new URL('/not-authorized', request.url);
-  url.searchParams.set('mode', mode);
-  url.searchParams.set(
-    'returnTo',
-    request.nextUrl.pathname + request.nextUrl.search,
-  );
-  return NextResponse.redirect(url);
 }
 
 function normalizeAccessToken(raw: unknown): string | null {
@@ -94,10 +91,17 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isApiPath = pathname === '/api' || pathname.startsWith('/api/');
 
+  const perfStart = process.env.TENON_DEBUG_PERF ? Date.now() : null;
   const authResponse = await auth0.middleware(request);
   const responder = (resp: NextResponse) => {
     if (isNextResponse(authResponse)) {
       mergeResponseCookies(authResponse, resp);
+    }
+    if (perfStart !== null) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `[perf:middleware] ${pathname} -> ${resp.status} ${Date.now() - perfStart}ms`,
+      );
     }
     return resp;
   };
@@ -138,7 +142,10 @@ export async function middleware(request: NextRequest) {
     return responder(pass);
   }
 
-  if (!session) return responder(buildLoginRedirect(request));
+  if (!session)
+    return responder(
+      redirectToLogin(request, modeForPath(request.nextUrl.pathname)),
+    );
 
   const fallbackAccessToken = normalizeAccessToken(
     (session as { accessToken?: unknown }).accessToken,
@@ -148,11 +155,11 @@ export async function middleware(request: NextRequest) {
   const wantsCandidate = requiresCandidateAccess(pathname);
 
   if (wantsRecruiter && !hasPermission(permissions, 'recruiter:access')) {
-    return responder(redirectNotAuthorized('recruiter', request));
+    return responder(redirectNotAuthorized(request, 'recruiter'));
   }
 
   if (wantsCandidate && !hasPermission(permissions, 'candidate:access')) {
-    return responder(redirectNotAuthorized('candidate', request));
+    return responder(redirectNotAuthorized(request, 'candidate'));
   }
 
   const pass = isNextResponse(authResponse)

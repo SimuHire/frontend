@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { RecruiterProfile } from '@/types/recruiter';
 import { toUserMessage } from '@/lib/utils/errors';
+import {
+  buildLoginUrl,
+  buildNotAuthorizedUrl,
+  buildReturnTo,
+} from '@/lib/auth/routing';
 
 type Options = {
   initialProfile?: RecruiterProfile | null;
@@ -44,12 +49,12 @@ export function useRecruiterProfile(options?: Options): State {
             typeof window !== 'undefined' &&
             (res.status === 401 || res.status === 403)
           ) {
-            const returnTo = `${window.location.pathname}${window.location.search}`;
+            const returnTo = buildReturnTo();
             const mode = 'recruiter';
             const destination =
               res.status === 401
-                ? `/auth/login?mode=${mode}&returnTo=${encodeURIComponent(returnTo)}`
-                : `/not-authorized?mode=${mode}&returnTo=${encodeURIComponent(returnTo)}`;
+                ? buildLoginUrl(mode, returnTo)
+                : buildNotAuthorizedUrl(mode, returnTo);
             window.location.assign(destination);
             return;
           }
