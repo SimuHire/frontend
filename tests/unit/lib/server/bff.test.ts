@@ -1,8 +1,27 @@
+import { TextDecoder, TextEncoder } from 'util';
+import { ReadableStream, WritableStream } from 'stream/web';
+import { MessageChannel, MessagePort } from 'worker_threads';
+
+// Provide encoding globals for undici in tests.
+global.TextDecoder = TextDecoder as unknown as typeof globalThis.TextDecoder;
+global.TextEncoder = TextEncoder as unknown as typeof globalThis.TextEncoder;
+global.ReadableStream =
+  ReadableStream as unknown as typeof globalThis.ReadableStream;
+global.WritableStream =
+  WritableStream as unknown as typeof globalThis.WritableStream;
+global.MessageChannel =
+  MessageChannel as unknown as typeof globalThis.MessageChannel;
+global.MessagePort = MessagePort as unknown as typeof globalThis.MessagePort;
+
 jest.mock('next/server', () => {
   class LocalResponse {
     status: number;
     ok: boolean;
-    headers: { get: (name: string) => string | null };
+    headers: {
+      get: (name: string) => string | null;
+      set?: (name: string, value: string) => void;
+      delete?: (name: string) => void;
+    };
     #body: unknown;
 
     constructor(body: unknown = '', init?: ResponseInit) {
@@ -184,12 +203,16 @@ describe('bff helpers', () => {
         'http://backend.example.com/api/test',
         expect.objectContaining({
           method: 'POST',
-          headers: { Authorization: 'Bearer abc', 'X-Test': 'yes' },
           body: JSON.stringify({ hello: 'world' }),
           cache: 'no-cache',
           redirect: 'manual',
         }),
       );
+      const init = fetchMock.mock.calls[0][1] as RequestInit;
+      const headers = init.headers as Headers;
+      expect(headers.get('authorization')).toBe('Bearer abc');
+      expect(headers.get('x-test')).toBe('yes');
+      expect(headers.get('x-tenon-request-id')).toBeTruthy();
 
       expect(resp.status).toBe(201);
       const parsed = await resp.json();

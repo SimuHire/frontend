@@ -52,9 +52,17 @@ jest.mock('next/server', () => {
     NextRequest: class {
       url: string;
       nextUrl: URL;
-      constructor(url: URL | string) {
+      headers: { get: (key: string) => string | null };
+      constructor(url: URL | string, headers?: Record<string, string>) {
         this.url = url.toString();
         this.nextUrl = new URL(this.url);
+        const headerStore = new Map<string, string>();
+        Object.entries(headers ?? {}).forEach(([k, v]) =>
+          headerStore.set(k.toLowerCase(), v),
+        );
+        this.headers = {
+          get: (key: string) => headerStore.get(key.toLowerCase()) ?? null,
+        };
       }
     },
   };
@@ -81,7 +89,7 @@ jest.mock('@/lib/server/bffAuth', () => {
       return;
     }
     from.cookies.getAll().forEach((cookie: { name: string; value: string }) => {
-      into.cookies.set(cookie);
+      into.cookies?.set?.(cookie);
     });
   };
   return {
@@ -92,6 +100,8 @@ jest.mock('@/lib/server/bffAuth', () => {
 
 jest.mock('@/lib/server/bff', () => ({
   forwardJson: jest.fn(),
+  resolveRequestId: jest.fn(() => 'req-123'),
+  REQUEST_ID_HEADER: 'x-tenon-request-id',
 }));
 
 const { BFF_HEADER } = jest.requireActual('@/app/api/utils');

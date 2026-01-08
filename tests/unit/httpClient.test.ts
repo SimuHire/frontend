@@ -29,8 +29,8 @@ describe('httpClient', () => {
 
   it('falls back to relative check on server without window', () => {
     const originalWindow = (global as unknown as { window?: unknown }).window;
-    // @ts-expect-error - simulate server environment
-    delete (global as unknown as { window?: unknown }).window;
+    const globalWindow = global as unknown as { window?: unknown };
+    delete globalWindow.window;
 
     expect(isSameOriginRequest('/api/ok')).toBe(true);
     expect(isSameOriginRequest('https://other.com/foo')).toBe(false);

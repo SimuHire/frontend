@@ -53,9 +53,17 @@ jest.mock('next/server', () => {
     NextRequest: class {
       url: string;
       nextUrl: URL;
-      constructor(url: URL | string) {
+      headers: { get: (key: string) => string | null };
+      constructor(url: URL | string, headers?: Record<string, string>) {
         this.url = url.toString();
         this.nextUrl = new URL(this.url);
+        const headerStore = new Map<string, string>();
+        Object.entries(headers ?? {}).forEach(([k, v]) =>
+          headerStore.set(k.toLowerCase(), v),
+        );
+        this.headers = {
+          get: (key: string) => headerStore.get(key.toLowerCase()) ?? null,
+        };
       }
       async json() {
         return {};
@@ -92,6 +100,8 @@ jest.mock('@/lib/server/bffAuth', () => {
 
 jest.mock('@/lib/server/bff', () => ({
   forwardJson: jest.fn(),
+  resolveRequestId: jest.fn(() => 'req-123'),
+  REQUEST_ID_HEADER: 'x-tenon-request-id',
 }));
 
 const requireBffAuthMock = jest.requireMock('@/lib/server/bffAuth')

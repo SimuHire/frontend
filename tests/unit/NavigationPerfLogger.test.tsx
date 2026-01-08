@@ -10,9 +10,10 @@ describe('NavigationPerfLogger', () => {
 
   beforeAll(() => {
     process.env.NEXT_PUBLIC_TENON_DEBUG_PERF = 'true';
-    (
-      performance as { getEntriesByType?: () => PerformanceEntry[] }
-    ).getEntriesByType ??= () => [];
+    const perfStub = performance as unknown as {
+      getEntriesByType?: (type: string) => PerformanceEntry[];
+    };
+    perfStub.getEntriesByType ??= () => [];
   });
 
   afterAll(() => {

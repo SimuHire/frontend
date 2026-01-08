@@ -4,7 +4,6 @@ import {
   buildNotAuthorizedUrl,
   buildReturnTo,
 } from '@/lib/auth/routing';
-import { listSimulations } from '@/lib/api/recruiter';
 import { toUserMessage } from '@/lib/utils/errors';
 import type { RecruiterProfile, SimulationListItem } from '@/types/recruiter';
 
@@ -14,14 +13,19 @@ type Options = {
   fetchOnMount?: boolean;
 };
 
+type DashboardPayload = {
+  profile: RecruiterProfile | null;
+  simulations: SimulationListItem[];
+  profileError: string | null;
+  simulationsError: string | null;
+};
+
 type Inflight = {
-  profile?: Promise<RecruiterProfile | null>;
-  simulations?: Promise<SimulationListItem[]>;
+  dashboard?: Promise<DashboardPayload>;
 };
 
 type Controllers = {
-  profile?: AbortController;
-  simulations?: AbortController;
+  dashboard?: AbortController;
 };
 
 function isAbortError(err: unknown) {
@@ -53,17 +57,17 @@ export function useDashboardData(options?: Options) {
   const controllersRef = useRef<Controllers>({});
   const requestIdRef = useRef(0);
 
-  const fetchProfile = useCallback((force = false) => {
-    if (!force && inflightRef.current.profile) {
-      return inflightRef.current.profile;
+  const fetchDashboard = useCallback((force = false) => {
+    if (!force && inflightRef.current.dashboard) {
+      return inflightRef.current.dashboard;
     }
 
-    controllersRef.current.profile?.abort();
+    controllersRef.current.dashboard?.abort();
     const controller = new AbortController();
-    controllersRef.current.profile = controller;
+    controllersRef.current.dashboard = controller;
 
     const promise = (async () => {
-      const res = await fetch('/api/auth/me', {
+      const res = await fetch('/api/dashboard', {
         cache: 'no-store',
         credentials: 'include',
         signal: controller.signal,
@@ -85,7 +89,7 @@ export function useDashboardData(options?: Options) {
           window.location.assign(destination);
         }
         const error = new Error(
-          toUserMessage(parsed, 'Unable to load your profile right now.', {
+          toUserMessage(parsed, 'Unable to load your dashboard right now.', {
             includeDetail: true,
           }),
         ) as Error & { status?: number };
@@ -93,36 +97,14 @@ export function useDashboardData(options?: Options) {
         throw error;
       }
 
-      return parsed as RecruiterProfile;
+      return parsed as DashboardPayload;
     })().finally(() => {
-      if (inflightRef.current.profile === promise) {
-        inflightRef.current.profile = undefined;
+      if (inflightRef.current.dashboard === promise) {
+        inflightRef.current.dashboard = undefined;
       }
     });
 
-    inflightRef.current.profile = promise;
-    return promise;
-  }, []);
-
-  const fetchSimulations = useCallback((force = false) => {
-    if (!force && inflightRef.current.simulations) {
-      return inflightRef.current.simulations;
-    }
-
-    controllersRef.current.simulations?.abort();
-    const controller = new AbortController();
-    controllersRef.current.simulations = controller;
-
-    const promise = listSimulations({
-      signal: controller.signal,
-      cache: 'no-store',
-    }).finally(() => {
-      if (inflightRef.current.simulations === promise) {
-        inflightRef.current.simulations = undefined;
-      }
-    });
-
-    inflightRef.current.simulations = promise;
+    inflightRef.current.dashboard = promise;
     return promise;
   }, []);
 
@@ -134,14 +116,17 @@ export function useDashboardData(options?: Options) {
       setProfileError(null);
       setSimError(null);
 
-      const profilePromise = fetchProfile(force);
-      const simsPromise = fetchSimulations(force);
+      const dashboardPromise = fetchDashboard(force);
 
-      profilePromise
+      dashboardPromise
         .then((result) => {
           if (requestIdRef.current !== requestId) return;
-          setProfile(result ?? null);
-          setProfileError(null);
+          setProfile(result?.profile ?? null);
+          setSimulations(
+            Array.isArray(result?.simulations) ? result.simulations : [],
+          );
+          setProfileError(result?.profileError ?? null);
+          setSimError(result?.simulationsError ?? null);
         })
         .catch((err: unknown) => {
           if (isAbortError(err) || requestIdRef.current !== requestId) return;
@@ -155,33 +140,6 @@ export function useDashboardData(options?: Options) {
               includeDetail: true,
             }),
           );
-        })
-        .finally(() => {
-          if (requestIdRef.current === requestId) setLoadingProfile(false);
-        });
-
-      simsPromise
-        .then((result) => {
-          if (requestIdRef.current !== requestId) return;
-          setSimulations(Array.isArray(result) ? result : []);
-          setSimError(null);
-        })
-        .catch((err: unknown) => {
-          if (isAbortError(err) || requestIdRef.current !== requestId) return;
-          const status =
-            err && typeof err === 'object'
-              ? (err as { status?: unknown }).status
-              : null;
-          if (status === 401) {
-            window.location.assign(buildLoginUrl('recruiter', buildReturnTo()));
-            return;
-          }
-          if (status === 403) {
-            window.location.assign(
-              buildNotAuthorizedUrl('recruiter', buildReturnTo()),
-            );
-            return;
-          }
           setSimError(
             toUserMessage(err, 'Failed to load simulations.', {
               includeDetail: true,
@@ -189,20 +147,21 @@ export function useDashboardData(options?: Options) {
           );
         })
         .finally(() => {
-          if (requestIdRef.current === requestId) setLoadingSimulations(false);
+          if (requestIdRef.current !== requestId) return;
+          setLoadingProfile(false);
+          setLoadingSimulations(false);
         });
 
-      return Promise.allSettled([profilePromise, simsPromise]);
+      return dashboardPromise;
     },
-    [fetchProfile, fetchSimulations],
+    [fetchDashboard],
   );
 
   useEffect(() => {
     const controllers = controllersRef.current;
     if (options?.fetchOnMount === false) {
       return () => {
-        controllers.profile?.abort();
-        controllers.simulations?.abort();
+        controllers.dashboard?.abort();
       };
     }
 
@@ -214,8 +173,7 @@ export function useDashboardData(options?: Options) {
 
     return () => {
       active = false;
-      controllers.profile?.abort();
-      controllers.simulations?.abort();
+      controllers.dashboard?.abort();
     };
   }, [controllersRef, options?.fetchOnMount, refresh]);
 

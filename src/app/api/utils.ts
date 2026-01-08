@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { forwardJson } from '@/lib/server/bff';
+import {
+  REQUEST_ID_HEADER,
+  forwardJson,
+  resolveRequestId,
+} from '@/lib/server/bff';
 import { BRAND_SLUG } from '@/lib/brand';
 import { mergeResponseCookies, requireBffAuth } from '@/lib/server/bffAuth';
 
@@ -22,9 +26,11 @@ export async function forwardWithAuth(
   const auth = await requireBffAuth(req, {
     requirePermission: requirePermission,
   });
+  const requestId = resolveRequestId(req.headers);
   if (!auth.ok) {
     const resp = auth.response;
     mergeResponseCookies(auth.cookies, resp);
+    resp.headers.set(REQUEST_ID_HEADER, requestId);
     return resp;
   }
 
@@ -34,14 +40,16 @@ export async function forwardWithAuth(
       ...args,
       accessToken: auth.accessToken,
       cache: args.cache ?? 'no-store',
+      requestId,
     });
   } catch (e: unknown) {
-    const error = errorResponse(e);
+    const error = errorResponse(e, 'Upstream error', requestId);
     mergeResponseCookies(auth.cookies, error);
     return error;
   }
 
   mergeResponseCookies(auth.cookies, resp);
+  resp.headers.set(REQUEST_ID_HEADER, requestId);
 
   if (tag) {
     resp.headers.set(BFF_HEADER, tag);
@@ -50,14 +58,23 @@ export async function forwardWithAuth(
   return resp;
 }
 
-export function errorResponse(e: unknown, fallback = 'Upstream error') {
+export function errorResponse(
+  e: unknown,
+  fallback = 'Upstream error',
+  requestId?: string,
+) {
   const message = e instanceof Error ? `${fallback}: ${e.message}` : fallback;
-  return NextResponse.json({ message }, { status: 500 });
+  const resp = NextResponse.json({ message }, { status: 500 });
+  if (requestId) {
+    resp.headers.set(REQUEST_ID_HEADER, requestId);
+  }
+  return resp;
 }
 
 type RecruiterAuthHandler = (auth: {
   accessToken: string;
   cookies: NextResponse;
+  requestId: string;
 }) => Promise<NextResponse>;
 
 export async function withRecruiterAuth(
@@ -65,24 +82,28 @@ export async function withRecruiterAuth(
   options: { tag: string; requirePermission?: string },
   handler: RecruiterAuthHandler,
 ): Promise<NextResponse> {
+  const requestId = resolveRequestId(req.headers);
   const auth = await requireBffAuth(req, {
     requirePermission: options.requirePermission ?? 'recruiter:access',
   });
 
   if (!auth.ok) {
     mergeResponseCookies(auth.cookies, auth.response);
+    auth.response.headers.set(REQUEST_ID_HEADER, requestId);
     return auth.response;
   }
 
   try {
-    const resp = await handler(auth);
+    const resp = await handler({ ...auth, requestId });
     mergeResponseCookies(auth.cookies, resp);
     resp.headers.set(BFF_HEADER, options.tag);
+    resp.headers.set(REQUEST_ID_HEADER, requestId);
     return resp;
   } catch (e: unknown) {
-    const error = errorResponse(e);
+    const error = errorResponse(e, 'Upstream error', requestId);
     mergeResponseCookies(auth.cookies, error);
     error.headers.set(BFF_HEADER, options.tag);
+    error.headers.set(REQUEST_ID_HEADER, requestId);
     return error;
   }
 }

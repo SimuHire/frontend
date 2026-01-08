@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       forwardJson({
         path: '/api/simulations',
         accessToken: auth.accessToken,
+        requestId: auth.requestId,
       }),
   );
 }
@@ -37,6 +38,7 @@ export async function POST(req: NextRequest) {
         headers: { 'Content-Type': 'application/json' },
         body,
         accessToken: auth.accessToken,
+        requestId: auth.requestId,
       });
     },
   );

@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       forwardJson({
         path: '/api/auth/me',
         accessToken: auth.accessToken,
+        requestId: auth.requestId,
       }),
   );
 }

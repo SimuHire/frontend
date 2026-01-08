@@ -24,6 +24,7 @@ export async function POST(
         headers: { 'Content-Type': 'application/json' },
         body: payload ?? {},
         accessToken: auth.accessToken,
+        requestId: auth.requestId,
       }),
   );
 }

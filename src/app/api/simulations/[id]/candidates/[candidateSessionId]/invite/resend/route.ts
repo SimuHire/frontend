@@ -21,6 +21,7 @@ export async function POST(
         method: 'POST',
         cache: 'no-store',
         accessToken: auth.accessToken,
+        requestId: auth.requestId,
       }),
   );
 }

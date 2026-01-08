@@ -71,24 +71,44 @@ jest.mock('next/server', () => {
     url: string;
     nextUrl: URL;
     headers: {
+      get: (key: string) => string | null;
       forEach: (cb: (value: string, key: string) => void) => void;
     };
     method: string;
+    private _body?: ArrayBuffer;
+    signal: AbortSignal;
     constructor(
       url: URL | string,
-      init?: { method?: string; headers?: Record<string, string> },
+      init?: {
+        method?: string;
+        headers?: Record<string, string>;
+        body?: string | ArrayBuffer;
+      },
     ) {
       this.url = url.toString();
       this.nextUrl = new URL(this.url);
       this.method = init?.method ?? 'GET';
+      this.signal = new AbortController().signal;
       const headerStore = new Map<string, string>();
       Object.entries(init?.headers ?? {}).forEach(([k, v]) =>
         headerStore.set(k.toLowerCase(), v),
       );
+      if (init?.body) {
+        this._body =
+          typeof init.body === 'string'
+            ? new TextEncoder().encode(init.body).buffer
+            : (init.body as ArrayBuffer);
+      }
       this.headers = {
+        get: (key: string) => headerStore.get(key.toLowerCase()) ?? null,
         forEach: (cb: (value: string, key: string) => void) =>
           headerStore.forEach((v, k) => cb(v, k)),
       };
+    }
+
+    async arrayBuffer() {
+      if (this._body) return this._body;
+      return new ArrayBuffer(0);
     }
   }
 
@@ -107,9 +127,9 @@ type FakeResponseShape = {
   headers: { get: (key: string) => string | null };
 };
 
-jest.mock('@/lib/server/bff', () => ({
-  getBackendBaseUrl: jest.fn(() => 'https://backend.test'),
-  parseUpstreamBody: jest.fn(async (res: Response) => {
+jest.mock('@/lib/server/bff', () => {
+  const REQUEST_ID_HEADER = 'x-tenon-request-id';
+  const parseUpstreamBody = jest.fn(async (res: Response) => {
     const contentType = res.headers.get('content-type') ?? '';
     if (contentType.includes('application/json')) {
       try {
@@ -123,13 +143,90 @@ jest.mock('@/lib/server/bff', () => ({
     } catch {
       return undefined;
     }
-  }),
-  UPSTREAM_HEADER: 'x-tenon-upstream-status',
-}));
+  });
+
+  const upstreamRequest = jest.fn(
+    async (options: {
+      url: string;
+      method?: string;
+      headers?: Record<string, string>;
+      body?: BodyInit | null;
+      cache?: RequestCache;
+      timeoutMs?: number;
+      requestId: string;
+      maxAttempts?: number;
+    }) => {
+      const method = (options.method ?? 'GET').toUpperCase();
+      const retryable = method === 'GET' || method === 'HEAD';
+      const attempts = retryable ? (options.maxAttempts ?? 3) : 1;
+      let lastError: unknown;
+
+      for (let attempt = 1; attempt <= attempts; attempt++) {
+        const controller = new AbortController();
+        let timedOut = false;
+        const timeout = setTimeout(() => {
+          timedOut = true;
+          controller.abort();
+        }, options.timeoutMs ?? 15000);
+
+        const headers: Record<string, string> = {
+          ...(options.headers ?? {}),
+          [REQUEST_ID_HEADER]: options.requestId,
+        };
+
+        try {
+          const resp = await fetch(options.url, {
+            method,
+            headers,
+            body: options.body,
+            cache: options.cache ?? 'no-store',
+            redirect: 'manual',
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          if (
+            retryable &&
+            attempt < attempts &&
+            (resp.status === 502 || resp.status === 503 || resp.status === 504)
+          ) {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+            continue;
+          }
+          return resp;
+        } catch (err) {
+          clearTimeout(timeout);
+          if (timedOut) {
+            throw new Error(
+              `Request timed out after ${options.timeoutMs ?? 15000}ms`,
+            );
+          }
+          if (!retryable || attempt >= attempts) throw err;
+          lastError = err;
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+      }
+
+      throw lastError ?? new Error('Upstream failed');
+    },
+  );
+
+  return {
+    getBackendBaseUrl: jest.fn(() => 'https://backend.test'),
+    parseUpstreamBody,
+    resolveRequestId: jest.fn(() => 'req-test'),
+    UPSTREAM_HEADER: 'x-tenon-upstream-status',
+    REQUEST_ID_HEADER,
+    upstreamRequest,
+  };
+});
 
 const fetchMock = jest.fn();
 const originalFetch = global.fetch;
 const encoder = new TextEncoder();
+const upstreamRequestMock = jest.requireMock('@/lib/server/bff')
+  .upstreamRequest as jest.Mock;
+const parseUpstreamBodyMock = jest.requireMock('@/lib/server/bff')
+  .parseUpstreamBody as jest.Mock;
 
 function mockResponse(
   body: string | ArrayBuffer,
@@ -169,20 +266,19 @@ function mockResponse(
 describe('/api/backend proxy', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // @ts-expect-error - assign mock fetch
-    global.fetch = fetchMock;
+    global.fetch = fetchMock as unknown as typeof fetch;
   });
 
   afterEach(() => {
     fetchMock.mockReset();
+    jest.useRealTimers();
   });
 
   afterAll(() => {
-    // @ts-expect-error - restore real fetch
     global.fetch = originalFetch;
   });
 
-  it('passes through JSON responses and sets upstream header', async () => {
+  it('passes through JSON responses and sets headers', async () => {
     fetchMock.mockResolvedValueOnce(
       mockResponse(JSON.stringify({ ok: true }), {
         status: 200,
@@ -201,10 +297,33 @@ describe('/api/backend proxy', () => {
         redirect: 'manual',
       }),
     );
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const upstreamHeaders = init.headers as Headers | Record<string, string>;
+    const requestId =
+      typeof (upstreamHeaders as Headers).get === 'function'
+        ? (upstreamHeaders as Headers).get('x-tenon-request-id')
+        : (upstreamHeaders as Record<string, string>)['x-tenon-request-id'];
+    expect(requestId).toBe('req-test');
     expect(res.status).toBe(200);
     expect((res as FakeResponseShape).body).toEqual({ ok: true });
     expect(res.headers.get('x-tenon-upstream-status')).toBe('200');
-    expect(res.headers.get('location')).toBeNull();
+    expect(res.headers.get('x-tenon-request-id')).toBe('req-test');
+  });
+
+  it('threads request signal to upstream call', async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+
+    const req = new NextRequest('http://localhost/api/backend/signal');
+    await GET(req, { params: Promise.resolve({ path: ['signal'] }) });
+
+    expect(upstreamRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({ signal: req.signal }),
+    );
   });
 
   it('passes through non-JSON content and preserves content-type', async () => {
@@ -227,6 +346,49 @@ describe('/api/backend proxy', () => {
     expect(decoded).toBe('plain body');
     expect(res.headers.get('content-type')).toBe('text/plain');
     expect(res.headers.get('x-tenon-upstream-status')).toBe('201');
+    expect(res.headers.get('x-tenon-request-id')).toBe('req-test');
+  });
+
+  it('returns stable error for invalid json without re-reading body', async () => {
+    parseUpstreamBodyMock.mockClear();
+    const reader = {
+      read: jest
+        .fn()
+        .mockResolvedValueOnce({
+          done: false,
+          value: encoder.encode('not-json'),
+        })
+        .mockResolvedValueOnce({ done: true, value: undefined }),
+    };
+
+    fetchMock.mockResolvedValueOnce({
+      status: 200,
+      headers: {
+        get: (key: string) =>
+          key.toLowerCase() === 'content-type' ? 'application/json' : null,
+        forEach: (cb: (value: string, key: string) => void) => {
+          cb('application/json', 'content-type');
+        },
+      },
+      body: {
+        getReader: () => reader,
+        cancel: jest.fn(),
+      },
+      json: async () => ({}),
+      text: async () => '{}',
+    } as unknown as Response);
+
+    const res = await GET(
+      new NextRequest('http://localhost/api/backend/bad-json') as never,
+      { params: Promise.resolve({ path: ['bad-json'] }) },
+    );
+
+    expect(res.status).toBe(200);
+    expect((res as FakeResponseShape).body).toEqual({
+      message: 'Invalid JSON from upstream',
+    });
+    expect(res.headers.get('x-tenon-request-id')).toBe('req-test');
+    expect(parseUpstreamBodyMock).not.toHaveBeenCalled();
   });
 
   it('blocks upstream redirects and strips location header', async () => {
@@ -249,5 +411,126 @@ describe('/api/backend proxy', () => {
     });
     expect(res.headers.get('x-tenon-upstream-status')).toBe('302');
     expect(res.headers.get('location')).toBeNull();
+    expect(res.headers.get('x-tenon-request-id')).toBe('req-test');
+  });
+
+  it('retries GET on transient errors', async () => {
+    fetchMock
+      .mockResolvedValueOnce(mockResponse(JSON.stringify({}), { status: 503 }))
+      .mockResolvedValueOnce(
+        mockResponse(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+
+    const promise = GET(
+      new NextRequest('http://localhost/api/backend/retry') as never,
+      { params: Promise.resolve({ path: ['retry'] }) },
+    );
+
+    const res = await promise;
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('x-tenon-upstream-status')).toBe('200');
+  });
+
+  it('returns 502 when upstream response content-length exceeds cap', async () => {
+    const resp = mockResponse(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        'content-type': 'application/json',
+        'content-length': '5000000',
+      },
+    });
+    const arrayBufferSpy = jest.spyOn(
+      resp as unknown as { arrayBuffer: () => Promise<ArrayBuffer> },
+      'arrayBuffer',
+    );
+    fetchMock.mockResolvedValueOnce(resp);
+
+    const res = await GET(
+      new NextRequest('http://localhost/api/backend/huge') as never,
+      { params: Promise.resolve({ path: ['huge'] }) },
+    );
+
+    expect(res.status).toBe(502);
+    expect(res.headers.get('x-tenon-request-id')).toBe('req-test');
+    expect(arrayBufferSpy).not.toHaveBeenCalled();
+  });
+
+  it('returns 502 when streamed response exceeds cap', async () => {
+    const bigChunk = new Uint8Array(2 * 1024 * 1024 + 10);
+    const reader = {
+      read: jest
+        .fn()
+        .mockResolvedValueOnce({ done: false, value: bigChunk })
+        .mockResolvedValueOnce({ done: true, value: undefined }),
+    };
+    const cancel = jest.fn();
+
+    fetchMock.mockResolvedValueOnce({
+      status: 200,
+      headers: {
+        get: (key: string) =>
+          key.toLowerCase() === 'content-type' ? 'application/json' : null,
+        forEach: (cb: (value: string, key: string) => void) => {
+          cb('application/json', 'content-type');
+        },
+      },
+      body: {
+        getReader: () => reader,
+        cancel,
+      },
+      json: async () => ({}),
+      text: async () => '{}',
+    } as unknown as Response);
+
+    const res = await GET(
+      new NextRequest('http://localhost/api/backend/huge-stream') as never,
+      { params: Promise.resolve({ path: ['huge-stream'] }) },
+    );
+
+    expect(res.status).toBe(502);
+    expect(res.headers.get('x-tenon-request-id')).toBe('req-test');
+    expect(cancel).toHaveBeenCalled();
+  });
+
+  it('returns 413 when request body exceeds limit', async () => {
+    const req = new NextRequest('http://localhost/api/backend/oversize', {
+      method: 'POST',
+      headers: { 'content-length': '5000000' },
+    }) as never;
+    const arrayBufferSpy = jest.fn(async () => new ArrayBuffer(0));
+    (
+      req as unknown as { arrayBuffer: () => Promise<ArrayBuffer> }
+    ).arrayBuffer = arrayBufferSpy;
+
+    const res = await GET(req, {
+      params: Promise.resolve({ path: ['oversize'] }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(res.status).toBe(413);
+    expect(res.headers.get('x-tenon-request-id')).toBe('req-test');
+    expect(arrayBufferSpy).not.toHaveBeenCalled();
+  });
+
+  it('times out and returns an error response', async () => {
+    upstreamRequestMock.mockImplementationOnce(async () => {
+      throw new Error('Request timed out after 20000ms');
+    });
+
+    const res = await GET(
+      new NextRequest('http://localhost/api/backend/slow') as never,
+      { params: Promise.resolve({ path: ['slow'] }) },
+    );
+
+    expect(res.status).toBe(502);
+    expect((res as FakeResponseShape).body).toEqual(
+      expect.objectContaining({ message: 'Upstream request failed' }),
+    );
+    expect(res.headers.get('x-tenon-request-id')).toBe('req-test');
   });
 });

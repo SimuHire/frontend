@@ -19,6 +19,7 @@ export async function GET(
       forwardJson({
         path: `/api/simulations/${encodeURIComponent(id)}/candidates`,
         accessToken: auth.accessToken,
+        requestId: auth.requestId,
       }),
   );
 }
