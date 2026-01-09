@@ -267,19 +267,25 @@ export async function claimCandidateInvite(
 
 export async function sendCandidateVerificationCode(
   inviteToken: string,
+  email?: string,
 ): Promise<CandidateVerificationSendResponse> {
   const safeInviteToken = inviteToken.trim();
   if (!safeInviteToken) {
     throw new HttpError(400, 'Missing invite token.');
   }
+  const trimmedEmail = typeof email === 'string' ? email.trim() : '';
   const path = `/candidate/session/${encodeURIComponent(
     safeInviteToken,
   )}/verification/code/send`;
 
   try {
+    const payload =
+      trimmedEmail && trimmedEmail.includes('@')
+        ? { email: trimmedEmail }
+        : undefined;
     const data = await apiClient.post<CandidateVerificationSendResponse>(
       path,
-      undefined,
+      payload,
       { cache: 'no-store' },
       { ...baseClientOptions, skipAuth: true },
     );

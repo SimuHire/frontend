@@ -78,6 +78,25 @@ describe('candidate api helpers', () => {
     });
   });
 
+  it('sends verification code with email when provided', async () => {
+    apiClient.post.mockResolvedValueOnce({
+      status: 'sent',
+      maskedEmail: 't***@example.com',
+      expiresAt: '2025-01-01T00:00:00Z',
+    });
+
+    const { sendCandidateVerificationCode } =
+      await import('@/lib/api/candidate');
+    await sendCandidateVerificationCode('abc', 'user@example.com');
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/candidate/session/abc/verification/code/send',
+      { email: 'user@example.com' },
+      { cache: 'no-store' },
+      expect.objectContaining({ skipAuth: true }),
+    );
+  });
+
   it('attaches otp metadata for resend cooldown', async () => {
     apiClient.post.mockRejectedValueOnce({
       status: 429,
