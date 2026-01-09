@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import {
   act,
   fireEvent,
@@ -28,6 +29,7 @@ describe('CandidateVerificationPanel', () => {
   beforeEach(() => {
     sendMock.mockReset();
     confirmMock.mockReset();
+    sessionStorage.clear();
   });
 
   afterEach(() => {
@@ -45,11 +47,29 @@ describe('CandidateVerificationPanel', () => {
       <CandidateVerificationPanel token="tok_123" onVerified={jest.fn()} />,
     );
 
-    await waitFor(() => expect(sendMock).toHaveBeenCalledWith('tok_123'));
+    await waitFor(() =>
+      expect(sendMock).toHaveBeenCalledWith('tok_123', undefined),
+    );
     expect(await screen.findByText(/t\*\*\*@example.com/i)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /Resend in 1:00/i }),
     ).toBeInTheDocument();
+  });
+
+  it('sends the verification code only once in StrictMode', async () => {
+    sendMock.mockResolvedValue({
+      status: 'sent',
+      maskedEmail: 't***@example.com',
+      expiresAt: '2025-01-01T00:00:00Z',
+    });
+
+    render(
+      <StrictMode>
+        <CandidateVerificationPanel token="tok_123" onVerified={jest.fn()} />
+      </StrictMode>,
+    );
+
+    await waitFor(() => expect(sendMock).toHaveBeenCalledTimes(1));
   });
 
   it('verifies the code and calls onVerified', async () => {
@@ -153,6 +173,41 @@ describe('CandidateVerificationPanel', () => {
     ).toBeInTheDocument();
   });
 
+  it('requires an email before resending when the API requests it', async () => {
+    sendMock
+      .mockRejectedValueOnce({
+        status: 400,
+        otpError: 'email_required',
+      })
+      .mockResolvedValueOnce({
+        status: 'sent',
+        maskedEmail: 't***@example.com',
+        expiresAt: '2025-01-01T00:00:00Z',
+      });
+
+    render(
+      <CandidateVerificationPanel token="tok_123" onVerified={jest.fn()} />,
+    );
+
+    await waitForSend();
+    expect(
+      await screen.findByText(/email that received the invite/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send code/i })).toBeDisabled();
+
+    const user = userEvent.setup();
+    await user.type(
+      screen.getByPlaceholderText('you@example.com'),
+      'user@example.com',
+    );
+    await user.click(screen.getByRole('button', { name: /Send code/i }));
+
+    expect(sendMock).toHaveBeenCalledWith('tok_123', undefined);
+    await waitFor(() =>
+      expect(sendMock).toHaveBeenCalledWith('tok_123', 'user@example.com'),
+    );
+  });
+
   it('shows resend cooldown messaging for otp_cooldown', async () => {
     sendMock.mockRejectedValue({
       status: 429,
@@ -198,7 +253,7 @@ describe('CandidateVerificationPanel', () => {
       maskedEmail: 't***@example.com',
       expiresAt: '2025-01-01T00:00:00Z',
     });
-    await user.click(screen.getByRole('button', { name: /Resend code/i }));
+    await user.click(screen.getByRole('button', { name: /Send code/i }));
     await waitFor(() => expect(sendMock).toHaveBeenCalledTimes(2));
   });
 
@@ -596,6 +651,38 @@ describe('CandidateVerificationPanel', () => {
     await user.click(screen.getByRole('button', { name: /Verify code/i }));
 
     expect(await screen.findByText(/code doesn’t match/i)).toBeInTheDocument();
+  });
+
+  it('shows email-required messaging when verification needs an email', async () => {
+    sendMock.mockResolvedValue({
+      status: 'sent',
+      maskedEmail: 't***@example.com',
+      expiresAt: '2025-01-01T00:00:00Z',
+    });
+    confirmMock.mockRejectedValue({ otpError: 'email_required' });
+
+    render(
+      <CandidateVerificationPanel token="tok_123" onVerified={jest.fn()} />,
+    );
+
+    await waitForSend();
+    const user = userEvent.setup();
+    await user.type(
+      screen.getByPlaceholderText('you@example.com'),
+      'user@example.com',
+    );
+    for (const [index, digit] of ['1', '2', '3', '4', '5', '6'].entries()) {
+      await user.type(screen.getByLabelText(`Digit ${index + 1}`), digit);
+    }
+    await user.click(screen.getByRole('button', { name: /Verify code/i }));
+
+    expect(
+      await screen.findByText(/Enter the email that received the invite/i),
+    ).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
+      target: { value: '' },
+    });
+    expect(screen.getByRole('button', { name: /Verify code/i })).toBeDisabled();
   });
 
   it('shows mismatch messaging when the email does not match', async () => {

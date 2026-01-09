@@ -10,6 +10,21 @@ import {
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
+const AUTO_SEND_KEY_PREFIX = 'tenon:otp_auto_sent:';
+
+function hasAutoSent(token: string): boolean {
+  try {
+    return sessionStorage.getItem(`${AUTO_SEND_KEY_PREFIX}${token}`) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markAutoSent(token: string): void {
+  try {
+    sessionStorage.setItem(`${AUTO_SEND_KEY_PREFIX}${token}`, '1');
+  } catch {}
+}
 
 type CandidateVerificationPanelProps = {
   token: string;
@@ -85,6 +100,8 @@ export function CandidateVerificationPanel({
   const [lockCountdownActive, setLockCountdownActive] =
     useState<boolean>(false);
   const [sendLimitReached, setSendLimitReached] = useState<boolean>(false);
+  const [emailRequiredForSend, setEmailRequiredForSend] =
+    useState<boolean>(false);
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const sentOnceRef = useRef<string | null>(null);
 
@@ -92,12 +109,14 @@ export function CandidateVerificationPanel({
   const isComplete = codeValue.length === OTP_LENGTH;
   const emailIsValid = useMemo(() => isMinimalEmail(email), [email]);
   const inputsDisabled = locked || verifyStatus === 'verifying';
+  const hasSent = status === 'sent' || cooldown > 0 || Boolean(maskedEmail);
   const resendDisabled =
     locked ||
     sendLimitReached ||
     status === 'sending' ||
     verifyStatus === 'verifying' ||
     cooldown > 0 ||
+    (emailRequiredForSend && !emailIsValid) ||
     !token;
 
   const expiresLabel = useMemo(() => {
@@ -149,12 +168,20 @@ export function CandidateVerificationPanel({
       cooldown > 0
     )
       return;
+    const trimmedEmail = email.trim().toLowerCase();
+    if (emailRequiredForSend && !isMinimalEmail(trimmedEmail)) {
+      setInlineError('Enter the email that received the invite to get a code.');
+      return;
+    }
     setStatus('sending');
     setInlineError(null);
     setSendLimitReached(false);
 
     try {
-      const response = await sendCandidateVerificationCode(token);
+      const response = await sendCandidateVerificationCode(
+        token,
+        isMinimalEmail(trimmedEmail) ? trimmedEmail : undefined,
+      );
       setMaskedEmail((prev) => response.maskedEmail || prev);
       setExpiresAt(response.expiresAt ?? null);
       setCooldown(response.retryAfterSeconds ?? RESEND_COOLDOWN_SECONDS);
@@ -163,6 +190,14 @@ export function CandidateVerificationPanel({
       const parsed = parseOtpError(err);
       if (parsed.status === 404 || parsed.status === 410) {
         setInlineError(parsed.message ?? 'That invite link is invalid.');
+      } else if (
+        parsed.otpError === 'email_required' ||
+        parsed.otpError === 'email_missing'
+      ) {
+        setEmailRequiredForSend(true);
+        setInlineError(
+          'Enter the email that received the invite to get a code.',
+        );
       } else if (parsed.otpError === 'otp_send_limit') {
         setSendLimitReached(true);
         setInlineError(
@@ -178,14 +213,24 @@ export function CandidateVerificationPanel({
       }
       setStatus('error');
     }
-  }, [cooldown, locked, status, token, verifyStatus]);
+  }, [
+    cooldown,
+    email,
+    emailRequiredForSend,
+    locked,
+    status,
+    token,
+    verifyStatus,
+  ]);
 
   useEffect(() => {
     if (!token) return;
+    if (hasAutoSent(token)) return;
     if (sentOnceRef.current === token) return;
     if (status !== 'idle') return;
     if (locked || verifyStatus === 'verifying' || cooldown > 0) return;
 
+    markAutoSent(token);
     sentOnceRef.current = token;
     setStatus('sending');
     setInlineError(null);
@@ -193,7 +238,11 @@ export function CandidateVerificationPanel({
 
     void (async () => {
       try {
-        const response = await sendCandidateVerificationCode(token);
+        const trimmedEmail = email.trim().toLowerCase();
+        const response = await sendCandidateVerificationCode(
+          token,
+          isMinimalEmail(trimmedEmail) ? trimmedEmail : undefined,
+        );
         setMaskedEmail((prev) => response.maskedEmail || prev);
         setExpiresAt(response.expiresAt ?? null);
         setCooldown(response.retryAfterSeconds ?? RESEND_COOLDOWN_SECONDS);
@@ -202,6 +251,14 @@ export function CandidateVerificationPanel({
         const parsed = parseOtpError(err);
         if (parsed.status === 404 || parsed.status === 410) {
           setInlineError(parsed.message ?? 'That invite link is invalid.');
+        } else if (
+          parsed.otpError === 'email_required' ||
+          parsed.otpError === 'email_missing'
+        ) {
+          setEmailRequiredForSend(true);
+          setInlineError(
+            'Enter the email that received the invite to get a code.',
+          );
         } else if (parsed.otpError === 'otp_send_limit') {
           setSendLimitReached(true);
           setInlineError(
@@ -220,7 +277,7 @@ export function CandidateVerificationPanel({
         setStatus('error');
       }
     })();
-  }, [cooldown, locked, status, token, verifyStatus]);
+  }, [cooldown, email, locked, status, token, verifyStatus]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -397,6 +454,12 @@ export function CandidateVerificationPanel({
               )}. Contact support if you need help.`
             : 'Too many attempts. This invite is locked. Contact support.',
         );
+      } else if (
+        parsed.otpError === 'email_required' ||
+        parsed.otpError === 'email_missing'
+      ) {
+        setEmailRequiredForSend(true);
+        setInlineError('Enter the email that received the invite.');
       } else if (parsed.otpError === 'otp_expired') {
         setInlineError('That code expired. Request a new one.');
         resetDigits();
@@ -420,9 +483,11 @@ export function CandidateVerificationPanel({
     token,
   ]);
 
-  const hintLine = maskedEmail
-    ? `We sent a 6-digit code to ${maskedEmail}.`
-    : 'We sent a 6-digit code to your invite email.';
+  const hintLine = hasSent
+    ? maskedEmail
+      ? `We sent a 6-digit code to ${maskedEmail}.`
+      : 'We sent a 6-digit code to your invite email.'
+    : 'Enter the email from your invite to get a 6-digit code.';
   const lockoutMessage = locked
     ? lockRemaining > 0
       ? `Too many attempts. Try again in ${formatCountdown(
@@ -522,7 +587,9 @@ export function CandidateVerificationPanel({
           >
             {cooldown > 0
               ? `Resend in ${formatCountdown(cooldown)}`
-              : 'Resend code'}
+              : hasSent
+                ? 'Resend code'
+                : 'Send code'}
           </Button>
         </div>
 
