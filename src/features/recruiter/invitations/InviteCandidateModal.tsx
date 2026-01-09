@@ -46,6 +46,9 @@ export function InviteCandidateModal({
     if (!open) return null;
     if (!candidateName.trim()) return 'Candidate name is required.';
     if (!inviteEmail.trim()) return 'Candidate email is required.';
+    const normalizedEmail = inviteEmail.trim();
+    const basicEmailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+    if (!basicEmailOk) return 'Enter a valid email address.';
     return null;
   }, [open, candidateName, inviteEmail]);
 

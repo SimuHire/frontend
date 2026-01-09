@@ -33,6 +33,10 @@ export type CandidateSession = {
   inviteEmailStatus?: 'sent' | 'failed' | 'rate_limited' | string | null;
   inviteEmailSentAt?: string | null;
   inviteEmailError?: string | null;
+  verified?: boolean | null;
+  verificationStatus?: string | null;
+  verifiedAt?: string | null;
+  dayProgress?: { current: number; total: number } | null;
 };
 
 export type StatusPillTone = 'info' | 'success' | 'warning' | 'muted';

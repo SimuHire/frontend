@@ -3,6 +3,7 @@ import {
   inviteCandidate,
   listSimulations,
   createSimulation,
+  normalizeCandidateSession,
 } from '@/lib/api/recruiter';
 
 jest.mock('@/lib/api/httpClient', () => ({
@@ -185,6 +186,30 @@ describe('recruiterApi', () => {
       });
     });
 
+    it('builds inviteUrl from token when missing and window is undefined', async () => {
+      const globalAny = globalThis as Record<string, unknown>;
+      const originalWindow = globalAny.window as Window | undefined;
+      delete globalAny.window;
+
+      mockedBffPost.mockResolvedValueOnce({
+        candidate_session_id: 'cs_3',
+        token: 'tok_3',
+        invite_url: '',
+      });
+
+      const result = await inviteCandidate(
+        'sim_3',
+        'Jane Doe',
+        'jane@example.com',
+      );
+
+      expect(result.inviteUrl).toBe('/candidate/session/tok_3');
+
+      if (originalWindow) {
+        globalAny.window = originalWindow;
+      }
+    });
+
     it('returns blanks when response is not an object', async () => {
       mockedBffPost.mockResolvedValueOnce('not-an-object');
 
@@ -224,6 +249,33 @@ describe('recruiterApi', () => {
         inviteUrl: '',
       });
       expect(mockedBffPost).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('normalizeCandidateSession', () => {
+    it('normalizes snake_case fields and builds inviteUrl fallback', () => {
+      const globalAny = globalThis as Record<string, unknown>;
+      const originalWindow = globalAny.window as Window | undefined;
+      delete globalAny.window;
+
+      const result = normalizeCandidateSession({
+        candidate_session_id: 12,
+        invite_email: 'test@example.com',
+        candidate_name: 'Test User',
+        status: 'not_started',
+        invite_token: 'tok_12',
+        invite_url: '',
+        invite_email_status: 'sent',
+        invite_email_sent_at: '2025-01-01T00:00:00Z',
+      });
+
+      expect(result.candidateSessionId).toBe(12);
+      expect(result.inviteUrl).toBe('/candidate/session/tok_12');
+      expect(result.inviteEmailStatus).toBe('sent');
+
+      if (originalWindow) {
+        globalAny.window = originalWindow;
+      }
     });
   });
 

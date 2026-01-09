@@ -343,7 +343,7 @@ describe('RecruiterSimulationDetailPage', () => {
 
     await waitFor(() => {
       expect(
-        screen.getAllByText(/Rate limited — try again in ~30s/i).length,
+        screen.getAllByText(/Retry in \d+s/i).length,
       ).toBeGreaterThanOrEqual(1);
     });
     expect(resendBtn).toBeDisabled();
@@ -396,7 +396,7 @@ describe('RecruiterSimulationDetailPage', () => {
     await waitFor(() => {
       expect(resendBtn).toBeDisabled();
       expect(
-        screen.getAllByText(/Rate limited — try again in ~30s/i).length,
+        screen.getAllByText(/Retry in \d+s/i).length,
       ).toBeGreaterThanOrEqual(1);
     });
 
@@ -407,9 +407,7 @@ describe('RecruiterSimulationDetailPage', () => {
     await waitFor(() => {
       expect(resendBtn).not.toBeDisabled();
     });
-    expect(
-      screen.queryByText(/Rate limited — try again in ~30s/i),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Retry in \d+s/i)).not.toBeInTheDocument();
     jest.useRealTimers();
   });
 
