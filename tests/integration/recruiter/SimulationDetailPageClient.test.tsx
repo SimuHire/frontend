@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import RecruiterSimulationDetailPage from '@/features/recruiter/simulation-detail/RecruiterSimulationDetailPage';
 import { jsonResponse } from '../../setup/responseHelpers';
@@ -111,6 +111,47 @@ describe('RecruiterSimulationDetailPage', () => {
     expect(await screen.findByText(/Invite created for/i)).toBeInTheDocument();
 
     expect(await screen.findByText('New Person')).toBeInTheDocument();
+  });
+
+  it('shows resend CTA for existing emails', async () => {
+    const user = userEvent.setup();
+
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse([
+        {
+          candidateSessionId: 11,
+          inviteEmail: 'Test@Email.com',
+          candidateName: 'Alex',
+          status: 'not_started',
+          startedAt: null,
+          completedAt: null,
+          hasReport: false,
+        },
+      ]),
+    );
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ inviteEmailStatus: 'sent' }),
+    );
+
+    render(<RecruiterSimulationDetailPage />);
+
+    await user.click(screen.getByRole('button', { name: /Invite candidate/i }));
+    await user.type(screen.getByLabelText(/Candidate name/i), 'Alex');
+    await user.type(
+      screen.getByLabelText(/Candidate email/i),
+      '  test@email.com  ',
+    );
+
+    expect(
+      await screen.findByText(
+        /This email is already invited to this simulation\./i,
+      ),
+    ).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog');
+    await user.click(
+      within(dialog).getByRole('button', { name: /Resend invite/i }),
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('shows invite errors for 409, 422, and 429 responses', async () => {

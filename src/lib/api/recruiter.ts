@@ -31,6 +31,16 @@ export type CreateSimulationResponse = {
   message?: string;
   id: string;
 };
+
+const CANDIDATE_CACHE_TTL_MS = 5000;
+const candidateCache = new Map<
+  string,
+  {
+    ts: number;
+    data?: CandidateSession[];
+    promise?: Promise<CandidateSession[]>;
+  }
+>();
 type ListSimulationsOptions = {
   signal?: AbortSignal;
   cache?: RequestCache;
@@ -281,6 +291,58 @@ export async function inviteCandidate(
   );
 
   return normalizeInviteResponse(data);
+}
+
+export function listSimulationCandidates(
+  simulationId: string | number,
+): Promise<CandidateSession[]> {
+  const safeId = simulationId == null ? '' : String(simulationId).trim();
+  if (!safeId) return Promise.resolve([]);
+
+  const now = Date.now();
+  const cached = candidateCache.get(safeId);
+  if (cached) {
+    if (cached.data && now - cached.ts < CANDIDATE_CACHE_TTL_MS) {
+      return Promise.resolve(cached.data);
+    }
+    if (cached.promise) {
+      return cached.promise;
+    }
+  }
+
+  const request = recruiterBffClient
+    .get<unknown>(`/simulations/${encodeURIComponent(safeId)}/candidates`)
+    .then((data) => {
+      const normalized = Array.isArray(data)
+        ? data.map(normalizeCandidateSession)
+        : [];
+      candidateCache.set(safeId, { ts: Date.now(), data: normalized });
+      return normalized;
+    })
+    .catch((error) => {
+      candidateCache.delete(safeId);
+      throw error;
+    });
+
+  candidateCache.set(safeId, { ts: now, promise: request });
+  return request;
+}
+
+export async function resendInvite(
+  simulationId: string | number,
+  candidateSessionId: number,
+): Promise<unknown> {
+  const safeId = simulationId == null ? '' : String(simulationId).trim();
+  const safeCandidateId = Number.isFinite(candidateSessionId)
+    ? String(candidateSessionId)
+    : '';
+  if (!safeId || !safeCandidateId) return null;
+
+  return recruiterBffClient.post(
+    `/simulations/${encodeURIComponent(
+      safeId,
+    )}/candidates/${encodeURIComponent(safeCandidateId)}/invite/resend`,
+  );
 }
 
 function normalizeCreateSimulationResponse(

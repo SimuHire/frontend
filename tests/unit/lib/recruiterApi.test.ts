@@ -4,6 +4,7 @@ import {
   listSimulations,
   createSimulation,
   normalizeCandidateSession,
+  listSimulationCandidates,
 } from '@/lib/api/recruiter';
 
 jest.mock('@/lib/api/httpClient', () => ({
@@ -249,6 +250,26 @@ describe('recruiterApi', () => {
         inviteUrl: '',
       });
       expect(mockedBffPost).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('listSimulationCandidates', () => {
+    it('dedupes in-flight requests', async () => {
+      let resolveFetch: (value: unknown) => void = () => undefined;
+      const pending = new Promise((resolve) => {
+        resolveFetch = resolve;
+      });
+
+      mockedBffGet.mockReturnValueOnce(pending as Promise<unknown>);
+
+      const first = listSimulationCandidates('sim_1');
+      const second = listSimulationCandidates('sim_1');
+
+      expect(mockedBffGet).toHaveBeenCalledTimes(1);
+      expect(first).toBe(second);
+
+      resolveFetch([]);
+      await first;
     });
   });
 

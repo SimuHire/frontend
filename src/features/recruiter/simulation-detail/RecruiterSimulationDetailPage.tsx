@@ -218,6 +218,15 @@ export default function RecruiterSimulationDetailPage() {
   }, [loadCandidates]);
 
   const rows = useMemo(() => candidates ?? [], [candidates]);
+  const existingInviteMap = useMemo(() => {
+    const entries = new Map<string, CandidateSession>();
+    candidates.forEach((candidate) => {
+      const key = candidate.inviteEmail?.trim().toLowerCase() ?? '';
+      if (!key) return;
+      entries.set(key, candidate);
+    });
+    return entries;
+  }, [candidates]);
 
   const updateRowState = useCallback(
     (
@@ -295,7 +304,7 @@ export default function RecruiterSimulationDetailPage() {
   );
 
   const handleResend = useCallback(
-    async (candidate: CandidateSession) => {
+    async (candidate: CandidateSession): Promise<boolean> => {
       const id = candidate.candidateSessionId;
       const startCooldown = (seconds?: number | null) => {
         const cooldownSeconds =
@@ -378,7 +387,7 @@ export default function RecruiterSimulationDetailPage() {
             error: 'Candidate not found — refreshing list.',
           }));
           void loadCandidates();
-          return;
+          return false;
         }
 
         if (!res.ok) {
@@ -386,7 +395,7 @@ export default function RecruiterSimulationDetailPage() {
             startCooldown(
               Number.isFinite(retryAfterSeconds) ? retryAfterSeconds : null,
             );
-            return;
+            return false;
           }
           const msg = toUserMessage(parsed, 'Unable to resend invite.', {
             includeDetail: true,
@@ -429,16 +438,30 @@ export default function RecruiterSimulationDetailPage() {
             toastTimerRef.current = null;
           }, 4000);
         }
+        return !rateLimited;
       } catch (e: unknown) {
-        if (!mountedRef.current) return;
+        if (!mountedRef.current) return false;
         updateRowState(id, (prev) => ({
           ...prev,
           resending: false,
           error: errorToMessage(e, 'Unable to resend invite.'),
         }));
+        return false;
       }
     },
     [dismissToast, loadCandidates, simulationId, updateRowState],
+  );
+
+  const handleResendFromModal = useCallback(
+    async (candidateSessionId: number) => {
+      const candidate = candidates.find(
+        (item) => item.candidateSessionId === candidateSessionId,
+      );
+      if (!candidate) return;
+      const ok = await handleResend(candidate);
+      if (ok) setInviteModalOpen(false);
+    },
+    [candidates, handleResend],
   );
 
   const inviteLabel = useMemo(
@@ -716,6 +739,8 @@ export default function RecruiterSimulationDetailPage() {
       <InviteCandidateModal
         open={inviteModalOpen}
         title={inviteLabel}
+        simulationId={simulationId}
+        existingInviteMap={existingInviteMap}
         state={
           inviteFlow.state.status === 'error'
             ? { status: 'error', message: inviteFlow.state.message ?? '' }
@@ -726,6 +751,7 @@ export default function RecruiterSimulationDetailPage() {
           setInviteModalOpen(false);
         }}
         onSubmit={submitInvite}
+        onResend={handleResendFromModal}
         initialName=""
         initialEmail=""
       />
