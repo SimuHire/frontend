@@ -64,9 +64,22 @@ export function useInviteCandidateFlow(simulation: InviteModalState | null) {
           candidateEmail: safeEmail,
         };
       } catch (e: unknown) {
+        const status =
+          e && typeof e === 'object'
+            ? (e as { status?: unknown }).status
+            : null;
+        const friendlyMessage = (() => {
+          if (status === 409)
+            return 'This candidate was already invited. Try resending from the table.';
+          if (status === 422) return 'Enter a valid email address.';
+          if (status === 429)
+            return 'Too many invites sent. Please wait and try again.';
+          return null;
+        })();
         setState({
           status: 'error',
-          message: errorToMessage(e, 'Failed to invite candidate.'),
+          message:
+            friendlyMessage ?? errorToMessage(e, 'Failed to invite candidate.'),
         });
         return null;
       }

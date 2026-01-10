@@ -13,6 +13,7 @@ import {
   copyToClipboard,
   errorToMessage,
 } from '@/features/recruiter/utils/formatters';
+import { normalizeCandidateSession } from '@/lib/api/recruiter';
 import { toUserMessage } from '@/lib/utils/errors';
 import type { CandidateSession } from '@/types/recruiter';
 
@@ -22,65 +23,9 @@ type RowState = {
   error?: string | null;
   message?: string | null;
   cooldownUntilMs?: number | null;
+  manualCopyUrl?: string | null;
+  manualCopyOpen?: boolean;
 };
-
-function toNumber(value: unknown): number {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return 0;
-}
-
-function toStringOrNull(value: unknown): string | null {
-  return typeof value === 'string' && value.trim() ? value : null;
-}
-
-function normalizeCandidateSession(raw: unknown): CandidateSession {
-  if (!raw || typeof raw !== 'object') {
-    return {
-      candidateSessionId: 0,
-      inviteEmail: null,
-      candidateName: null,
-      status: 'not_started',
-      startedAt: null,
-      completedAt: null,
-      hasReport: false,
-    };
-  }
-
-  const rec = raw as Record<string, unknown>;
-
-  return {
-    candidateSessionId: toNumber(
-      rec.candidateSessionId ?? rec.candidate_session_id ?? rec.id,
-    ),
-    inviteEmail: toStringOrNull(rec.inviteEmail ?? rec.invite_email),
-    candidateName: toStringOrNull(rec.candidateName ?? rec.candidate_name),
-    status: (typeof rec.status === 'string'
-      ? rec.status
-      : typeof rec.sessionStatus === 'string'
-        ? rec.sessionStatus
-        : 'not_started') as CandidateSession['status'],
-    startedAt: toStringOrNull(rec.startedAt ?? rec.started_at),
-    completedAt: toStringOrNull(rec.completedAt ?? rec.completed_at),
-    hasReport: rec.hasReport === true || rec.has_report === true,
-    inviteToken: toStringOrNull(
-      rec.token ?? rec.inviteToken ?? rec.invite_token,
-    ),
-    inviteUrl: toStringOrNull(rec.inviteUrl ?? rec.invite_url),
-    inviteEmailStatus: toStringOrNull(
-      rec.inviteEmailStatus ?? rec.invite_email_status,
-    ),
-    inviteEmailSentAt: toStringOrNull(
-      rec.inviteEmailSentAt ?? rec.invite_email_sent_at,
-    ),
-    inviteEmailError: toStringOrNull(
-      rec.inviteEmailError ?? rec.invite_email_error,
-    ),
-  };
-}
 
 function formatDateTime(value: string | null): string | null {
   if (!value) return null;
@@ -100,9 +45,33 @@ function inviteStatusLabel(
   return String(status).replace(/_/g, ' ');
 }
 
-function buildInviteLink(candidate: CandidateSession): string | null {
-  if (candidate.inviteUrl?.trim()) return candidate.inviteUrl.trim();
-  return null;
+function verificationStatusLabel(candidate: CandidateSession): string {
+  if (candidate.verified === true) return 'Verified';
+  if (candidate.verificationStatus) {
+    const normalized = String(candidate.verificationStatus).toLowerCase();
+    if (normalized === 'verified') return 'Verified';
+    if (normalized === 'pending') return 'Pending';
+    if (normalized === 'required') return 'Required';
+    if (normalized === 'failed') return 'Failed';
+    return String(candidate.verificationStatus).replace(/_/g, ' ');
+  }
+  if (candidate.verified === false) return 'Not verified';
+  return 'Not verified';
+}
+
+function formatDayProgress(
+  progress: CandidateSession['dayProgress'],
+): string | null {
+  if (!progress) return null;
+  const current = Math.max(0, Math.round(progress.current));
+  const total = Math.max(0, Math.round(progress.total));
+  if (!total) return null;
+  return `${current} / ${total}`;
+}
+
+function formatCooldown(remainingMs: number): string {
+  const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
+  return `Retry in ${seconds}s`;
 }
 
 async function safeParseResponse(res: Response): Promise<unknown> {
@@ -153,12 +122,13 @@ export default function RecruiterSimulationDetailPage() {
       }
   >({ open: false });
   const [toastCopied, setToastCopied] = useState(false);
+  const [cooldownTick, setCooldownTick] = useState(0);
 
   const mountedRef = useRef(true);
   const toastTimerRef = useRef<number | null>(null);
   const toastCopyTimerRef = useRef<number | null>(null);
   const cooldownTimersRef = useRef<Record<number, number>>({});
-  const RATE_LIMIT_MESSAGE = 'Rate limited — try again in ~30s';
+  const cooldownIntervalRef = useRef<number | null>(null);
 
   const inviteFlow = useInviteCandidateFlow(
     inviteModalOpen
@@ -181,6 +151,10 @@ export default function RecruiterSimulationDetailPage() {
         window.clearTimeout(timerId);
       });
       cooldownTimersRef.current = {};
+      if (cooldownIntervalRef.current) {
+        window.clearInterval(cooldownIntervalRef.current);
+        cooldownIntervalRef.current = null;
+      }
     };
   }, []);
 
@@ -189,6 +163,25 @@ export default function RecruiterSimulationDetailPage() {
     setRowStates({});
     setError(null);
   }, [simulationId]);
+
+  useEffect(() => {
+    const hasCooldown = Object.values(rowStates).some(
+      (row) =>
+        typeof row.cooldownUntilMs === 'number' &&
+        row.cooldownUntilMs > Date.now(),
+    );
+
+    if (hasCooldown && !cooldownIntervalRef.current) {
+      cooldownIntervalRef.current = window.setInterval(() => {
+        setCooldownTick(Date.now());
+      }, 1000);
+    }
+
+    if (!hasCooldown && cooldownIntervalRef.current) {
+      window.clearInterval(cooldownIntervalRef.current);
+      cooldownIntervalRef.current = null;
+    }
+  }, [rowStates]);
 
   const loadCandidates = useCallback(async () => {
     setLoading(true);
@@ -225,6 +218,15 @@ export default function RecruiterSimulationDetailPage() {
   }, [loadCandidates]);
 
   const rows = useMemo(() => candidates ?? [], [candidates]);
+  const existingInviteMap = useMemo(() => {
+    const entries = new Map<string, CandidateSession>();
+    candidates.forEach((candidate) => {
+      const key = candidate.inviteEmail?.trim().toLowerCase() ?? '';
+      if (!key) return;
+      entries.set(key, candidate);
+    });
+    return entries;
+  }, [candidates]);
 
   const updateRowState = useCallback(
     (
@@ -243,9 +245,14 @@ export default function RecruiterSimulationDetailPage() {
     [],
   );
 
+  const dismissToast = useCallback(() => {
+    setToast({ open: false });
+    setToastCopied(false);
+  }, []);
+
   const handleCopy = useCallback(
     async (candidate: CandidateSession) => {
-      const link = buildInviteLink(candidate);
+      const link = candidate.inviteUrl?.trim() || null;
       const id = candidate.candidateSessionId;
       if (!link) {
         updateRowState(id, (prev) => ({
@@ -253,6 +260,8 @@ export default function RecruiterSimulationDetailPage() {
           copied: false,
           message: null,
           error: 'Invite link unavailable — resend invite or refresh.',
+          manualCopyOpen: false,
+          manualCopyUrl: null,
         }));
         return;
       }
@@ -265,7 +274,22 @@ export default function RecruiterSimulationDetailPage() {
         copied: ok,
         error: ok ? null : 'Unable to copy invite link.',
         message: ok ? 'Invite link copied' : null,
+        manualCopyOpen: ok ? false : true,
+        manualCopyUrl: ok ? null : link,
       }));
+
+      if (ok) {
+        setToast({
+          open: true,
+          kind: 'success',
+          message: 'Invite link copied.',
+        });
+        if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = window.setTimeout(() => {
+          dismissToast();
+          toastTimerRef.current = null;
+        }, 4000);
+      }
 
       window.setTimeout(() => {
         if (!mountedRef.current) return;
@@ -276,18 +300,23 @@ export default function RecruiterSimulationDetailPage() {
         }));
       }, 1800);
     },
-    [updateRowState],
+    [dismissToast, updateRowState],
   );
 
   const handleResend = useCallback(
-    async (candidate: CandidateSession) => {
+    async (candidate: CandidateSession): Promise<boolean> => {
       const id = candidate.candidateSessionId;
-      const startCooldown = () => {
+      const startCooldown = (seconds?: number | null) => {
+        const cooldownSeconds =
+          typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0
+            ? seconds
+            : 30;
+        const cooldownMs = cooldownSeconds * 1000;
         updateRowState(id, (prev) => ({
           ...prev,
           resending: false,
-          message: RATE_LIMIT_MESSAGE,
-          cooldownUntilMs: Date.now() + 30_000,
+          message: null,
+          cooldownUntilMs: Date.now() + cooldownMs,
         }));
         if (cooldownTimersRef.current[id])
           window.clearTimeout(cooldownTimersRef.current[id]);
@@ -295,10 +324,10 @@ export default function RecruiterSimulationDetailPage() {
           updateRowState(id, (prev) => ({
             ...prev,
             cooldownUntilMs: null,
-            message: prev.message === RATE_LIMIT_MESSAGE ? null : prev.message,
+            message: prev.message,
           }));
           delete cooldownTimersRef.current[id];
-        }, 30_000);
+        }, cooldownMs);
       };
 
       updateRowState(id, (prev) => ({
@@ -316,6 +345,21 @@ export default function RecruiterSimulationDetailPage() {
         );
 
         const parsed = await safeParseResponse(res);
+
+        const retryAfterHeader = res.headers.get('retry-after');
+        const retryAfterSeconds =
+          retryAfterHeader && /^\d+$/.test(retryAfterHeader)
+            ? Number(retryAfterHeader)
+            : parsed && typeof parsed === 'object'
+              ? Number(
+                  (parsed as { retryAfterSeconds?: unknown })
+                    .retryAfterSeconds ??
+                    (parsed as { retry_after_seconds?: unknown })
+                      .retry_after_seconds ??
+                    (parsed as { cooldownSeconds?: unknown }).cooldownSeconds ??
+                    (parsed as { cooldown_seconds?: unknown }).cooldown_seconds,
+                )
+              : null;
 
         const rateLimited =
           res.status === 429 ||
@@ -343,13 +387,15 @@ export default function RecruiterSimulationDetailPage() {
             error: 'Candidate not found — refreshing list.',
           }));
           void loadCandidates();
-          return;
+          return false;
         }
 
         if (!res.ok) {
           if (rateLimited) {
-            startCooldown();
-            return;
+            startCooldown(
+              Number.isFinite(retryAfterSeconds) ? retryAfterSeconds : null,
+            );
+            return false;
           }
           const msg = toUserMessage(parsed, 'Unable to resend invite.', {
             includeDetail: true,
@@ -369,7 +415,9 @@ export default function RecruiterSimulationDetailPage() {
         }
 
         if (rateLimited) {
-          startCooldown();
+          startCooldown(
+            Number.isFinite(retryAfterSeconds) ? retryAfterSeconds : null,
+          );
         } else {
           updateRowState(id, (prev) => ({
             ...prev,
@@ -379,23 +427,42 @@ export default function RecruiterSimulationDetailPage() {
             ),
             cooldownUntilMs: prev.cooldownUntilMs ?? null,
           }));
+          setToast({
+            open: true,
+            kind: 'success',
+            message: 'Invite resent.',
+          });
+          if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+          toastTimerRef.current = window.setTimeout(() => {
+            dismissToast();
+            toastTimerRef.current = null;
+          }, 4000);
         }
+        return !rateLimited;
       } catch (e: unknown) {
-        if (!mountedRef.current) return;
+        if (!mountedRef.current) return false;
         updateRowState(id, (prev) => ({
           ...prev,
           resending: false,
           error: errorToMessage(e, 'Unable to resend invite.'),
         }));
+        return false;
       }
     },
-    [loadCandidates, simulationId, updateRowState],
+    [dismissToast, loadCandidates, simulationId, updateRowState],
   );
 
-  const dismissToast = useCallback(() => {
-    setToast({ open: false });
-    setToastCopied(false);
-  }, []);
+  const handleResendFromModal = useCallback(
+    async (candidateSessionId: number) => {
+      const candidate = candidates.find(
+        (item) => item.candidateSessionId === candidateSessionId,
+      );
+      if (!candidate) return;
+      const ok = await handleResend(candidate);
+      if (ok) setInviteModalOpen(false);
+    },
+    [candidates, handleResend],
+  );
 
   const inviteLabel = useMemo(
     () => `Simulation ${simulationId}`,
@@ -492,6 +559,8 @@ export default function RecruiterSimulationDetailPage() {
                 <th className="px-4 py-3">Candidate</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Invite email</th>
+                <th className="px-4 py-3">Verification</th>
+                <th className="px-4 py-3">Day progress</th>
                 <th className="px-4 py-3">Started</th>
                 <th className="px-4 py-3">Completed</th>
                 <th className="px-4 py-3"></th>
@@ -502,13 +571,20 @@ export default function RecruiterSimulationDetailPage() {
                 const display = c.candidateName || c.inviteEmail || 'Unnamed';
                 const rowState = rowStates[c.candidateSessionId] ?? {};
                 const sentAt = formatDateTime(c.inviteEmailSentAt ?? null);
-                const inviteLink = buildInviteLink(c);
+                const inviteLink = c.inviteUrl?.trim() || null;
                 const startedAt = formatDateTime(c.startedAt);
                 const completedAt = formatDateTime(c.completedAt);
+                const verifiedAt = formatDateTime(c.verifiedAt ?? null);
+                const dayProgress = formatDayProgress(c.dayProgress ?? null);
+                const now = cooldownTick || Date.now();
                 const cooldownActive =
                   typeof rowState.cooldownUntilMs === 'number' &&
-                  rowState.cooldownUntilMs > Date.now();
+                  rowState.cooldownUntilMs > now;
                 const resendDisabled = rowState.resending || cooldownActive;
+                const cooldownRemainingMs =
+                  cooldownActive && typeof rowState.cooldownUntilMs === 'number'
+                    ? Math.max(0, rowState.cooldownUntilMs - now)
+                    : null;
 
                 return (
                   <tr key={c.candidateSessionId}>
@@ -568,9 +644,44 @@ export default function RecruiterSimulationDetailPage() {
                             Invite link unavailable — resend invite or refresh.
                           </div>
                         ) : null}
+                        {rowState.manualCopyOpen && rowState.manualCopyUrl ? (
+                          <div className="mt-2 rounded border border-gray-200 bg-gray-50 p-2">
+                            <div className="text-xs text-gray-600">
+                              Copy the link manually:
+                            </div>
+                            <div className="mt-1 flex items-center gap-2">
+                              <input
+                                className="w-full rounded border border-gray-200 bg-white px-2 py-1 font-mono text-xs"
+                                readOnly
+                                value={rowState.manualCopyUrl}
+                                onFocus={(e) => e.currentTarget.select()}
+                                aria-label="Manual invite link"
+                              />
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={() =>
+                                  updateRowState(
+                                    c.candidateSessionId,
+                                    (prev) => ({
+                                      ...prev,
+                                      manualCopyOpen: false,
+                                      manualCopyUrl: null,
+                                    }),
+                                  )
+                                }
+                              >
+                                Close
+                              </Button>
+                            </div>
+                          </div>
+                        ) : null}
                         {cooldownActive ? (
                           <div className="text-xs text-gray-600">
-                            Rate limited — try again in ~30s
+                            {cooldownRemainingMs
+                              ? formatCooldown(cooldownRemainingMs)
+                              : 'Rate limited — try again soon'}
                           </div>
                         ) : null}
                         {rowState.error ? (
@@ -584,6 +695,21 @@ export default function RecruiterSimulationDetailPage() {
                           </div>
                         ) : null}
                       </div>
+                    </td>
+
+                    <td className="px-4 py-3 align-top text-gray-700">
+                      <div className="flex flex-col gap-1">
+                        <div className="text-sm font-medium text-gray-800">
+                          {verificationStatusLabel(c)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {verifiedAt ? `Verified at ${verifiedAt}` : '—'}
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-3 align-top text-gray-700">
+                      {dayProgress ?? '—'}
                     </td>
 
                     <td className="px-4 py-3 align-top text-gray-700">
@@ -613,6 +739,8 @@ export default function RecruiterSimulationDetailPage() {
       <InviteCandidateModal
         open={inviteModalOpen}
         title={inviteLabel}
+        simulationId={simulationId}
+        existingInviteMap={existingInviteMap}
         state={
           inviteFlow.state.status === 'error'
             ? { status: 'error', message: inviteFlow.state.message ?? '' }
@@ -623,6 +751,7 @@ export default function RecruiterSimulationDetailPage() {
           setInviteModalOpen(false);
         }}
         onSubmit={submitInvite}
+        onResend={handleResendFromModal}
         initialName=""
         initialEmail=""
       />
