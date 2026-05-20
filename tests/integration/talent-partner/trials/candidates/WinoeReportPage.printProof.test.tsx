@@ -76,11 +76,9 @@ describe('WinoeReportPage print-proof artifact', () => {
     expect(screen.getByText(/Narrative Assessment/i)).toBeInTheDocument();
     expect(screen.getByText(/Disagree\? Send feedback →/i)).toBeInTheDocument();
     expect(
-      screen.getAllByText(/Project scaffolding quality/i).length,
+      screen.getAllByText(/Architecture & Design/i).length,
     ).toBeGreaterThan(0);
-    expect(
-      screen.getAllByText(/Communication \/ Handoff \+ Demo/i).length,
-    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Communication/i).length).toBeGreaterThan(0);
     expect(
       container.querySelector('[data-winoe-report-no-print="true"]'),
     ).not.toBeNull();

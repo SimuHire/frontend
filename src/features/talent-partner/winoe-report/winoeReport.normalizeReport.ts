@@ -335,38 +335,6 @@ function buildCanonicalDimension(
   });
 }
 
-function buildDerivedExtraDimension(
-  key: string,
-  dayScores: WinoeReportDayScore[],
-  explicitKeySet: Set<string>,
-  canonicalKeySet: Set<string>,
-): WinoeReportDimension | null {
-  if (explicitKeySet.has(key) || canonicalKeySet.has(key)) return null;
-  const definition = getDimensionDefinition(key);
-  const label = definition?.label ?? humanizeKey(key);
-  const evidence = collectDimensionEvidence(key, label, dayScores);
-  const scoreSamples = collectDimensionScoreSamples(key, label, dayScores);
-  const score =
-    scoreSamples.length > 0
-      ? scoreSamples.reduce((sum, value) => sum + value, 0) /
-        scoreSamples.length
-      : null;
-  if (score === null && evidence.length === 0) return null;
-
-  return buildDimensionFromParts({
-    key: definition?.key ?? key,
-    label,
-    description: definition?.description ?? null,
-    sourceKeys: [key],
-    score,
-    summary:
-      score !== null
-        ? `Derived from day-level rubric and evidence signals. Evidence was found in ${evidence.length} linked artifact${evidence.length === 1 ? '' : 's'}.`
-        : null,
-    evidence,
-  });
-}
-
 function buildDimensions(
   record: Record<string, unknown>,
   dayScores: WinoeReportDayScore[],
@@ -375,6 +343,16 @@ function buildDimensions(
   const explicitDimensions = dimensionRecords
     .map((item) => buildExplicitDimension(item, dayScores))
     .filter((item): item is WinoeReportDimension => Boolean(item));
+
+  if (explicitDimensions.length >= 8) {
+    const seen = new Set<string>();
+    return explicitDimensions.filter((dimension) => {
+      if (seen.has(dimension.key)) return false;
+      seen.add(dimension.key);
+      return true;
+    });
+  }
+
   const explicitByKey = new Map(
     explicitDimensions.map((item) => [item.key, item]),
   );
@@ -392,39 +370,7 @@ function buildDimensions(
     .filter((item) => !canonicalKeySet.has(item.key))
     .sort(sortDimensionsByCatalogOrder);
 
-  const derivedExtraKeys = Array.from(
-    new Set(
-      dayScores.flatMap((day) => [
-        ...Object.keys(day.rubricBreakdown).map(
-          (value) => getDimensionDefinition(value)?.key ?? value,
-        ),
-        ...day.evidence
-          .map(
-            (item) =>
-              item.dimensionKey ?? item.dimensionLabel ?? item.sourceLabel,
-          )
-          .filter((value): value is string => Boolean(value))
-          .map((value) => getDimensionDefinition(value)?.key ?? value),
-      ]),
-    ),
-  );
-  const derivedExtraDimensions = derivedExtraKeys
-    .map((key) =>
-      buildDerivedExtraDimension(
-        key,
-        dayScores,
-        new Set(explicitDimensions.map((item) => item.key)),
-        canonicalKeySet,
-      ),
-    )
-    .filter((item): item is WinoeReportDimension => Boolean(item))
-    .sort(sortDimensionsByCatalogOrder);
-
-  return [
-    ...canonicalDimensions,
-    ...explicitExtraDimensions,
-    ...derivedExtraDimensions,
-  ];
+  return [...canonicalDimensions, ...explicitExtraDimensions];
 }
 
 function buildReviewerSummaries(

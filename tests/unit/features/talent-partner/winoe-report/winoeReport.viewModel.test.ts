@@ -87,7 +87,7 @@ describe('normalizeWinoeReportViewModel', () => {
     });
 
     expect(
-      viewModel.dimensions.find((item) => item.id === 'architectural_coherence')
+      viewModel.dimensions.find((item) => item.id === 'architecture_and_design')
         ?.citations,
     ).toHaveLength(1);
     expect(
@@ -99,9 +99,8 @@ describe('normalizeWinoeReportViewModel', () => {
       renderMode: 'code',
     });
     expect(
-      viewModel.dimensions.find(
-        (item) => item.id === 'communication_handoff_demo',
-      )?.citations[0],
+      viewModel.dimensions.find((item) => item.id === 'communication')
+        ?.citations[0],
     ).toMatchObject({
       groupLabel: 'Day 4 — Handoff + Demo',
       artifactRef: 'handoff-demo-transcript.txt:02:14-02:48',
@@ -110,9 +109,8 @@ describe('normalizeWinoeReportViewModel', () => {
       endMs: 120000,
     });
     expect(
-      viewModel.dimensions.find(
-        (item) => item.id === 'reflection_self_awareness',
-      )?.citations[0],
+      viewModel.dimensions.find((item) => item.id === 'reflection_ownership')
+        ?.citations[0],
     ).toMatchObject({
       groupLabel: 'Day 5 — Reflection',
       artifactRef: 'day5-reflection.md:L8-L22',

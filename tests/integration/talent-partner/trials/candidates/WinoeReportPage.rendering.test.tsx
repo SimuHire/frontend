@@ -16,6 +16,165 @@ describe('WinoeReportPage rendering', () => {
     document.body.classList.remove('winoe-report-print-mode');
   });
 
+  it('renders exactly eight top-level dimensions for the seeded Sarah Chen report shape', async () => {
+    setFetchForWinoeReport(async (url) =>
+      url === '/api/candidate_sessions/2/winoe_report'
+        ? jsonResponse({
+            status: 'ready',
+            generatedAt: '2026-03-11T18:00:00.000Z',
+            report: {
+              overallWinoeScore: 0.78,
+              recommendation: 'strong_hire',
+              confidence: 0.74,
+              verdictOneLiner:
+                "Sarah's Trial is cohesive, evidence-backed, and easy to explain without overclaiming.",
+              narrativeAssessment:
+                'The report is backed by linked artifacts across the Trial timeline.',
+              cohortContext:
+                'This completed Trial has the densest evidence trail in the seeded demo set.',
+              dimensionScores: [
+                {
+                  key: 'architecture_and_design',
+                  label: 'Architecture & Design',
+                  score: 0.88,
+                  summary: 'The Day 1 design doc keeps the scope small.',
+                  evidence: [],
+                },
+                {
+                  key: 'problem_understanding',
+                  label: 'Problem Understanding',
+                  score: 0.86,
+                  summary:
+                    'The brief and setup stay aligned to the real problem.',
+                  evidence: [],
+                },
+                {
+                  key: 'implementation_quality',
+                  label: 'Implementation Quality',
+                  score: 0.89,
+                  summary: 'The Day 2 and Day 3 commits show steady progress.',
+                  evidence: [],
+                },
+                {
+                  key: 'code_quality',
+                  label: 'Code Quality',
+                  score: 0.88,
+                  summary:
+                    'The repository stays readable, compact, and easy to audit.',
+                  evidence: [],
+                },
+                {
+                  key: 'testing_discipline',
+                  label: 'Testing Discipline',
+                  score: 0.87,
+                  summary: 'The test story shows deliberate validation.',
+                  evidence: [],
+                },
+                {
+                  key: 'development_process',
+                  label: 'Development Process',
+                  score: 0.86,
+                  summary:
+                    'The implementation cadence and docs point the same way.',
+                  evidence: [],
+                },
+                {
+                  key: 'communication',
+                  label: 'Communication',
+                  score: 0.88,
+                  summary:
+                    'The Day 4 handoff and demo keep the story specific.',
+                  evidence: [],
+                },
+                {
+                  key: 'reflection_ownership',
+                  label: 'Reflection & Ownership',
+                  score: 0.84,
+                  summary:
+                    'The reflection is candid about tradeoffs and edges.',
+                  evidence: [],
+                },
+              ],
+              reviewerSummaries: [
+                {
+                  reviewerName: 'Design Doc Reviewer',
+                  dayIndexes: [1],
+                  score: 0.81,
+                  summary: 'The design doc frames the API clearly.',
+                  strengths: [],
+                  concerns: [],
+                  evidence: [],
+                  sourceLabel: 'Design Doc Reviewer',
+                },
+              ],
+              dayScores: [
+                {
+                  dayIndex: 1,
+                  score: 0.7,
+                  rubricBreakdown: { architecture_and_design: 0.88 },
+                  evidence: [],
+                },
+                {
+                  dayIndex: 2,
+                  score: 0.82,
+                  rubricBreakdown: { implementation_quality: 0.89 },
+                  evidence: [],
+                },
+                {
+                  dayIndex: 3,
+                  score: 0.84,
+                  rubricBreakdown: { code_quality: 0.88 },
+                  evidence: [],
+                },
+                {
+                  dayIndex: 4,
+                  score: 0.79,
+                  rubricBreakdown: { communication: 0.88 },
+                  evidence: [
+                    {
+                      kind: 'transcript',
+                      ref: 'transcript-4',
+                      excerpt:
+                        'Candidate describes architecture and follow-up items.',
+                      startMs: 15000,
+                      endMs: 19000,
+                      dayIndex: 4,
+                    },
+                  ],
+                },
+                {
+                  dayIndex: 5,
+                  score: 0.77,
+                  rubricBreakdown: { reflection_ownership: 0.84 },
+                  evidence: [],
+                },
+              ],
+              citations: [
+                {
+                  dimension: 'Architecture & Design',
+                  artifact_type: 'design_doc',
+                  artifact_ref: 'day1-design-doc.md:L1-L20',
+                  excerpt:
+                    'Use a small FastAPI service with one core domain module.',
+                },
+              ],
+            },
+          })
+        : textResponse('Not found', 404),
+    );
+
+    renderWinoeReportPage();
+
+    expect(await screen.findByText(/Winoe Score/i)).toBeInTheDocument();
+    expect(screen.getAllByTestId('view-evidence-button')).toHaveLength(8);
+    expect(
+      screen.getAllByText(/Architecture & Design/i).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/Reflection & Ownership/i).length,
+    ).toBeGreaterThan(0);
+  });
+
   it('toggles print-mode class while mounted', () => {
     setFetchForWinoeReport(async (url) =>
       url === '/api/candidate_sessions/2/winoe_report'
@@ -61,7 +220,7 @@ describe('WinoeReportPage rendering', () => {
     );
     renderWinoeReportPage();
     expect(
-      (await screen.findAllByText(/Project scaffolding quality/i)).length,
+      (await screen.findAllByText(/Architecture & Design/i)).length,
     ).toBeGreaterThan(0);
     expect(screen.getByText(/Winoe Score/i)).toBeInTheDocument();
     expect(screen.getAllByText(/^Winoe Report$/i).length).toBeGreaterThan(0);
@@ -73,7 +232,7 @@ describe('WinoeReportPage rendering', () => {
       fontFamily: 'var(--font-serif)',
     });
     expect(
-      screen.getAllByText(/Project scaffolding quality/i).length,
+      screen.getAllByText(/Architecture & Design/i).length,
     ).toBeGreaterThan(0);
     expect(
       screen.getAllByText(/Repository structure was established early/i).length,
@@ -101,12 +260,12 @@ describe('WinoeReportPage rendering', () => {
       screen.getAllByRole('button', { name: /View evidence/i })[0],
     );
     const drawer = screen.getByRole('dialog', {
-      name: /Evidence Trail · Project scaffolding quality/i,
+      name: /Evidence Trail · Architecture & Design/i,
     });
     expect(drawer).toBeInTheDocument();
     expect(within(drawer).getByText(/Dimension score/i)).toBeInTheDocument();
     expect(
-      within(drawer).getByText(/Project scaffolding quality/i),
+      within(drawer).getByText(/Architecture & Design/i),
     ).toBeInTheDocument();
     expect(
       within(drawer).getByRole('heading', {

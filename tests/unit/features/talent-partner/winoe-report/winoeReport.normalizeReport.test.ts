@@ -1,6 +1,154 @@
 import { normalizeReport } from '@/features/talent-partner/winoe-report/winoeReport.normalizeReport';
 
 describe('normalizeReport', () => {
+  it('preserves an explicit eight-dimension report without inflating it from day-level inference', () => {
+    const report = normalizeReport({
+      overallWinoeScore: 0.78,
+      recommendation: 'strong_hire',
+      dimensionScores: [
+        {
+          key: 'architecture_and_design',
+          label: 'Architecture & Design',
+          score: 0.88,
+          justification: 'The Day 1 design doc keeps the scope small.',
+          evidence: [
+            {
+              kind: 'design_doc',
+              ref: 'day1-design-doc.md:L1-L20',
+              dayIndex: 1,
+              excerpt:
+                'Use a small FastAPI service with one core domain module.',
+            },
+          ],
+        },
+        {
+          key: 'problem_understanding',
+          label: 'Problem Understanding',
+          score: 0.86,
+          justification:
+            'The brief and setup stay aligned to the real problem.',
+        },
+        {
+          key: 'implementation_quality',
+          label: 'Implementation Quality',
+          score: 0.89,
+          justification: 'The Day 2 and Day 3 commits show steady progress.',
+        },
+        {
+          key: 'code_quality',
+          label: 'Code Quality',
+          score: 0.88,
+          justification:
+            'The repository stays readable, compact, and easy to audit.',
+        },
+        {
+          key: 'testing_discipline',
+          label: 'Testing Discipline',
+          score: 0.87,
+          justification:
+            'The day-by-day test evidence shows deliberate validation.',
+        },
+        {
+          key: 'development_process',
+          label: 'Development Process',
+          score: 0.86,
+          justification:
+            'The implementation cadence and docs point in the same direction.',
+        },
+        {
+          key: 'communication',
+          label: 'Communication',
+          score: 0.88,
+          justification: 'The Day 4 handoff and demo keep the story specific.',
+          evidence: [
+            {
+              kind: 'transcript',
+              ref: 'handoff-demo-transcript.txt:02:14-02:48',
+              dayIndex: 4,
+              startMs: 134000,
+              endMs: 148000,
+              excerpt: 'Demo transcript with architecture and next steps.',
+            },
+          ],
+        },
+        {
+          key: 'reflection_ownership',
+          label: 'Reflection & Ownership',
+          score: 0.84,
+          justification: 'The reflection is candid about tradeoffs and edges.',
+        },
+      ],
+      dayScores: [
+        {
+          dayIndex: 1,
+          score: 0.7,
+          rubricBreakdown: {
+            architecture_and_design: 0.88,
+            problem_understanding: 0.86,
+          },
+          evidence: [
+            {
+              kind: 'commit',
+              ref: 'commit-1',
+              dayIndex: 1,
+              dimensionKey: 'architecture_and_design',
+              excerpt: 'Repository scaffolding commit.',
+            },
+          ],
+        },
+        {
+          dayIndex: 4,
+          score: 0.79,
+          rubricBreakdown: {
+            communication: 0.88,
+          },
+          evidence: [
+            {
+              kind: 'transcript',
+              ref: 'handoff-demo-transcript.txt:02:14-02:48',
+              dayIndex: 4,
+              startMs: 134000,
+              endMs: 148000,
+              dimensionKey: 'communication',
+              excerpt: 'Demo transcript with architecture and next steps.',
+            },
+          ],
+        },
+      ],
+      reviewerSummaries: [],
+      disabledDayIndexes: [],
+    });
+
+    expect(report).not.toBeNull();
+    expect(report?.dimensionScores).toHaveLength(8);
+    expect(report?.dimensionScores.map((item) => item.label)).toEqual([
+      'Architecture & Design',
+      'Problem Understanding',
+      'Implementation Quality',
+      'Code Quality',
+      'Testing Discipline',
+      'Development Process',
+      'Communication',
+      'Reflection & Ownership',
+    ]);
+    expect(report?.dimensionScores[0]?.evidence).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ref: 'commit-1',
+          dimensionKey: 'architecture_and_design',
+        }),
+      ]),
+    );
+    expect(report?.dimensionScores[6]?.evidence).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ref: 'handoff-demo-transcript.txt:02:14-02:48',
+          dimensionKey: 'communication',
+        }),
+      ]),
+    );
+  });
+
   it('merges explicit backend dimensions, derived day-level dimensions, and canonical from-scratch dimensions', () => {
     const report = normalizeReport({
       overallWinoeScore: 0.82,
@@ -97,46 +245,46 @@ describe('normalizeReport', () => {
 
     expect(report).not.toBeNull();
     expect(report?.dimensionScores.map((item) => item.key)).toEqual([
-      'project_scaffolding_quality',
-      'architectural_coherence',
-      'development_process',
+      'architecture_and_design',
+      'problem_understanding',
+      'implementation_quality',
       'code_quality',
       'testing_discipline',
-      'communication_handoff_demo',
-      'reflection_self_awareness',
+      'development_process',
+      'communication',
+      'reflection_ownership',
       'custom_dimension',
     ]);
     expect(
-      report?.dimensionScores.find(
-        (item) => item.key === 'communication_handoff_demo',
-      )?.score,
+      report?.dimensionScores.find((item) => item.key === 'communication')
+        ?.score,
     ).toBe(0.88);
     expect(
       report?.dimensionScores.find(
-        (item) => item.key === 'project_scaffolding_quality',
+        (item) => item.key === 'architecture_and_design',
       ),
     ).toMatchObject({
       evidence: expect.arrayContaining([
         expect.objectContaining({
           ref: 'commit-1',
-          dimensionKey: 'project_scaffolding_quality',
+          dimensionKey: 'architecture_and_design',
         }),
       ]),
     });
     expect(
       report?.dimensionScores.find(
-        (item) => item.key === 'project_scaffolding_quality',
+        (item) => item.key === 'architecture_and_design',
       )?.score,
-    ).toBe(0.72);
+    ).toBe(0.7);
     expect(
       report?.dimensionScores.find(
-        (item) => item.key === 'reflection_self_awareness',
+        (item) => item.key === 'reflection_ownership',
       ),
     ).toMatchObject({
       evidence: expect.arrayContaining([
         expect.objectContaining({
           ref: 'day5-reflection.md:L8-L22',
-          dimensionKey: 'reflection_self_awareness',
+          dimensionKey: 'reflection_ownership',
         }),
       ]),
       score: 0.77,
@@ -170,7 +318,7 @@ describe('normalizeReport', () => {
     });
 
     expect(report?.dimensionScores.at(-1)?.key).toBe('zeta_custom');
-    expect(report?.dimensionScores[0]?.key).toBe('project_scaffolding_quality');
+    expect(report?.dimensionScores[0]?.key).toBe('architecture_and_design');
   });
 
   it('normalizes scores without collapsing ten-point dimension inputs', () => {
@@ -201,9 +349,8 @@ describe('normalizeReport', () => {
 
     expect(report?.overallWinoeScore).toBeCloseTo(0.6731, 4);
     expect(
-      report?.dimensionScores.find(
-        (item) => item.key === 'communication_handoff_demo',
-      )?.score,
+      report?.dimensionScores.find((item) => item.key === 'communication')
+        ?.score,
     ).toBeCloseTo(0.74, 2);
     expect(report?.dayScores[0]?.score).toBeCloseTo(0.74, 2);
   });
