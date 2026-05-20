@@ -1,6 +1,7 @@
 # Task 10 — Demo Infrastructure Frontend Support
 
 ## Summary
+
 - Fixed Winoe Report demo rendering so the seeded Sarah Chen report shows exactly 8 top-level dimensions.
 - Preserved Evidence Trail and Day 1-5 artifacts as separate sections.
 - Aligned the Winoe Report catalog with the seeded demo labels.
@@ -9,6 +10,7 @@
 - Added and retained frontend tests for the seeded report shape and browser behavior.
 
 ## Frontend Change List
+
 - `winoeReport.normalizeReport.ts`
   - no longer inflates explicit seeded 8-dimension reports from day-level evidence
   - preserves top-level report dimensions
@@ -30,17 +32,20 @@
   - print-proof behavior remains covered
 
 ## Verification
+
 ```bash
 npm test -- --runInBand tests/unit/features/talent-partner/winoe-report/winoeReport.normalizeReport.test.ts tests/unit/features/talent-partner/winoe-report/winoeReport.viewModel.test.ts tests/integration/talent-partner/trials/candidates/WinoeReportPage.rendering.test.tsx tests/integration/talent-partner/trials/candidates/WinoeReportPage.printProof.test.tsx
 ./precommit.sh
 ```
 
 Final outcome:
+
 - targeted Winoe Report tests passed
 - frontend precommit passed
 - build / typecheck passed
 
 ## Manual QA Evidence
+
 - Browser verified Sarah Chen Winoe Report at local URL.
 - Winoe Score displayed as `78`.
 - exactly 8 dimensions displayed.
@@ -51,6 +56,7 @@ Final outcome:
 - candidate dashboard smoke passed.
 
 ## Known Warnings / Follow-ups
+
 - Local login is magic-link based; QA used `/api/dev/qa-login`.
 - PDF export behaves as print mode rather than a downloaded file.
 - This was accepted as non-blocking for Task 10.
@@ -60,6 +66,7 @@ Final outcome:
 `Task 10 FINAL QA PASS — ready to finish / raise PRs.`
 
 Final verification confirmed:
+
 - normal seed command exits 0 after documented reset repair path
 - seeded data is idempotent and stable
 - fake GitHub provider is used in demo mode
