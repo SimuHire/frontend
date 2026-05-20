@@ -1,124 +1,73 @@
-# Task 7: Add Submission Review and Benchmarks/Compare Talent Partner surfaces
+# Task 10 — Demo Infrastructure Frontend Support
 
 ## Summary
+- Fixed Winoe Report demo rendering so the seeded Sarah Chen report shows exactly 8 top-level dimensions.
+- Preserved Evidence Trail and Day 1-5 artifacts as separate sections.
+- Aligned the Winoe Report catalog with the seeded demo labels.
+- Removed normalization behavior that inflated explicit seeded dimension reports from day-level evidence.
+- Kept print-mode / PDF behavior documented as non-blocking.
+- Added and retained frontend tests for the seeded report shape and browser behavior.
 
-This PR adds the Talent Partner-facing post-Trial review experience:
+## Frontend Change List
+- `winoeReport.normalizeReport.ts`
+  - no longer inflates explicit seeded 8-dimension reports from day-level evidence
+  - preserves top-level report dimensions
+- `winoeReport.catalog.ts`
+  - aligned to seeded 8 dimension labels:
+    - Architecture & Design
+    - Problem Understanding
+    - Implementation Quality
+    - Code Quality
+    - Testing Discipline
+    - Development Process
+    - Communication
+    - Reflection & Ownership
+  - aliases retained for older / internal keys
+- Winoe Report page tests:
+  - renders exactly 8 dimensions
+  - Winoe Score remains `78`
+  - Evidence Trail remains available
+  - print-proof behavior remains covered
 
-- Submission Review for raw candidate artifacts
-- Benchmarks for same-Trial comparison
-- Side-by-side Compare for 2-3 candidates
-- Canonical Talent Partner Winoe Report route and actions
-- Day 4 video/transcript interaction, including click-to-seek behavior
+## Verification
+```bash
+npm test -- --runInBand tests/unit/features/talent-partner/winoe-report/winoeReport.normalizeReport.test.ts tests/unit/features/talent-partner/winoe-report/winoeReport.viewModel.test.ts tests/integration/talent-partner/trials/candidates/WinoeReportPage.rendering.test.tsx tests/integration/talent-partner/trials/candidates/WinoeReportPage.printProof.test.tsx
+./precommit.sh
+```
 
-The goal is to let Talent Partners inspect evidence, compare candidates within the same Trial, and follow the canonical `/talent-partner/...` route namespace without relying on legacy dashboard paths.
+Final outcome:
+- targeted Winoe Report tests passed
+- frontend precommit passed
+- build / typecheck passed
 
-## What changed
+## Manual QA Evidence
+- Browser verified Sarah Chen Winoe Report at local URL.
+- Winoe Score displayed as `78`.
+- exactly 8 dimensions displayed.
+- expected labels displayed.
+- Evidence Trail opened successfully.
+- Day 1-5 artifacts visible and accessible.
+- no legacy terms visible.
+- candidate dashboard smoke passed.
 
-### Submission Review
+## Known Warnings / Follow-ups
+- Local login is magic-link based; QA used `/api/dev/qa-login`.
+- PDF export behaves as print mode rather than a downloaded file.
+- This was accepted as non-blocking for Task 10.
 
-- Added the route at `/talent-partner/trials/[id]/candidates/[candidateSessionId]/submission`.
-- Added the five-day tabbed artifact viewer:
-  - Day 1 markdown Design Doc
-  - Day 2 code artifact viewer
-  - Day 3 code artifact viewer
-  - Day 4 Handoff + Demo video/transcript
-  - Day 5 markdown Reflection
-- Day 2 and Day 3 now render real code artifacts with:
-  - file tree
-  - selectable files
-  - Prism syntax highlighting
-  - line numbers
-  - commit timeline
-  - selected-file and deep-link behavior where available
-- Day 4 now includes:
-  - video player
-  - transcript panel
-  - click-to-seek behavior
-  - pending seek handling until media readiness
-  - active segment highlight
-- Added honest empty states for missing artifacts instead of implying data exists when it does not.
+## Final QA Result
 
-### Benchmarks
+`Task 10 FINAL QA PASS — ready to finish / raise PRs.`
 
-- Added the routes at `/talent-partner/benchmarks` and `/talent-partner/trials/[id]/benchmarks`.
-- Added:
-  - Trial selector
-  - status filter
-  - time range filter
-  - cohort summary
-  - median / mean / range / n
-  - sufficient / limited sample badge
-  - required `n < 3` caveat
-  - candidate table
-  - dimension sparklines
-  - report-pending handling
-  - multi-select compare bar
-- Kept the fairness copy explicit: `Same Trial. Same Winoe instance. Same rubric.`
-
-### Compare
-
-- Added `/talent-partner/benchmarks/compare?candidates=...`.
-- Supports:
-  - 2 candidates
-  - 3 candidates
-  - max 3 selection cap
-  - ScoreRing / RadarChart / dimensional list where data is available
-  - canonical report and submission links
-  - fairness note
-- Avoids “winner” language and keeps the comparison framed as same-Trial evidence review.
-
-### Winoe Report integration
-
-- Added the canonical route at `/talent-partner/trials/[id]/candidates/[candidateSessionId]/winoe-report`.
-- Kept the legacy dashboard route available for compatibility.
-- Added or restored actions:
-  - `View raw submission`
-  - `Open Benchmarks`
-- Ensured Task 7-visible links use canonical `/talent-partner/...` paths.
-
-### Trial Detail
-
-- Added the `View submission` entry point.
-- Fixed the completed-candidate summary copy so it no longer says `No completed candidates yet` when completed candidates exist but reports are not benchmark-ready.
-
-## Manual QA
-
-- Local frontend and backend were running during QA.
-- Talent Partner login was used.
-- Day 2 artifacts were verified.
-- Day 3 artifacts were verified.
-- Day 4 transcript seek was verified with `video.currentTime` moving from `0` to `35`.
-- Canonical Winoe Report route was verified.
-- Winoe Report actions were verified.
-- Benchmarks report links were verified.
-- Compare canonical links were verified.
-- Route namespace was verified.
-- No banned visible terminology was found in the reviewed Task 7 surfaces.
-- Screenshots were local-only and were not committed.
-
-Browser proof:
-
-- Route: `/talent-partner/trials/2/candidates/5/submission`
-- Segment clicked: `00:35 Implementation walkthrough.`
-- `video.currentTime` before click: `0`
-- `video.currentTime` after click: `35`
-- Seek worked: `yes`
-- Active highlight updated: `yes`
-
-## Tests
-
-- `npm test -- --runInBand tests/unit/features/talent-partner/submission-review/SubmissionReviewPage.test.tsx`
-- `./precommit.sh`
-
-Final frontend precommit passed:
-
-- `526 suites passed`
-- `1678 tests passed`
-- `typecheck passed`
-- `build passed`
-
-## Risk / follow-up
-
-- Fake/local QA media artifacts were not committed.
-- Transcript seek depends on seekable media; backend fake-storage Range support is included in the backend PR.
-- Legacy `/dashboard/...` routes remain compatibility-only.
+Final verification confirmed:
+- normal seed command exits 0 after documented reset repair path
+- seeded data is idempotent and stable
+- fake GitHub provider is used in demo mode
+- production demo mode is rejected
+- dashboard shows 3 Trials
+- Trial A and Trial C candidate lists work
+- Sarah Chen Winoe Report renders with Winoe Score 78 and exactly 8 dimensions
+- Evidence Trail and Day 1-5 artifacts are accessible
+- legacy guard passes
+- backend precommit passes
+- frontend precommit passes

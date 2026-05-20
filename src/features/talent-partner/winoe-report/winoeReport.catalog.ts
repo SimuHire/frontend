@@ -10,26 +10,60 @@ type DimensionDefinition = {
 
 const DIMENSIONS: DimensionDefinition[] = [
   {
-    key: 'project_scaffolding_quality',
-    label: 'Project scaffolding quality',
-    aliases: ['scaffolding', 'project_scaffolding_quality', 'scaffold'],
-    description:
-      'How clearly the repository was structured before feature work accelerated.',
-  },
-  {
-    key: 'architectural_coherence',
-    label: 'Architectural coherence',
+    key: 'architecture_and_design',
+    label: 'Architecture & Design',
     aliases: [
       'architecture',
       'architectural_coherence',
       'architecture_coherence',
+      'project_scaffolding_quality',
+      'scaffolding',
     ],
     description:
-      'How well the implementation boundaries, data flow, and module shape fit together.',
+      'How clearly the solution shape, boundaries, and data flow were established.',
+  },
+  {
+    key: 'problem_understanding',
+    label: 'Problem Understanding',
+    aliases: [
+      'problem_understanding',
+      'scope_control',
+      'functional_requirements',
+      'non_functional_requirements',
+      'scope_realism',
+    ],
+    description:
+      'How well the candidate framed the actual problem, constraints, and success path.',
+  },
+  {
+    key: 'implementation_quality',
+    label: 'Implementation Quality',
+    aliases: [
+      'implementation_quality',
+      'implementation_discipline',
+      'implementation',
+      'build_quality',
+      'delivery_quality',
+    ],
+    description:
+      'How effectively the feature was delivered and refined across the Trial.',
+  },
+  {
+    key: 'code_quality',
+    label: 'Code Quality',
+    aliases: ['code_quality', 'quality', 'code', 'implementation_code_quality'],
+    description: 'How readable, maintainable, and consistent the code landed.',
+  },
+  {
+    key: 'testing_discipline',
+    label: 'Testing Discipline',
+    aliases: ['testing', 'testing_discipline', 'tests', 'coverage'],
+    description:
+      'How consistently the candidate added or improved tests and verification signals.',
   },
   {
     key: 'development_process',
-    label: 'Development process',
+    label: 'Development Process',
     aliases: [
       'process',
       'development_process',
@@ -40,36 +74,31 @@ const DIMENSIONS: DimensionDefinition[] = [
       'How the commit trail, iteration sequence, and build progression were managed.',
   },
   {
-    key: 'code_quality',
-    label: 'Code quality',
-    aliases: ['code_quality', 'quality', 'implementation_quality'],
-    description:
-      'How readable, maintainable, and consistent the candidate’s code landed.',
-  },
-  {
-    key: 'testing_discipline',
-    label: 'Testing discipline',
-    aliases: ['testing', 'testing_discipline', 'tests', 'coverage'],
-    description:
-      'How consistently the candidate added or improved tests and coverage signals.',
-  },
-  {
-    key: 'communication_handoff_demo',
-    label: 'Communication / Handoff + Demo',
+    key: 'communication',
+    label: 'Communication',
     aliases: [
-      'demo',
       'communication',
+      'communication_handoff_demo',
       'handoff',
       'handoff_demo',
       'presentation',
+      'demo',
+      'transcript',
     ],
     description:
       'How clearly the candidate explained the work, tradeoffs, and next steps.',
   },
   {
-    key: 'reflection_self_awareness',
-    label: 'Reflection & self-awareness',
-    aliases: ['reflection', 'reflection_essay', 'self_awareness'],
+    key: 'reflection_ownership',
+    label: 'Reflection & Ownership',
+    aliases: [
+      'reflection',
+      'reflection_essay',
+      'reflection_self_awareness',
+      'self_awareness',
+      'ownership',
+      'growth_orientation',
+    ],
     description:
       'How honestly the candidate described tradeoffs, mistakes, and areas for improvement.',
   },
