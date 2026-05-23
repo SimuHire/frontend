@@ -13,6 +13,7 @@ export const useCandidateSessionMock = jest.fn();
 
 jest.mock('next/navigation', () => ({
   useRouter: () => useRouterMock,
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock('@/features/candidate/session/api', () => ({
@@ -31,8 +32,8 @@ jest.mock('@/features/candidate/session/CandidateSessionProvider', () => ({
 const defaultSessionState = {
   token: 'access-token',
   authStatus: 'authenticated',
-  candidateSessionId: null,
-  inviteToken: null,
+  candidateSessionId: null as number | null,
+  inviteToken: null as string | null,
 };
 
 export const resetDashboardPageMocks = () => {

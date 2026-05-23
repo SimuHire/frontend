@@ -3,12 +3,15 @@ import { CandidateSessionView } from '@/features/candidate/session/CandidateSess
 import { buildCandidateSessionViewProps } from './CandidateSessionView.windowGating.testProps';
 
 describe('CandidateSessionView window gating', () => {
-  it('renders countdown/read-only banner and disables submit', () => {
+  it('renders closed-session copy and disables submit', () => {
     render(<CandidateSessionView {...buildCandidateSessionViewProps()} />);
-    expect(screen.getByText(/^Day 1 is not open yet$/i)).toBeInTheDocument();
+    expect(screen.getByText(/Day 1 is closed/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Your saved Day 1 work stays locked in/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Come back at/i)).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /submit & continue/i }),
-    ).toBeDisabled();
+      screen.queryByRole('button', { name: /submit & continue to day 2/i }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -78,8 +78,14 @@ export const normalizeCandidateSession = (raw: unknown): CandidateSession => {
   const inviteToken =
     toStringOrNull(rec.inviteToken ?? rec.invite_token ?? rec.token) ?? null;
   const rawInviteUrl = toStringOrNull(rec.inviteUrl ?? rec.invite_url);
-  const inviteUrl =
-    rawInviteUrl ?? (inviteToken ? buildInviteUrl(inviteToken) : undefined);
+  const inviteUrl = inviteToken
+    ? rawInviteUrl?.includes('/candidate/session/')
+      ? rawInviteUrl.replace(
+          /\/candidate\/session\/([^/?#]+)/,
+          `/invite/${encodeURIComponent(inviteToken)}`,
+        )
+      : (rawInviteUrl ?? buildInviteUrl(inviteToken))
+    : (rawInviteUrl ?? undefined);
 
   return {
     candidateSessionId: candidateSessionId ?? 0,

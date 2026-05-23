@@ -122,6 +122,7 @@ runtimeRequire('./tests/setup/jest/testingLibraryQueryClientMock');
 runtimeRequire('./tests/setup/jest/consoleSilence');
 runtimeRequire('./tests/setup/jest/reactMarkdownMock');
 runtimeRequire('./tests/setup/jest/candidateApiCompatMocks');
+runtimeRequire('./tests/setup/jest/day1MarkdownEditorMock.tsx');
 
 jest.setTimeout(15000);
 

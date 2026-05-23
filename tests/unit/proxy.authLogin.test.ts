@@ -58,7 +58,7 @@ describe('proxy - auth login', () => {
     );
     expect(res?.status).toBe(307);
     expect(res?.headers.get('location')).toBe(
-      'http://localhost/candidate/dashboard',
+      'http://localhost/candidate/portal',
     );
   });
 

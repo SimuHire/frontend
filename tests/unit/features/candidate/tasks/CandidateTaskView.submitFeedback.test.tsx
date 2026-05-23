@@ -66,9 +66,7 @@ describe('CandidateTaskView submit feedback statuses', () => {
       },
       onSubmit,
     });
-    fireEvent.click(
-      screen.getByRole('button', { name: /submit implementation wrap-up/i }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: /submit & continue/i }));
     await waitFor(() =>
       expect(screen.getByText(/Final recorded/i)).toBeInTheDocument(),
     );

@@ -38,12 +38,17 @@ describe('TaskView submission', () => {
         onSubmit={onSubmit}
       />,
     );
-    fireEvent.change(screen.getByRole('textbox'), {
-      target: { value: '   ' },
-    });
+    fireEvent.change(
+      screen.getByRole('textbox', { name: /markdown editor/i }),
+      {
+        target: { value: '   ' },
+      },
+    );
 
-    fireEvent.click(screen.getByRole('button', { name: /submit & continue/i }));
-    fireEvent.click(screen.getByRole('button', { name: /submit and lock/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /submit & continue to day 2/i }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: /submit day 1/i }));
 
     expect(
       await screen.findByText(/please enter an answer before submitting/i),
@@ -69,15 +74,20 @@ describe('TaskView submission', () => {
         onSubmit={onSubmit}
       />,
     );
-    fireEvent.change(screen.getByRole('textbox'), {
-      target: { value: '  Needs trim  ' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /submit & continue/i }));
+    fireEvent.change(
+      screen.getByRole('textbox', { name: /markdown editor/i }),
+      {
+        target: { value: '  Needs trim  ' },
+      },
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: /submit & continue to day 2/i }),
+    );
     expect(onSubmit).not.toHaveBeenCalled();
     expect(
-      screen.getByRole('dialog', { name: /submit day 1 design document/i }),
+      screen.getByRole('dialog', { name: /submit day 1/i }),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /submit and lock/i }));
+    fireEvent.click(screen.getByRole('button', { name: /submit day 1/i }));
     await act(async () => Promise.resolve());
     expect(onSubmit).toHaveBeenCalledWith({ contentText: 'Needs trim' });
   });

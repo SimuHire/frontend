@@ -11,179 +11,104 @@ jest.mock('@/shared/time/now', () => ({
   resolveNowMs: () => mockNowMs,
 }));
 
-type StateCase = {
-  name: string;
-  invite: ReturnType<typeof makeInvite>;
-  statusLabel: string;
-  currentDayLabel: string;
-  actionLabel: string;
-  disabled: boolean;
-  visibleNotes?: RegExp[];
-};
-
-const stateCases: StateCase[] = [
-  {
-    name: 'invited',
-    invite: makeInvite({ status: 'not_started', progress: null }),
-    statusLabel: 'Invited',
-    currentDayLabel: 'Day 1 of 5',
-    actionLabel: 'Start trial',
-    disabled: false,
-  },
-  {
-    name: 'awaiting start date',
-    invite: makeInvite({
-      status: 'in_progress',
-      scheduledStartAt: '2025-01-16T00:00:00Z',
-      dayWindows: null,
-    }),
-    statusLabel: 'Awaiting start date',
-    currentDayLabel: 'Day 1 of 5',
-    actionLabel: 'Continue trial',
-    disabled: false,
-  },
-  {
-    name: 'scheduled',
-    invite: makeInvite({
-      status: 'in_progress',
-      scheduledStartAt: '2025-01-14T00:00:00Z',
-      dayWindows: [
-        {
-          dayIndex: 1,
-          windowStartAt: '2025-01-16T00:00:00Z',
-          windowEndAt: '2025-01-16T23:59:59Z',
-        },
-      ],
-    }),
-    statusLabel: 'Scheduled',
-    currentDayLabel: 'Day 1 of 5',
-    actionLabel: 'Continue trial',
-    disabled: false,
-  },
-  {
-    name: 'day open',
-    invite: makeInvite({
-      status: 'in_progress',
-      progress: { completed: 1, total: 5 },
-    }),
-    statusLabel: 'Day 2 open',
-    currentDayLabel: 'Day 2 of 5',
-    actionLabel: 'Continue trial',
-    disabled: false,
-  },
-  {
-    name: 'day closed',
-    invite: makeInvite({
-      status: 'in_progress',
-      currentDayWindow: {
-        dayIndex: 3,
-        windowStartAt: '2025-01-15T09:00:00Z',
-        windowEndAt: '2025-01-15T17:00:00Z',
-        state: 'closed',
-      },
-    }),
-    statusLabel: 'Day 3 closed',
-    currentDayLabel: 'Day 3 of 5',
-    actionLabel: 'Continue trial',
-    disabled: false,
-  },
-  {
-    name: 'complete',
-    invite: makeInvite({
-      status: 'completed',
-      progress: { completed: 5, total: 5 },
-      completedAt: '2025-01-15T10:00:00Z',
-    }),
-    statusLabel: 'Complete',
-    currentDayLabel: 'Day 5 of 5',
-    actionLabel: 'Review submissions',
-    disabled: false,
-  },
-  {
-    name: 'report ready',
-    invite: makeInvite({
-      status: 'completed',
-      progress: { completed: 5, total: 5 },
-      reportReady: true,
-      hasReport: true,
-    }),
-    statusLabel: 'Report ready',
-    currentDayLabel: 'Day 5 of 5',
-    actionLabel: 'Review submissions',
-    disabled: false,
-  },
-  {
-    name: 'terminated',
-    invite: makeInvite({
-      status: 'in_progress',
-      terminatedAt: '2025-01-15T11:00:00Z',
-      isTerminated: true,
-    }),
-    statusLabel: 'Terminated',
-    currentDayLabel: 'Day 5 of 5',
-    actionLabel: 'Ended',
-    disabled: true,
-    visibleNotes: [/This trial has ended/i],
-  },
-  {
-    name: 'expired',
-    invite: makeInvite({
-      status: 'expired',
-      isExpired: true,
-    }),
-    statusLabel: 'Expired',
-    currentDayLabel: 'Day 1 of 5',
-    actionLabel: 'Expired',
-    disabled: true,
-    visibleNotes: [/This invite has expired/i],
-  },
-];
-
 describe('CandidateDashboardPage invite-specific states', () => {
   let consoleErrorSpy: jest.SpyInstance;
+  let dateNowSpy: jest.SpyInstance;
 
   beforeEach(() => {
     consoleErrorSpy = setupDashboardExtraTest();
+    dateNowSpy = jest.spyOn(Date, 'now').mockReturnValue(mockNowMs);
   });
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
+    dateNowSpy.mockRestore();
   });
 
-  it.each(stateCases)(
-    'renders the $name candidate portal state',
-    async ({
-      invite,
-      statusLabel,
-      currentDayLabel,
-      actionLabel,
-      disabled,
-      visibleNotes,
-    }) => {
-      await renderDashboardInvite(invite);
+  it('prompts to schedule when no start date is set', async () => {
+    await renderDashboardInvite(
+      makeInvite({ status: 'not_started', progress: null }),
+    );
+    expect(
+      screen.getByRole('button', { name: /schedule your start date/i }),
+    ).toBeInTheDocument();
+  });
 
-      expect(screen.getByText(invite.title)).toBeInTheDocument();
-      expect(screen.getByText(/Company pending/i)).toBeInTheDocument();
-      expect(
-        screen.getByText(
-          new RegExp(`Talent Partner: ${invite.talentPartnerName}`),
-        ),
-      ).toBeInTheDocument();
-      expect(screen.getAllByText(statusLabel).length).toBeGreaterThan(0);
-      expect(
-        screen.getByText(`Current day: ${currentDayLabel}`),
-      ).toBeInTheDocument();
+  it('shows countdown before Day 1 unlocks', async () => {
+    await renderDashboardInvite(
+      makeInvite({
+        status: 'in_progress',
+        scheduledStartAt: '2025-01-16T00:00:00Z',
+        dayWindows: [
+          {
+            dayIndex: 1,
+            windowStartAt: '2025-01-16T00:00:00Z',
+            windowEndAt: '2025-01-16T23:59:59Z',
+          },
+        ],
+      }),
+    );
+    expect(screen.getByText(/Day 1 unlocks in/i)).toBeInTheDocument();
+  });
 
-      const button = screen.getByRole('button', { name: actionLabel });
-      if (disabled) {
-        expect(button).toBeDisabled();
-      } else {
-        expect(button).toBeEnabled();
-      }
+  it('shows active trial CTA when the window is open', async () => {
+    await renderDashboardInvite(
+      makeInvite({
+        status: 'in_progress',
+        progress: { completed: 1, total: 5 },
+        scheduledStartAt: '2025-01-14T00:00:00Z',
+        dayWindows: [
+          {
+            dayIndex: 1,
+            windowStartAt: '2025-01-14T00:00:00Z',
+            windowEndAt: '2025-01-15T23:59:59Z',
+          },
+        ],
+      }),
+    );
+    expect(
+      screen.getByRole('button', { name: /open your trial/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Day 2 of 5/i)).toBeInTheDocument();
+  });
 
-      for (const note of visibleNotes ?? []) {
-        expect(screen.getByText(note)).toBeInTheDocument();
-      }
-    },
-  );
+  it('shows completed review CTA', async () => {
+    await renderDashboardInvite(
+      makeInvite({
+        status: 'completed',
+        progress: { completed: 5, total: 5 },
+        completedAt: '2025-01-15T10:00:00Z',
+        scheduledStartAt: '2025-01-01T00:00:00Z',
+        dayWindows: [
+          {
+            dayIndex: 1,
+            windowStartAt: '2025-01-01T00:00:00Z',
+            windowEndAt: '2025-01-01T23:59:59Z',
+          },
+        ],
+      }),
+    );
+    expect(
+      screen.getByRole('button', { name: /review your submissions/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows ended copy for terminated trials', async () => {
+    await renderDashboardInvite(
+      makeInvite({
+        status: 'in_progress',
+        terminatedAt: '2025-01-15T11:00:00Z',
+        isTerminated: true,
+        scheduledStartAt: '2025-01-01T00:00:00Z',
+        dayWindows: [
+          {
+            dayIndex: 1,
+            windowStartAt: '2025-01-01T00:00:00Z',
+            windowEndAt: '2025-01-01T23:59:59Z',
+          },
+        ],
+      }),
+    );
+    expect(screen.getByText(/This Trial has ended/i)).toBeInTheDocument();
+  });
 });

@@ -85,11 +85,12 @@ export const TaskActions = memo(function TaskActions({
               id="submit-day1-confirm-title"
               className="text-lg font-semibold text-gray-950"
             >
-              Submit Day 1 design document?
+              Submit Day 1?
             </h2>
             <p className="mt-2 text-sm leading-6 text-gray-700">
-              Final submission locks this Day 1 design document. Winoe AI will
-              use it in the Evidence Trail for this Trial.
+              Submitting will lock your Day 1 Design Doc and unlock Day 2 — your
+              empty Codespace will be ready in 60 seconds. You can still view
+              your design doc in read-only mode.
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <Button
@@ -98,7 +99,7 @@ export const TaskActions = memo(function TaskActions({
                 disabled={confirmPending}
                 onClick={() => setConfirmOpen(false)}
               >
-                Cancel
+                Keep working
               </Button>
               <Button
                 type="button"
@@ -107,7 +108,7 @@ export const TaskActions = memo(function TaskActions({
                 }
                 onClick={handleConfirm}
               >
-                Submit and lock
+                Submit Day 1
               </Button>
             </div>
           </div>

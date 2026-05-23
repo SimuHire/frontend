@@ -6,6 +6,7 @@ import { useCountdownTicker } from '@/shared/hooks/useCountdownTicker';
 type Day1DeadlineCardProps = {
   cutoffAt?: string | null;
   isClosed: boolean;
+  variant?: 'card' | 'inline';
 };
 
 const deadlineFormatter = new Intl.DateTimeFormat(undefined, {
@@ -31,6 +32,7 @@ function formatRemaining(ms: number): string {
 export function Day1DeadlineCard({
   cutoffAt,
   isClosed,
+  variant = 'card',
 }: Day1DeadlineCardProps) {
   const cutoffMs = useMemo(() => {
     if (!cutoffAt) return null;
@@ -54,6 +56,19 @@ export function Day1DeadlineCard({
 
   const remainingMs = cutoffMs - now;
   const closed = isClosed || remainingMs <= 0;
+
+  if (variant === 'inline') {
+    return (
+      <div className="text-right text-sm text-wheat-900">
+        <p className="text-xs font-medium text-wheat-700">
+          {closed ? 'Day 1 closed' : 'Closes in'}
+        </p>
+        <p className="mt-0.5 font-semibold tabular-nums">
+          {closed ? '—' : formatRemaining(remainingMs)}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-md border border-wheat-100 bg-wheat-50 p-4 text-wheat-900">

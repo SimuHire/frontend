@@ -25,7 +25,7 @@ export const redirectSignedInHome = (
   if (hasPermission(permissions, 'talent_partner:access'))
     return redirect('/dashboard', request);
   if (hasPermission(permissions, 'candidate:access'))
-    return redirect('/candidate/dashboard', request);
+    return redirect('/candidate/portal', request);
   return null;
 };
 

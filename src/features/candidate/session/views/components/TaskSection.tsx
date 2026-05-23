@@ -10,6 +10,7 @@ import type { WindowActionGate } from '../../lib/windowState';
 type Props = {
   currentTask: CandidateTask | null;
   candidateSessionId: number | null;
+  trialRole: string;
   submitting: boolean;
   submitError: string | null;
   actionGate: WindowActionGate;
@@ -24,6 +25,7 @@ type Props = {
 export function TaskSection({
   currentTask,
   candidateSessionId,
+  trialRole,
   submitting,
   submitError,
   actionGate,
@@ -37,6 +39,7 @@ export function TaskSection({
       <CandidateTaskView
         candidateSessionId={candidateSessionId}
         task={currentTask}
+        trialRole={trialRole}
         submitting={submitting}
         submitError={submitError}
         actionGate={actionGate}

@@ -17,6 +17,7 @@ type Props = {
   currentTask: CandidateTask | null;
   candidateSessionId: number | null;
   resourceLink: string | null;
+  trialRole: string;
   submitting: boolean;
   showWorkspacePanel: boolean;
   showRecordingPanel: boolean;
@@ -39,6 +40,7 @@ export function RunningPanelsSection({
   currentTask,
   candidateSessionId,
   resourceLink,
+  trialRole,
   submitting,
   showWorkspacePanel,
   showRecordingPanel,
@@ -77,6 +79,7 @@ export function RunningPanelsSection({
       <TaskSection
         currentTask={currentTask}
         candidateSessionId={candidateSessionId}
+        trialRole={trialRole}
         submitting={submitting}
         submitError={taskError}
         actionGate={actionGate}

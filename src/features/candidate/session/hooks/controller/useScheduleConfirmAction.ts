@@ -28,6 +28,7 @@ type Params = Pick<
   setScheduleSubmitError: SetNullableString;
   setScheduleTimezoneError: SetNullableString;
   setScheduleDateError: SetNullableString;
+  onScheduleSuccessNavigate?: () => void;
 };
 
 export function useScheduleConfirmAction({
@@ -49,6 +50,7 @@ export function useScheduleConfirmAction({
   setScheduleSubmitError,
   setScheduleTimezoneError,
   setScheduleDateError,
+  onScheduleSuccessNavigate,
 }: Params) {
   return useCallback(async () => {
     if (!validateForm()) {
@@ -82,10 +84,14 @@ export function useScheduleConfirmAction({
         githubUsernameValue: scheduleGithubUsernameValue,
         clearScheduleErrors,
       });
-      setView('locked');
       markEnd('candidate:schedule:submit', {
         status: 'locked',
       });
+      if (onScheduleSuccessNavigate) {
+        onScheduleSuccessNavigate();
+        return;
+      }
+      setView('locked');
     } catch (err) {
       await handleScheduleConfirmError({
         err,
@@ -120,5 +126,6 @@ export function useScheduleConfirmAction({
     setErrorMessage,
     runInit,
     setScheduleTimezoneError,
+    onScheduleSuccessNavigate,
   ]);
 }

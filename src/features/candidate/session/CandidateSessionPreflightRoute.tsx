@@ -40,6 +40,9 @@ export function CandidateSessionPreflightRoute({
       <LockedView
         title={props.title}
         role={props.role}
+        completedCount={props.completedCount}
+        currentDayIndex={props.currentDayIndex}
+        lastSubmissionAt={props.lastSubmissionAt}
         countdownLabel={props.scheduleCountdownLabel}
         countdownTargetAt={props.scheduleCountdownTargetAt}
         timezone={props.scheduleDisplayTimezone}

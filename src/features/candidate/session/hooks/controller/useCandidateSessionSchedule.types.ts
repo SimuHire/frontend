@@ -16,6 +16,7 @@ export type CandidateSessionScheduleParams = {
   setErrorMessage: (message: string | null) => void;
   detectedTimezone: string | null;
   session: SessionCtx;
+  onScheduleSuccessNavigate?: () => void;
 };
 
 export type SetNullableString = (value: string | null) => void;

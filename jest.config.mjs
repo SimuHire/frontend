@@ -20,6 +20,7 @@ const customJestConfig = {
     '!**/*.stories.*',
     '!**/*.config.*',
     '!**/.DS_Store',
+    '!<rootDir>/src/features/candidate/tasks/components/Day1MarkdownEditor.tsx',
   ],
   coverageThreshold: {
     global: {

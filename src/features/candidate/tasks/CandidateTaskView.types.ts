@@ -4,6 +4,7 @@ import type { SubmitPayload, SubmitResponse, Task } from './types';
 export type CandidateTaskViewProps = {
   candidateSessionId: number | null;
   task: Task;
+  trialRole?: string;
   submitting: boolean;
   submitError?: string | null;
   actionGate?: WindowActionGate;

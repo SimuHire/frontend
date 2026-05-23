@@ -12,7 +12,7 @@ describe('PublicHomeContent', () => {
     ).toHaveAttribute('href', '/dashboard');
     expect(
       screen.getByRole('link', { name: 'Candidate portal' }),
-    ).toHaveAttribute('href', '/candidate/dashboard');
+    ).toHaveAttribute('href', '/candidate/portal');
     const logout = screen.getByRole('link', { name: 'Logout' });
     expect(logout).toHaveAttribute('href', '/auth/logout');
   });
@@ -31,7 +31,7 @@ describe('PublicHomeContent', () => {
       screen.getByRole('link', { name: 'Candidate portal' }),
     ).toHaveAttribute(
       'href',
-      '/auth/start?returnTo=%2Fcandidate%2Fdashboard&mode=candidate',
+      '/auth/start?returnTo=%2Fcandidate%2Fportal&mode=candidate',
     );
   });
 

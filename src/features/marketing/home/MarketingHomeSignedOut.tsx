@@ -26,7 +26,7 @@ export function MarketingHomeSignedOut() {
         </AuthStartLink>
 
         <AuthStartLink
-          returnTo="/candidate/dashboard"
+          returnTo="/candidate/portal"
           mode="candidate"
           className={secondaryCtaClass}
         >
@@ -37,7 +37,7 @@ export function MarketingHomeSignedOut() {
       <p className="mt-4 text-xs text-slate-500">
         In production, candidates will receive a unique trial link like{' '}
         <code className="rounded bg-slate-100 px-1 py-0.5 text-[0.7rem]">
-          /candidate/session/&lt;invite-token&gt;
+          /invite/&lt;invite-token&gt;
         </code>
         .
       </p>

@@ -38,7 +38,7 @@ describe('CandidateTaskView Day 3 implementation wrap-up', () => {
     expect(screen.getByText(/optimize where useful/i)).toBeInTheDocument();
     expect(screen.getAllByText(/documentation/i).length).toBeGreaterThan(0);
     expect(
-      screen.getByRole('button', { name: /submit implementation wrap-up/i }),
+      screen.getByRole('button', { name: /submit & continue/i }),
     ).toBeInTheDocument();
 
     const pageText = document.body.textContent ?? '';

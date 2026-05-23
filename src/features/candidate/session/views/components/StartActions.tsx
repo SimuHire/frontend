@@ -14,7 +14,7 @@ export function StartActions({ onStart, onDashboard }: Props) {
       <div className="mt-3 flex flex-wrap gap-3">
         <Button onClick={onStart}>Start trial</Button>
         <Button variant="secondary" onClick={onDashboard}>
-          Back to Candidate Dashboard
+          Back to your portal
         </Button>
       </div>
     </div>

@@ -28,4 +28,5 @@ export type UseCandidateSessionControllerRuntimeArgs = {
   resetLocalState: LocalState['resetLocalState'];
   markStart: PerfMarks['markStart'];
   markEnd: PerfMarks['markEnd'];
+  onScheduleSuccessNavigate?: () => void;
 };

@@ -48,6 +48,7 @@ export function useTaskDraftAutosave<TValue>({
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [restoreApplied, setRestoreApplied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [persistentFailure, setPersistentFailure] = useState(false);
   const [autosaveLocked, setAutosaveLocked] = useState(false);
   const [restoreReadyKey, setRestoreReadyKey] = useState<string | null>(null);
   const restoreKey = `${candidateSessionId ?? 'none'}:${taskId}`;
@@ -58,6 +59,7 @@ export function useTaskDraftAutosave<TValue>({
   const valueRef = useRef(value);
   const inFlightRef = useRef<Promise<boolean> | null>(null);
   const lastSavedFingerprintRef = useRef<string | null>(null);
+  const serverUpdatedAtRef = useRef<string | null>(null);
 
   useEffect(() => {
     serializeRef.current = serialize;
@@ -72,8 +74,10 @@ export function useTaskDraftAutosave<TValue>({
       setLastSavedAt(null);
       setRestoreApplied(false);
       setError(null);
+      setPersistentFailure(false);
       setAutosaveLocked(false);
       lastSavedFingerprintRef.current = null;
+      serverUpdatedAtRef.current = null;
     }, 0);
 
     return () => {
@@ -103,6 +107,7 @@ export function useTaskDraftAutosave<TValue>({
         onTaskWindowClosed,
         setInternalStatus,
         setError,
+        setPersistentFailure,
         setAutosaveLocked,
         setLastSavedAt,
         serializeRef,
@@ -110,6 +115,7 @@ export function useTaskDraftAutosave<TValue>({
         onSavedAtRef,
         inFlightRef,
         lastSavedFingerprintRef,
+        serverUpdatedAtRef,
       })(reason),
     [candidateSessionId, isDisabled, onTaskWindowClosed, taskId],
   );
@@ -145,6 +151,7 @@ export function useTaskDraftAutosave<TValue>({
     lastSavedAt,
     restoreApplied,
     error,
+    persistentFailure,
     flushNow: useCallback(() => persistNow('manual'), [persistNow]),
   };
 }

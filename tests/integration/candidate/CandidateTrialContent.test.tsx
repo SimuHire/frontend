@@ -93,7 +93,7 @@ describe('CandidateSessionPage', () => {
     );
     expect(await screen.findByText(/Role:\s*Backend/i)).toBeInTheDocument();
     expect(
-      (await screen.findAllByText('Day 1 — Architecture')).length,
+      (await screen.findAllByText(/Day 1 — Planning & Design Doc/i)).length,
     ).toBeGreaterThan(0);
     expect(currentTaskMock).toHaveBeenCalledWith(123);
   });

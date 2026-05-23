@@ -186,7 +186,9 @@ describe('CandidateCompletedReviewPage', () => {
     ).toBeNull();
     expect(screen.queryByRole('button', { name: /record/i })).toBeNull();
 
-    expect(screen.getByText('Day 1 — Design Doc')).toBeInTheDocument();
+    expect(
+      screen.getByText('Day 1 — Planning & Design Doc'),
+    ).toBeInTheDocument();
     expect(
       screen.getByText('Day 2 — Implementation Kickoff'),
     ).toBeInTheDocument();
@@ -199,7 +201,7 @@ describe('CandidateCompletedReviewPage', () => {
     expect(
       screen.getAllByText(/^Day [1-5] —/).map((node) => node.textContent),
     ).toEqual([
-      'Day 1 — Design Doc',
+      'Day 1 — Planning & Design Doc',
       'Day 2 — Implementation Kickoff',
       'Day 3 — Implementation Wrap-Up',
       'Day 4 — Handoff + Demo',
@@ -225,7 +227,7 @@ describe('CandidateCompletedReviewPage', () => {
     expect(screen.getByText(/0\.0s - 1\.0s/i)).toBeInTheDocument();
     expect(screen.getByText(/The Trial was complete\./i)).toBeInTheDocument();
     expect(screen.getAllByText(/Commit history/i)).toHaveLength(2);
-    expect(screen.getAllByText(/Test results/i)).toHaveLength(2);
+    expect(screen.getAllByText(/Validation results/i)).toHaveLength(2);
     expect(
       screen.getByText(/Wrap up implementation and cleanup/i),
     ).toBeInTheDocument();
@@ -319,7 +321,7 @@ describe('CandidateCompletedReviewPage', () => {
       screen.getAllByText(/Commit history is unavailable for this day\./i),
     ).toHaveLength(2);
     expect(
-      screen.getAllByText(/Test results are unavailable for this day\./i),
+      screen.getAllByText(/Validation results are unavailable for this day\./i),
     ).toHaveLength(2);
   });
 
@@ -349,9 +351,9 @@ describe('CandidateCompletedReviewPage', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/temporarily unavailable/i)).toBeInTheDocument();
     fireEvent.click(
-      screen.getByRole('button', { name: /Back to Candidate Dashboard/i }),
+      screen.getByRole('button', { name: /Back to your portal/i }),
     );
-    expect(routerMock.push).toHaveBeenCalledWith('/candidate/dashboard');
+    expect(routerMock.push).toHaveBeenCalledWith('/candidate/portal');
   });
 
   it('redirects to candidate login for auth failures', async () => {

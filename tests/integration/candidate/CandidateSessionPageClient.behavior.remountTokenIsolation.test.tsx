@@ -149,7 +149,7 @@ describe('CandidateSessionPage auth flow remount and token isolation', () => {
     renderSessionPage('token-b');
     expect(screen.queryByText('Token A Task')).not.toBeInTheDocument();
     expect(screen.queryByText('Token A Trial')).not.toBeInTheDocument();
-    await screen.findByText(/Pick your start date/i);
+    await screen.findByText(/Pick Day 1 on your calendar/i);
     expect(
       fetchMock.mock.calls.some(([url]) =>
         String(url).includes('/candidate/session/111/current_task'),

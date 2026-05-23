@@ -1,13 +1,13 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   baseSession,
-  expectAllScheduleDaysVisible,
   fetchMock,
   fillScheduleAndContinue,
   renderSessionPage,
   resetBehaviorEnv,
   restoreFetch,
+  routerMock,
   sampleWindows,
 } from './CandidateSessionPageClient.behavior.testlib';
 import { jsonResponse } from '../../setup/responseHelpers';
@@ -23,7 +23,7 @@ describe('CandidateSessionPage auth flow schedule success', () => {
     restoreFetch();
   });
 
-  it('shows scheduling flow, confirms schedule, and renders locked windows', async () => {
+  it('shows scheduling flow, confirms schedule, and routes to the portal', async () => {
     let scheduleRequestBody: Record<string, unknown> | null = null;
     fetchMock.mockImplementation(
       async (url: RequestInfo | URL, init?: RequestInit) => {
@@ -57,26 +57,21 @@ describe('CandidateSessionPage auth flow schedule success', () => {
     expect(
       await screen.findByText(/5-day schedule preview/i),
     ).toBeInTheDocument();
-    expectAllScheduleDaysVisible();
-    expect(
-      screen.getByText(/Confirm this schedule before the Talent Partner/i),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /Confirm schedule/i }));
+    await user.click(
+      screen.getByRole('button', { name: /Confirm and lock in/i }),
+    );
     expect(scheduleRequestBody).toMatchObject({
-      scheduledStartAt: '2099-01-01T14:00:00Z',
       candidateTimezone: 'America/New_York',
       githubUsername: 'octocat',
     });
-    expect(
-      await screen.findByText(/Trial locked until start/i),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/5-day schedule preview/i)).toBeInTheDocument();
-    expectAllScheduleDaysVisible();
+    expect(scheduleRequestBody?.scheduledStartAt).toEqual(expect.any(String));
+    await waitFor(() =>
+      expect(routerMock.push).toHaveBeenCalledWith('/candidate/portal'),
+    );
     expect(screen.queryByText(/Project Brief/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Codespace/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Repository URL/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Day 1 editor/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Start trial/i)).not.toBeInTheDocument();
     expect(
       fetchMock.mock.calls.find(([url]) =>
         String(url).includes('/current_task'),

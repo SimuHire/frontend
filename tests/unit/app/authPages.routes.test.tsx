@@ -93,7 +93,7 @@ describe('auth route entrypoints', () => {
       }),
     );
     const links = screen.getAllByRole('link');
-    expect(links[0]).toHaveAttribute('href', '/candidate/dashboard');
+    expect(links[0]).toHaveAttribute('href', '/candidate/portal');
     expect(links[1]).toHaveAttribute('href', '/dash');
   });
 

@@ -27,7 +27,7 @@ describe('TaskProgress', () => {
     );
     expect(screen.getByText('Day 3').closest('li')).toHaveTextContent('Locked');
   });
-  it('uses the current task title for the active day', () => {
+  it('prefers canonical day summary title over backend task title', () => {
     render(
       <TaskProgress
         completedCount={1}
@@ -36,7 +36,8 @@ describe('TaskProgress', () => {
         currentTaskTitle="Build the API"
       />,
     );
-    expect(screen.getByText('Build the API')).toBeInTheDocument();
+    expect(screen.getByText('Implementation Kickoff')).toBeInTheDocument();
+    expect(screen.queryByText('Build the API')).not.toBeInTheDocument();
   });
   it('shows "Complete Day 1 first" for day 1 locked state', () => {
     render(
@@ -71,7 +72,7 @@ describe('TaskProgress', () => {
         currentTaskTitle={null}
       />,
     );
-    expect(screen.getByText('Build in GitHub')).toBeInTheDocument();
+    expect(screen.getByText('Implementation Kickoff')).toBeInTheDocument();
   });
   it('shows "Done" for completed days', () => {
     render(

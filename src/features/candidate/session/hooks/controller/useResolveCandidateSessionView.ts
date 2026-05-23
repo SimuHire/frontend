@@ -8,6 +8,7 @@ import type { ViewState } from '../../views/types';
 type Params = {
   view: ViewState;
   hasTaskData: boolean;
+  started: boolean;
   bootstrap: CandidateBootstrap | null;
   scheduleResponseWindowCount: number;
   clockNowMs: number;
@@ -16,6 +17,7 @@ type Params = {
 export function resolveCandidateSessionView({
   view,
   hasTaskData,
+  started,
   bootstrap,
   scheduleResponseWindowCount,
   clockNowMs,
@@ -25,7 +27,7 @@ export function resolveCandidateSessionView({
       ? 'running'
       : view;
 
-  if (resolvedView === 'locked' && hasTaskData) {
+  if (resolvedView === 'locked' && (hasTaskData || started)) {
     return 'running';
   }
 
@@ -45,6 +47,7 @@ export function resolveCandidateSessionView({
   ];
 
   const shouldKeepLocked =
+    !started &&
     resolvedView !== 'locked' &&
     lockEligibleViews.includes(resolvedView) &&
     hasSchedule &&

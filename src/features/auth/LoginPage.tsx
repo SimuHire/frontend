@@ -31,7 +31,7 @@ export default function LoginPage({
     !(process.env.NEXT_PUBLIC_WINOE_AUTH0_CANDIDATE_CONNECTION ?? '').trim();
 
   const signupHref = isCandidate
-    ? buildSignupHref(returnTo || '/candidate/dashboard', 'candidate')
+    ? buildSignupHref(returnTo || '/candidate/portal', 'candidate')
     : buildTalentPartnerOnboardingHref(returnTo || '/dashboard');
 
   return (

@@ -16,6 +16,7 @@ export function useCandidateSessionSchedule({
   setErrorMessage,
   detectedTimezone,
   session,
+  onScheduleSuccessNavigate,
 }: CandidateSessionScheduleParams) {
   const draft = useCandidateSessionScheduleDraft({
     bootstrap,
@@ -49,6 +50,7 @@ export function useCandidateSessionSchedule({
     setScheduleSubmitError: draft.setScheduleSubmitError,
     setScheduleTimezoneError: draft.setScheduleTimezoneError,
     setScheduleDateError: draft.setScheduleDateError,
+    onScheduleSuccessNavigate,
   });
 
   return {
@@ -56,6 +58,7 @@ export function useCandidateSessionSchedule({
     scheduleDate: draft.scheduleDateValue,
     scheduleTimezone: draft.scheduleTimezoneValue,
     scheduleGithubUsername: draft.scheduleGithubUsernameValue,
+    scheduleIncludeWeekends: draft.scheduleIncludeWeekends,
     scheduleDateError: draft.scheduleDateError,
     scheduleTimezoneError: draft.scheduleTimezoneError,
     scheduleGithubUsernameError: draft.scheduleGithubUsernameError,
@@ -72,6 +75,7 @@ export function useCandidateSessionSchedule({
     onScheduleDateChange: draft.onScheduleDateChange,
     onScheduleTimezoneChange: draft.onScheduleTimezoneChange,
     onScheduleGithubUsernameChange: draft.onScheduleGithubUsernameChange,
+    onIncludeWeekendsChange: draft.onIncludeWeekendsChange,
     onScheduleContinue: submit.onScheduleContinue,
     onScheduleBack: submit.onScheduleBack,
     onScheduleConfirm: submit.onScheduleConfirm,

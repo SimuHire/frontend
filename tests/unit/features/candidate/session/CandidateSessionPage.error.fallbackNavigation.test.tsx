@@ -79,7 +79,7 @@ describe('CandidateSessionPage error states - fallback and navigation', () => {
       ).toBeInTheDocument(),
     );
     fireEvent.click(screen.getByRole('button', { name: /Back to dashboard/i }));
-    expect(routerMock.push).toHaveBeenCalledWith('/candidate/dashboard');
+    expect(routerMock.push).toHaveBeenCalledWith('/candidate/portal');
   });
 
   it('resets state when inviteToken changes', async () => {

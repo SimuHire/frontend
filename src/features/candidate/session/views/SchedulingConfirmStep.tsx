@@ -33,7 +33,7 @@ export function SchedulingConfirmStep({
     <div className="space-y-4 rounded-md border border-gray-200 p-4">
       <div className="rounded-md border border-wheat-100 bg-wheat-50 p-3 text-sm text-wheat-900">
         <p>
-          Your Trial opens on{' '}
+          Day 1 will unlock on{' '}
           <span className="font-semibold">
             {firstWindow && timezone
               ? formatScheduleDate(firstWindow.windowStartAt, timezone)
@@ -42,14 +42,13 @@ export function SchedulingConfirmStep({
           at{' '}
           <span className="font-semibold">
             {firstWindow && timezone
-              ? `${formatScheduleTime(firstWindow.windowStartAt, timezone)} ${timezone}`
+              ? `${formatScheduleTime(firstWindow.windowStartAt, timezone)} (${timezone})`
               : '9:00 AM in your timezone'}
           </span>
           .
         </p>
         <p className="mt-2">
-          Trial content unlocks only when Day 1 opens. Confirm this schedule
-          before the Talent Partner is notified.
+          We&apos;ll email you a calendar invite and reminders.
         </p>
       </div>
       <div>
@@ -99,7 +98,7 @@ export function SchedulingConfirmStep({
           Back
         </Button>
         <Button loading={step === 'submitting'} onClick={onScheduleConfirm}>
-          Confirm schedule
+          Confirm and lock in
         </Button>
       </div>
     </div>

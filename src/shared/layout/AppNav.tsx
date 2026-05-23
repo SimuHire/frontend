@@ -36,7 +36,7 @@ export function AppNav({ isAuthed, permissions = [], navScope }: AppNavProps) {
       ) : null}
       {showCandidate ? (
         <Link
-          href="/candidate/dashboard"
+          href="/candidate/portal"
           className="text-secondary hover:text-primary"
         >
           Candidate Portal

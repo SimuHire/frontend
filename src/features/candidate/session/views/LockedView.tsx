@@ -9,6 +9,9 @@ import { LockedViewDayWindows } from './LockedViewDayWindows';
 type Props = {
   title: string;
   role: string;
+  completedCount: number;
+  currentDayIndex: number;
+  lastSubmissionAt: string | null;
   countdownLabel: string;
   countdownTargetAt: string | null;
   timezone: string | null;
@@ -22,6 +25,9 @@ type Props = {
 export function LockedView({
   title,
   role,
+  completedCount,
+  currentDayIndex,
+  lastSubmissionAt,
   countdownLabel,
   countdownTargetAt,
   timezone,
@@ -31,14 +37,26 @@ export function LockedView({
   errorMessage,
   onRetry,
 }: Props) {
+  const hasSubmission = lastSubmissionAt !== null || completedCount > 0;
+  const submittedDayIndex = Math.max(1, completedCount);
+  const nextDayIndex = Math.min(
+    Math.max(currentDayIndex, submittedDayIndex + 1),
+    5,
+  );
+  const showSubmittedState = hasSubmission && nextDayIndex > 1;
+  const heading = showSubmittedState
+    ? `Day ${submittedDayIndex} submitted - Day ${nextDayIndex} is next`
+    : 'Almost there — your Trial is scheduled';
+  const description = showSubmittedState
+    ? `Your Day ${submittedDayIndex} work is locked in. Day ${nextDayIndex} opens when the next window begins.`
+    : `${title || 'Your Trial'}${role ? ` (${role})` : ''} stays calm and locked until Day 1 opens. Take a breath; we'll meet you at the start line.`;
+
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-6">
+    <div className="mx-auto max-w-3xl space-y-6 p-6 text-center">
       <div>
-        <h1 className="text-lg font-semibold">Trial locked until start</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          {title || 'Your Trial'}
-          {role ? ` (${role})` : ''} opens when Day 1 starts. Come back at the
-          scheduled opening time.
+        <h1 className="text-xl font-semibold text-gray-900">{heading}</h1>
+        <p className="mt-2 text-sm leading-relaxed text-gray-600">
+          {description}
         </p>
       </div>
 
@@ -47,6 +65,7 @@ export function LockedView({
         countdownTargetAt={countdownTargetAt}
         timezone={timezone}
         scheduledStartAt={scheduledStartAt}
+        dayIndex={currentDayWindow?.dayIndex ?? nextDayIndex}
       />
 
       {errorMessage ? (

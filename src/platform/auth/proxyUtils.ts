@@ -12,10 +12,19 @@ export const PUBLIC_PATHS = new Set([
   '/login',
   '/auth/login',
   '/auth/logout',
+  '/auth/error',
   '/not-authorized',
   '/talent-partner-onboarding',
 ]);
-export const PUBLIC_PREFIXES = ['/auth'];
+export const AUTH0_HANDLER_PREFIXES = [
+  '/auth/start',
+  '/auth/callback',
+  '/auth/profile',
+  '/auth/access-token',
+  '/auth/backchannel-logout',
+  '/auth/clear',
+];
+export const PUBLIC_PREFIXES = ['/invite'];
 export const CANDIDATE_PREFIXES = ['/candidate'];
 export const TALENT_PARTNER_PREFIXES = ['/dashboard'];
 
@@ -43,7 +52,17 @@ export const redirectNotAuthorized = (
   mode: 'candidate' | 'talent_partner',
 ) => redirect(buildNotAuthorizedUrl(mode, request), request);
 
-export const shouldSkipAuth = (pathname: string) => isPublicPath(pathname);
+export const isAuth0HandlerPath = (pathname: string) =>
+  AUTH0_HANDLER_PREFIXES.some((p) => pathnameMatchesPrefix(pathname, p));
+
+export const isAuthAuxiliaryPath = (pathname: string) =>
+  pathnameMatchesPrefix(pathname, '/auth') &&
+  !pathnameMatchesPrefix(pathname, '/auth/login');
+
+export const shouldSkipAuth = (pathname: string) =>
+  isPublicPath(pathname) ||
+  isAuth0HandlerPath(pathname) ||
+  isAuthAuxiliaryPath(pathname);
 export const requiresCandidateAccess = (pathname: string) =>
   CANDIDATE_PREFIXES.some((p) => pathnameMatchesPrefix(pathname, p));
 export const requiresTalentPartnerAccess = (pathname: string) =>

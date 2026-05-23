@@ -1,6 +1,8 @@
 import {
   isScheduleDateInPast,
+  isScheduleDateOutsideBookingWindow,
   isValidIanaTimezone,
+  isWeekendDateInput,
 } from '../../utils/scheduleUtils';
 import {
   isValidGithubUsername,
@@ -14,6 +16,7 @@ type Params = {
   scheduleGithubUsernameValue: string;
   scheduleTimezoneState: string | null;
   scheduleGithubUsernameState: string | null;
+  scheduleIncludeWeekends: boolean;
   setScheduleTimezone: SetNullableString;
   setScheduleGithubUsername: SetNullableString;
   setScheduleSubmitError: SetNullableString;
@@ -28,6 +31,7 @@ export function validateScheduleDraft({
   scheduleGithubUsernameValue,
   scheduleTimezoneState,
   scheduleGithubUsernameState,
+  scheduleIncludeWeekends,
   setScheduleTimezone,
   setScheduleGithubUsername,
   setScheduleSubmitError,
@@ -65,6 +69,28 @@ export function validateScheduleDraft({
     isScheduleDateInPast({ dateInput: dateValue, timezone: timezoneValue })
   ) {
     setScheduleDateError('Start date cannot be in the past.');
+    valid = false;
+  }
+  if (
+    valid &&
+    isScheduleDateOutsideBookingWindow({
+      dateInput: dateValue,
+      timezone: timezoneValue,
+    })
+  ) {
+    setScheduleDateError(
+      'Pick a start date within the next 14 days — Winoe keeps Trials time-bound so work stays realistic.',
+    );
+    valid = false;
+  }
+  if (
+    valid &&
+    isWeekendDateInput({ dateInput: dateValue, timezone: timezoneValue }) &&
+    !scheduleIncludeWeekends
+  ) {
+    setScheduleDateError(
+      'That date falls on a weekend. Turn on "Show weekends" below, or pick a weekday.',
+    );
     valid = false;
   }
   if (!githubUsernameValue) {

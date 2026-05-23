@@ -81,6 +81,7 @@ export function buildSchedulePreview(params: {
     const mm = String(next.getUTCMonth() + 1).padStart(2, '0');
     const dd = String(next.getUTCDate()).padStart(2, '0');
     const nextDateInput = `${yyyy}-${mm}-${dd}`;
+    const endHour = idx === totalDays - 1 ? 21 : DEFAULT_END_HOUR;
     windows.push({
       dayIndex: idx + 1,
       windowStartAt: localDateAtHourToUtcIso({
@@ -91,9 +92,56 @@ export function buildSchedulePreview(params: {
       windowEndAt: localDateAtHourToUtcIso({
         dateInput: nextDateInput,
         timezone,
-        hour: DEFAULT_END_HOUR,
+        hour: endHour,
       }),
     });
   }
   return windows;
+}
+
+export function localTodayYmdInTimezone(
+  timezone: string,
+  nowMs: number = resolveNowMs(),
+): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(nowMs));
+}
+
+export function plusCalendarDaysYmd(ymd: string, days: number): string {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const t = Date.UTC(y, m - 1, d);
+  const n = new Date(t + days * 86400000);
+  return n.toISOString().slice(0, 10);
+}
+
+export function isScheduleDateOutsideBookingWindow(params: {
+  dateInput: string;
+  timezone: string;
+  horizonDays?: number;
+  nowMs?: number;
+}): boolean {
+  const horizon = params.horizonDays ?? 14;
+  const todayYmd = localTodayYmdInTimezone(params.timezone, params.nowMs);
+  const maxYmd = plusCalendarDaysYmd(todayYmd, horizon);
+  return params.dateInput > maxYmd;
+}
+
+export function isWeekendDateInput(params: {
+  dateInput: string;
+  timezone: string;
+}): boolean {
+  const noonIso = localDateAtHourToUtcIso({
+    dateInput: params.dateInput,
+    timezone: params.timezone,
+    hour: 12,
+  });
+  const wd = new Intl.DateTimeFormat('en-US', {
+    timeZone: params.timezone,
+    weekday: 'short',
+  }).format(new Date(noonIso));
+  return wd === 'Sat' || wd === 'Sun';
 }

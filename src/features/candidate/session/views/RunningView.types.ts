@@ -15,6 +15,7 @@ export type RunningViewProps = {
   role: string;
   completedCount: number;
   currentDayIndex: number;
+  started: boolean;
   currentTask: CandidateTask | null;
   candidateSessionId: number | null;
   taskError: string | null;

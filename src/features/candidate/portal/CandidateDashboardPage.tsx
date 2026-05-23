@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { buildLoginHref } from '@/features/auth/authPaths';
 import { useCandidateSession } from '../session/CandidateSessionProvider';
+import { CandidatePortalFaq } from './components/CandidatePortalFaq';
+import { CandidatePortalTrialHero } from './components/CandidatePortalTrialHero';
 import { DashboardHeader } from './components/DashboardHeader';
-import { InviteList } from './components/InviteList';
 import { useCandidateDashboardActions } from './hooks/useCandidateDashboardActions';
 import { useCandidateInvites } from './hooks/useCandidateInvites';
 import { extractInviteToken } from './utils/inviteTokensUtils';
@@ -19,36 +20,84 @@ export default function CandidateDashboardPage({
   signedInEmail?: string | null;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const scheduleUnavailable = searchParams.get('schedule') === 'unavailable';
   const { state } = useCandidateSession();
   const handleAuthRequired = useCallback(() => {
-    router.replace(buildLoginHref('/candidate/dashboard', 'candidate'));
+    router.replace(buildLoginHref('/candidate/portal', 'candidate'));
   }, [router]);
   const { sortedInvites, loading, error, refresh, setError } =
     useCandidateInvites(signedInEmail ?? null, handleAuthRequired);
 
   const displayEmail = useMemo(() => signedInEmail ?? '', [signedInEmail]);
-  const { handleContinue, prefetchContinue, resolveFallbackToken } =
-    useCandidateDashboardActions({
-      router,
-      queryClient,
-      candidateSessionId: state.candidateSessionId,
-      inviteToken: state.inviteToken,
-      setError,
-    });
+  const { handleContinue, prefetchContinue } = useCandidateDashboardActions({
+    router,
+    queryClient,
+    candidateSessionId: state.candidateSessionId,
+    inviteToken: state.inviteToken,
+    setError,
+  });
+
+  const primaryInvite = sortedInvites[0] ?? null;
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6">
-      <DashboardHeader email={displayEmail} />
-      <InviteList
-        invites={sortedInvites}
-        loading={loading}
-        error={error}
-        onRefresh={refresh}
-        onContinue={handleContinue}
-        onContinueIntent={prefetchContinue}
-        resolveFallbackToken={resolveFallbackToken}
-      />
+    <div className="mx-auto flex min-h-[70vh] max-w-3xl flex-col gap-8 py-10">
+      <div className="px-6">
+        <DashboardHeader email={displayEmail} />
+      </div>
+
+      {loading ? (
+        <div className="mx-6 rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 p-10 text-center text-sm text-gray-600">
+          Loading your Trial…
+        </div>
+      ) : null}
+
+      {scheduleUnavailable ? (
+        <div className="mx-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Scheduling isn&apos;t available from this link right now. If you
+          already claimed your invite, open it from your email or contact your
+          Talent Partner.
+        </div>
+      ) : null}
+
+      {error ? (
+        <div className="mx-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {error}
+          <button
+            type="button"
+            className="ml-2 underline"
+            onClick={() => refresh()}
+          >
+            Retry
+          </button>
+        </div>
+      ) : null}
+
+      {!loading && !error && !primaryInvite ? (
+        <div className="mx-6 rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-600">
+          No active Trial is linked to this account yet. Open your invite link
+          from email, or sign in with the address your Talent Partner used.
+        </div>
+      ) : null}
+
+      {primaryInvite ? (
+        <div className="space-y-4 px-6">
+          <CandidatePortalTrialHero
+            invite={primaryInvite}
+            onContinue={handleContinue}
+            onContinueIntent={prefetchContinue}
+          />
+          {sortedInvites.length > 1 ? (
+            <p className="text-center text-xs text-gray-500">
+              You have more than one Trial on this account; this page shows your
+              most recent one first.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      <CandidatePortalFaq />
     </div>
   );
 }

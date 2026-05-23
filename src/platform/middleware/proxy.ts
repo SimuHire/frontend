@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { auth0, getSessionNormalized } from '@/platform/auth0';
 import { extractPermissions } from '@/platform/auth0/claims';
 import {
+  isAuth0HandlerPath,
   isNextResponse,
   normalizeAccessToken,
   redirectToLogin,
@@ -51,19 +52,23 @@ export async function proxy(request: NextRequest) {
     isNextResponse(authResponse)
       ? (authResponse as NextResponse)
       : NextResponse.next();
+  const publicPassThrough = () => NextResponse.next();
 
   if (isApiPath) return responder(NextResponse.next());
   const isRootOrLogin =
     pathname === '/' || pathname === '/auth/login' || pathname === '/login';
   if (shouldSkipAuth(pathname) && !isRootOrLogin) {
-    return responder(passThrough());
+    if (isAuth0HandlerPath(pathname)) {
+      return responder(passThrough());
+    }
+    return responder(publicPassThrough());
   }
 
   const session = await getSessionNormalized(request);
   if (shouldSkipAuth(pathname)) {
     const homeRedirect = redirectSignedInHome(session, isRootOrLogin, request);
     if (homeRedirect) return responder(homeRedirect);
-    return responder(passThrough());
+    return responder(publicPassThrough());
   }
   if (!session)
     return responder(

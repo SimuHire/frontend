@@ -68,10 +68,12 @@ export function useCandidateSessionController(token: string) {
     resetLocalState,
     markStart,
     markEnd,
+    onScheduleSuccessNavigate: onDashboard,
   });
   const derived = useCandidateDerivedInfo(state, errorStatus, errorMessage, {
     currentTask,
   });
+  const started = state.started || state.bootstrap?.status === 'in_progress';
   const windowState = useWindowState({
     dayWindows: state.bootstrap?.dayWindows,
     currentDayIndex: derived.currentDayIndex,
@@ -83,14 +85,17 @@ export function useCandidateSessionController(token: string) {
         ? taskWindowOverride.value
         : null,
   });
-  const finalView = resolveCandidateSessionView({
+  const resolvedView = resolveCandidateSessionView({
     view,
     hasTaskData: state.taskState.isComplete || Boolean(currentTask),
+    started,
     bootstrap: state.bootstrap,
     scheduleResponseWindowCount:
       runtime.schedule.scheduleResponseWindows.length,
     clockNowMs: runtime.schedule.clockNowMs,
   });
+  const finalView =
+    started && resolvedView === 'locked' ? 'running' : resolvedView;
   return buildCandidateSessionControllerResult({
     finalView,
     state,

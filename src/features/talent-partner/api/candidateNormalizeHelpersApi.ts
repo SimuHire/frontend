@@ -15,7 +15,7 @@ export const emptyCandidate: CandidateSession = {
 };
 
 export const buildInviteUrl = (token: string) => {
-  const path = `/candidate/session/${token}`;
+  const path = `/invite/${encodeURIComponent(token)}`;
   if (typeof window === 'undefined' || !window.location?.origin) return path;
   return `${window.location.origin}${path}`;
 };

@@ -50,6 +50,7 @@ export function buildCandidateSessionControllerResult({
     scheduleDate: schedule.scheduleDate,
     scheduleTimezone: schedule.scheduleTimezone,
     scheduleGithubUsername: schedule.scheduleGithubUsername,
+    scheduleIncludeWeekends: schedule.scheduleIncludeWeekends,
     scheduleTimezoneDetected: detectedTimezone,
     scheduleTimezoneOptions: timezoneOptions,
     scheduleDateError: schedule.scheduleDateError,
@@ -79,6 +80,7 @@ export function buildCandidateSessionControllerResult({
     onScheduleDateChange: schedule.onScheduleDateChange,
     onScheduleTimezoneChange: schedule.onScheduleTimezoneChange,
     onScheduleGithubUsernameChange: schedule.onScheduleGithubUsernameChange,
+    onIncludeWeekendsChange: schedule.onIncludeWeekendsChange,
     onScheduleContinue: schedule.onScheduleContinue,
     onScheduleBack: schedule.onScheduleBack,
     onScheduleConfirm: () => {

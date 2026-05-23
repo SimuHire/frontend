@@ -62,6 +62,9 @@ export function sanitizeReturnTo(value: string | null | undefined): string {
 }
 
 export function modeForPath(pathname: string): LoginMode {
+  if (pathnameMatchesPrefix(pathname, '/invite')) {
+    return 'candidate';
+  }
   return CANDIDATE_PREFIXES.some((prefix) =>
     pathnameMatchesPrefix(pathname, prefix),
   )
