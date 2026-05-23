@@ -36,23 +36,23 @@ File:
 
 ## Frontend Checks
 
-| Command | Result | Notes |
-|---|---|---|
-| npm run lint | PASS | ESLint and Prettier clean |
-| npx jest tests/unit/features/candidate/tasks/components/day1MarkdownEditorActions.test.ts --runInBand | PASS | Bubble-menu action coverage passed |
-| npx jest tests/integration/candidate/CandidateSessionPageClient.behavior.scheduleSuccess.test.tsx tests/integration/candidate/CandidateSessionPageClient.behavior.scheduleAuthConflict.test.tsx tests/integration/candidate/CandidateSessionPageClient.behavior.lockedProxy.test.tsx --runInBand | PASS | Candidate session integration checks passed |
-| ./precommit.sh | PASS | Lint, Jest CI/coverage, typecheck, and build passed |
+| Command                                                                                                                                                                                                                                                                                          | Result | Notes                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | --------------------------------------------------- |
+| npm run lint                                                                                                                                                                                                                                                                                     | PASS   | ESLint and Prettier clean                           |
+| npx jest tests/unit/features/candidate/tasks/components/day1MarkdownEditorActions.test.ts --runInBand                                                                                                                                                                                            | PASS   | Bubble-menu action coverage passed                  |
+| npx jest tests/integration/candidate/CandidateSessionPageClient.behavior.scheduleSuccess.test.tsx tests/integration/candidate/CandidateSessionPageClient.behavior.scheduleAuthConflict.test.tsx tests/integration/candidate/CandidateSessionPageClient.behavior.lockedProxy.test.tsx --runInBand | PASS   | Candidate session integration checks passed         |
+| ./precommit.sh                                                                                                                                                                                                                                                                                   | PASS   | Lint, Jest CI/coverage, typecheck, and build passed |
 
 ## Browser QA
 
-| Flow | Result | Notes |
-|---|---|---|
-| Real-backend editor smoke | PASS | Used local QA login with real backend draft endpoints |
-| Bubble menu duplicate link warning check | PASS | No duplicate-link warning in fresh browser console |
-| Bubble menu Bold / Italic / Code / Link | PASS | Formatting persisted after reload |
-| Slash command smoke | PASS | `/h2` applied successfully |
-| Autosave reload smoke | PASS | Draft restored after reload |
-| Submit dialog smoke | PASS | Dialog opened by normal click; Keep working preserved editor content |
+| Flow                                     | Result | Notes                                                                |
+| ---------------------------------------- | ------ | -------------------------------------------------------------------- |
+| Real-backend editor smoke                | PASS   | Used local QA login with real backend draft endpoints                |
+| Bubble menu duplicate link warning check | PASS   | No duplicate-link warning in fresh browser console                   |
+| Bubble menu Bold / Italic / Code / Link  | PASS   | Formatting persisted after reload                                    |
+| Slash command smoke                      | PASS   | `/h2` applied successfully                                           |
+| Autosave reload smoke                    | PASS   | Draft restored after reload                                          |
+| Submit dialog smoke                      | PASS   | Dialog opened by normal click; Keep working preserved editor content |
 
 ## Frontend Warning
 
