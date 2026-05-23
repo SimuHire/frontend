@@ -195,3 +195,24 @@ export async function resolveCandidateInviteToken(
     mapCandidateApiError(err, 'Something went wrong loading your trial.');
   }
 }
+
+export async function claimCandidateInvite(
+  token: string,
+  payload: {
+    fullName: string;
+    preferredDisplayName?: string | null;
+    candidateTimezone: string;
+  },
+  options?: { signal?: AbortSignal },
+): Promise<CandidateSessionBootstrapResponse> {
+  try {
+    return await apiClient.post<CandidateSessionBootstrapResponse>(
+      `/candidate/trials/${encodeURIComponent(token)}/claim`,
+      payload,
+      { cache: 'no-store', signal: options?.signal },
+      candidateClientOptions,
+    );
+  } catch (err) {
+    mapCandidateApiError(err, 'Unable to complete invite setup.');
+  }
+}

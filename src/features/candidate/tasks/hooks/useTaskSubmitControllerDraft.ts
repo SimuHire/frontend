@@ -67,6 +67,7 @@ export function useTaskSubmitControllerDraft({
       },
       [task.id],
     ),
+    debounceMs: task.dayIndex === 1 ? 8000 : 1500,
   });
 
   return {
@@ -74,6 +75,7 @@ export function useTaskSubmitControllerDraft({
     setText,
     textRef,
     draftAutosave,
+    draftPersistentFailure: draftAutosave.persistentFailure,
     saveDraftNow: () => void draftAutosave.flushNow(),
     clearDrafts: () => {},
   };

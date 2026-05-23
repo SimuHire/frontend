@@ -42,7 +42,7 @@ export default async function NotAuthorizedPage({
       <div className="flex flex-wrap gap-3">
         <Link
           href={
-            returnTo && mode === 'candidate' ? returnTo : '/candidate/dashboard'
+            returnTo && mode === 'candidate' ? returnTo : '/candidate/portal'
           }
           className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50"
         >

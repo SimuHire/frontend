@@ -2,7 +2,9 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   buildSchedulePreview,
   isScheduleDateInPast,
+  isScheduleDateOutsideBookingWindow,
   isValidIanaTimezone,
+  isWeekendDateInput,
   toDateInputInTimezone,
 } from '../../utils/scheduleUtils';
 import type { CandidateSessionScheduleParams } from './useCandidateSessionSchedule.types';
@@ -34,6 +36,7 @@ export function useCandidateSessionScheduleDraft({
   const [scheduleSubmitError, setScheduleSubmitError] = useState<string | null>(
     null,
   );
+  const [includeWeekends, setIncludeWeekends] = useState(false);
 
   const scheduleTimezoneValue =
     scheduleTimezoneState ??
@@ -59,6 +62,7 @@ export function useCandidateSessionScheduleDraft({
     setScheduleDate(null);
     setScheduleTimezone(null);
     setScheduleGithubUsername(null);
+    setIncludeWeekends(false);
     clearScheduleErrors();
   }, [clearScheduleErrors]);
 
@@ -79,14 +83,36 @@ export function useCandidateSessionScheduleDraft({
     const timezoneValue = scheduleTimezoneValue.trim();
     if (!scheduleDateValue || !isValidIanaTimezone(timezoneValue)) return false;
     try {
-      return !isScheduleDateInPast({
-        dateInput: scheduleDateValue,
-        timezone: timezoneValue,
-      });
+      if (
+        isScheduleDateInPast({
+          dateInput: scheduleDateValue,
+          timezone: timezoneValue,
+        })
+      ) {
+        return false;
+      }
+      if (
+        isScheduleDateOutsideBookingWindow({
+          dateInput: scheduleDateValue,
+          timezone: timezoneValue,
+        })
+      ) {
+        return false;
+      }
+      if (
+        isWeekendDateInput({
+          dateInput: scheduleDateValue,
+          timezone: timezoneValue,
+        }) &&
+        !includeWeekends
+      ) {
+        return false;
+      }
+      return true;
     } catch {
       return false;
     }
-  }, [scheduleDateValue, scheduleTimezoneValue]);
+  }, [scheduleDateValue, scheduleTimezoneValue, includeWeekends]);
 
   const validateForm = useCallback(
     () =>
@@ -96,6 +122,7 @@ export function useCandidateSessionScheduleDraft({
         scheduleGithubUsernameValue,
         scheduleTimezoneState,
         scheduleGithubUsernameState,
+        scheduleIncludeWeekends: includeWeekends,
         setScheduleTimezone,
         setScheduleGithubUsername,
         setScheduleSubmitError,
@@ -107,6 +134,7 @@ export function useCandidateSessionScheduleDraft({
       scheduleDateValue,
       scheduleGithubUsernameState,
       scheduleGithubUsernameValue,
+      includeWeekends,
       scheduleTimezoneState,
       scheduleTimezoneValue,
       setScheduleTimezone,
@@ -128,16 +156,38 @@ export function useCandidateSessionScheduleDraft({
         return;
       }
       try {
-        setScheduleDateError(
+        if (
           isScheduleDateInPast({ dateInput: value, timezone: timezoneValue })
-            ? 'Start date cannot be in the past.'
-            : null,
-        );
+        ) {
+          setScheduleDateError('Start date cannot be in the past.');
+          return;
+        }
+        if (
+          isScheduleDateOutsideBookingWindow({
+            dateInput: value,
+            timezone: timezoneValue,
+          })
+        ) {
+          setScheduleDateError(
+            'Pick a start date within the next 14 days — Winoe keeps Trials time-bound so work stays realistic.',
+          );
+          return;
+        }
+        if (
+          isWeekendDateInput({ dateInput: value, timezone: timezoneValue }) &&
+          !includeWeekends
+        ) {
+          setScheduleDateError(
+            'That date falls on a weekend. Turn on "Show weekends" below, or pick a weekday.',
+          );
+          return;
+        }
+        setScheduleDateError(null);
       } catch {
         setScheduleDateError('Select a valid start date.');
       }
     },
-    [scheduleTimezoneValue],
+    [scheduleTimezoneValue, includeWeekends],
   );
 
   const onScheduleTimezoneChange = useCallback(
@@ -151,19 +201,47 @@ export function useCandidateSessionScheduleDraft({
         return;
       }
       try {
-        setScheduleDateError(
+        if (
+          !scheduleDateValue ||
           isScheduleDateInPast({
             dateInput: scheduleDateValue,
             timezone: timezoneValue,
           })
-            ? 'Start date cannot be in the past.'
-            : null,
-        );
+        ) {
+          setScheduleDateError(
+            scheduleDateValue ? 'Start date cannot be in the past.' : null,
+          );
+          return;
+        }
+        if (
+          isScheduleDateOutsideBookingWindow({
+            dateInput: scheduleDateValue,
+            timezone: timezoneValue,
+          })
+        ) {
+          setScheduleDateError(
+            'Pick a start date within the next 14 days — Winoe keeps Trials time-bound so work stays realistic.',
+          );
+          return;
+        }
+        if (
+          isWeekendDateInput({
+            dateInput: scheduleDateValue,
+            timezone: timezoneValue,
+          }) &&
+          !includeWeekends
+        ) {
+          setScheduleDateError(
+            'That date falls on a weekend. Turn on "Show weekends" below, or pick a weekday.',
+          );
+          return;
+        }
+        setScheduleDateError(null);
       } catch {
         setScheduleDateError('Select a valid start date.');
       }
     },
-    [scheduleDateValue],
+    [scheduleDateValue, includeWeekends],
   );
 
   const onScheduleGithubUsernameChange = useCallback((value: string) => {
@@ -172,10 +250,61 @@ export function useCandidateSessionScheduleDraft({
     setScheduleSubmitError(null);
   }, []);
 
+  const onIncludeWeekendsChange = useCallback(
+    (value: boolean) => {
+      setIncludeWeekends(value);
+      setScheduleSubmitError(null);
+      const timezoneValue = scheduleTimezoneValue.trim();
+      if (!scheduleDateValue || !isValidIanaTimezone(timezoneValue)) {
+        return;
+      }
+      try {
+        if (
+          isWeekendDateInput({
+            dateInput: scheduleDateValue,
+            timezone: timezoneValue,
+          }) &&
+          value
+        ) {
+          setScheduleDateError(null);
+          return;
+        }
+        if (
+          isWeekendDateInput({
+            dateInput: scheduleDateValue,
+            timezone: timezoneValue,
+          }) &&
+          !value
+        ) {
+          setScheduleDateError(
+            'That date falls on a weekend. Turn on "Show weekends" below, or pick a weekday.',
+          );
+          return;
+        }
+        if (
+          isScheduleDateOutsideBookingWindow({
+            dateInput: scheduleDateValue,
+            timezone: timezoneValue,
+          })
+        ) {
+          setScheduleDateError(
+            'Pick a start date within the next 14 days — Winoe keeps Trials time-bound so work stays realistic.',
+          );
+          return;
+        }
+        setScheduleDateError(null);
+      } catch {
+        setScheduleDateError('Select a valid start date.');
+      }
+    },
+    [scheduleDateValue, scheduleTimezoneValue],
+  );
+
   return {
     scheduleDateValue,
     scheduleTimezoneValue,
     scheduleGithubUsernameValue,
+    scheduleIncludeWeekends: includeWeekends,
     scheduleDateError,
     scheduleTimezoneError,
     scheduleGithubUsernameError,
@@ -192,5 +321,6 @@ export function useCandidateSessionScheduleDraft({
     onScheduleDateChange,
     onScheduleTimezoneChange,
     onScheduleGithubUsernameChange,
+    onIncludeWeekendsChange,
   };
 }

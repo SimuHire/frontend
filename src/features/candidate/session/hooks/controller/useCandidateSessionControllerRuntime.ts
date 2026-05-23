@@ -28,6 +28,7 @@ export function useCandidateSessionControllerRuntime({
   resetLocalState,
   markStart,
   markEnd,
+  onScheduleSuccessNavigate,
 }: UseCandidateSessionControllerRuntimeArgs) {
   const { codingWorkspace, onCodingWorkspaceSnapshot, resetCodingWorkspace } =
     useCodingWorkspaceSync();
@@ -68,6 +69,7 @@ export function useCandidateSessionControllerRuntime({
     setErrorMessage,
     detectedTimezone,
     session,
+    onScheduleSuccessNavigate,
   });
 
   const reset = useCallback(() => {

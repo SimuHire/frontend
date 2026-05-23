@@ -43,8 +43,7 @@ export function useTaskAutoload({
       view === 'expired' ||
       view === 'scheduling' ||
       view === 'scheduleConfirm' ||
-      view === 'scheduleSubmitting' ||
-      view === 'locked'
+      view === 'scheduleSubmitting'
     )
       return;
     if (!state.candidateSessionId) return;

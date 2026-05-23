@@ -30,7 +30,7 @@ describe('talentPartnerApi normalizeCandidateSession', () => {
       report_id: 'r-12',
     });
     expect(result.candidateSessionId).toBe(12);
-    expect(result.inviteUrl).toBe('/candidate/session/tok_12');
+    expect(result.inviteUrl).toBe('/invite/tok_12');
     expect(result.inviteEmailStatus).toBe('sent');
     expect(result.reportReady).toBe(true);
     expect(result.reportId).toBe('r-12');
@@ -51,7 +51,7 @@ describe('talentPartnerApi normalizeCandidateSession', () => {
       email_verified: true,
       progress: { current: '1', total: '3' },
     });
-    expect(result.inviteUrl).toBe('https://app.test/candidate/session/tok_7');
+    expect(result.inviteUrl).toBe('https://app.test/invite/tok_7');
     expect(result.verified).toBe(true);
     expect(result.dayProgress).toEqual({ current: 1, total: 3 });
     if (originalWindow) globalAny.window = originalWindow;

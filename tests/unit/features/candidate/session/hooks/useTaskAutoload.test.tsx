@@ -106,4 +106,32 @@ describe('useTaskAutoload', () => {
     expect(setView).not.toHaveBeenCalled();
     expect(setErrorMessage).not.toHaveBeenCalled();
   });
+
+  it('still autoloads a started session when the schedule is locked', async () => {
+    const setView = jest.fn();
+    const setErrorMessage = jest.fn();
+    fetchCurrentTaskMock.mockResolvedValue(undefined);
+    render(
+      <HookHarness
+        view="locked"
+        state={baseState({
+          taskState: {
+            loading: false,
+            error: null,
+            isComplete: false,
+            completedAt: null,
+            completedTaskIds: [1, 2, 3, 4],
+            currentTask: null,
+          },
+        })}
+        fetchCurrentTask={fetchCurrentTaskMock}
+        setErrorMessage={setErrorMessage}
+        setView={setView}
+      />,
+    );
+
+    await waitFor(() => expect(fetchCurrentTaskMock).toHaveBeenCalledTimes(1));
+    expect(setView).toHaveBeenCalledWith(expect.any(Function));
+    expect(setErrorMessage).not.toHaveBeenCalled();
+  });
 });

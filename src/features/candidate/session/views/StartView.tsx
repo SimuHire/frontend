@@ -19,7 +19,7 @@ export function StartView({ title, role, onStart, onDashboard }: Props) {
         <h2 className="text-sm font-semibold">What to expect</h2>
         <ul className="mt-2 space-y-1 text-sm text-wheat-700">
           <li>
-            <b>Day 1:</b> architecture plan (written).
+            <b>Day 1:</b> Planning & Design Doc (written).
           </li>
           <li>
             <b>Days 2–3:</b> build from scratch in the GitHub Codespace only.

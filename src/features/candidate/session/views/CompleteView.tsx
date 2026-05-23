@@ -61,7 +61,7 @@ export function CompleteView({
       <div className="flex flex-wrap gap-2">
         <Button onClick={onReview}>Review submissions</Button>
         <Button variant="secondary" onClick={onDashboard}>
-          Back to Candidate Dashboard
+          Back to your portal
         </Button>
       </div>
     </div>

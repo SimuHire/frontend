@@ -47,7 +47,7 @@ describe('TalentPartnerTrialDetailPage - invite create modal', () => {
             candidateSessionId: '99',
             name: 'New Person',
             email: 'new@example.com',
-            inviteUrl: 'https://example.com/candidate/session/invite-token',
+            inviteUrl: 'https://example.com/invite/invite-token',
             status: 'sent',
           },
         ],
@@ -75,7 +75,7 @@ describe('TalentPartnerTrialDetailPage - invite create modal', () => {
     ).toBeInTheDocument();
     expect(
       await screen.findByLabelText(/Invite URL for new@example.com/i),
-    ).toHaveValue('https://example.com/candidate/session/invite-token');
+    ).toHaveValue('https://example.com/invite/invite-token');
     const success = await screen.findByTestId('invite-batch-success');
     expect(within(success).getByText('New Person')).toBeInTheDocument();
     expect(await screen.findByText(/1 invite sent/i)).toBeInTheDocument();
@@ -116,7 +116,7 @@ describe('TalentPartnerTrialDetailPage - invite create modal', () => {
             candidateSessionId: '99',
             name: 'New Person',
             email: 'new@example.com',
-            inviteUrl: 'https://example.com/candidate/session/invite-token',
+            inviteUrl: 'https://example.com/invite/invite-token',
             status: 'sent',
           },
         ],
@@ -175,7 +175,7 @@ describe('TalentPartnerTrialDetailPage - invite create modal', () => {
             candidateSessionId: '99',
             name: 'New Person',
             email: 'new@example.com',
-            inviteUrl: 'https://example.com/candidate/session/invite-token',
+            inviteUrl: 'https://example.com/invite/invite-token',
             status: 'sent',
           },
         ],

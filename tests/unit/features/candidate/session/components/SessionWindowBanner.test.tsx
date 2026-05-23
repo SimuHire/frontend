@@ -27,6 +27,7 @@ describe('SessionWindowBanner', () => {
     render(
       <SessionWindowBanner
         windowState={windowState}
+        started={true}
         lastDraftSavedAt={null}
         lastSubmissionAt={null}
         lastSubmissionId={null}
@@ -36,7 +37,7 @@ describe('SessionWindowBanner', () => {
     expect(screen.getByText(/Day 2 open/i)).toBeInTheDocument();
   });
 
-  it('renders pre-start countdown and comeback callout', () => {
+  it('renders started-session closed copy and comeback callout', () => {
     const windowState: DerivedWindowState = {
       ...baseWindowState(),
       phase: 'closed_before_start',
@@ -44,7 +45,7 @@ describe('SessionWindowBanner', () => {
       countdownLabel: '0d 00h 15m 00s',
       actionGate: {
         isReadOnly: true,
-        disabledReason: 'This day is not open yet.',
+        disabledReason: 'Day 2 is closed.',
         comeBackAt: '2099-01-03T14:00:00Z',
       },
       correctedByBackend: true,
@@ -54,14 +55,20 @@ describe('SessionWindowBanner', () => {
     render(
       <SessionWindowBanner
         windowState={windowState}
+        started={true}
         lastDraftSavedAt={null}
         lastSubmissionAt={null}
         lastSubmissionId={null}
       />,
     );
 
-    expect(screen.getByText(/not open yet/i)).toBeInTheDocument();
-    expect(screen.getByText(/Starts in 0d 00h 15m 00s/i)).toBeInTheDocument();
+    expect(screen.getByText(/Day 2 is closed/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Your saved Day 2 work stays locked in/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Day 3 starts in 0d 00h 15m 00s/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Come back at/i)).toBeInTheDocument();
   });
 
@@ -79,6 +86,7 @@ describe('SessionWindowBanner', () => {
     render(
       <SessionWindowBanner
         windowState={windowState}
+        started={true}
         lastDraftSavedAt={null}
         lastSubmissionAt={'2099-01-03T22:01:00Z'}
         lastSubmissionId={91}

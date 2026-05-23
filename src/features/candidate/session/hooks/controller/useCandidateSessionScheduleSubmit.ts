@@ -26,6 +26,7 @@ type Params = Pick<
   setScheduleSubmitError: SetNullableString;
   setScheduleTimezoneError: SetNullableString;
   setScheduleDateError: SetNullableString;
+  onScheduleSuccessNavigate?: () => void;
 };
 
 export function useCandidateSessionScheduleSubmit({
@@ -47,6 +48,7 @@ export function useCandidateSessionScheduleSubmit({
   setScheduleSubmitError,
   setScheduleTimezoneError,
   setScheduleDateError,
+  onScheduleSuccessNavigate,
 }: Params) {
   const onScheduleContinue = useCallback(() => {
     if (!validateForm()) return;
@@ -77,6 +79,7 @@ export function useCandidateSessionScheduleSubmit({
     setScheduleSubmitError,
     setScheduleTimezoneError,
     setScheduleDateError,
+    onScheduleSuccessNavigate,
   });
 
   const onScheduleRetry = useCallback(() => {

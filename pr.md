@@ -1,80 +1,70 @@
-# Task 10 — Demo Infrastructure Frontend Support
+# Task 8 — Candidate Onboarding + Day 1 Design Doc Workspace
 
-## Summary
+## Status
 
-- Fixed Winoe Report demo rendering so the seeded Sarah Chen report shows exactly 8 top-level dimensions.
-- Preserved Evidence Trail and Day 1-5 artifacts as separate sections.
-- Aligned the Winoe Report catalog with the seeded demo labels.
-- Removed normalization behavior that inflated explicit seeded dimension reports from day-level evidence.
-- Kept print-mode / PDF behavior documented as non-blocking.
-- Added and retained frontend tests for the seeded report shape and browser behavior.
+TASK 8 FULL QA PASSED WITH WARNINGS
 
-## Frontend Change List
+## Frontend Summary
 
-- `winoeReport.normalizeReport.ts`
-  - no longer inflates explicit seeded 8-dimension reports from day-level evidence
-  - preserves top-level report dimensions
-- `winoeReport.catalog.ts`
-  - aligned to seeded 8 dimension labels:
-    - Architecture & Design
-    - Problem Understanding
-    - Implementation Quality
-    - Code Quality
-    - Testing Discipline
-    - Development Process
-    - Communication
-    - Reflection & Ownership
-  - aliases retained for older / internal keys
-- Winoe Report page tests:
-  - renders exactly 8 dimensions
-  - Winoe Score remains `78`
-  - Evidence Trail remains available
-  - print-proof behavior remains covered
+- Public `/invite/{token}` claim page implemented.
+- Candidate setup form captures full name, preferred display name, and timezone.
+- Candidate auth handoff and auto-claim flow are wired end to end.
+- Candidate portal is available at `/candidate/portal`.
+- Legacy `/candidate/dashboard` remains as a compatibility alias.
+- Start-date scheduling flow is in place.
+- Pre-Day countdown and locked state are handled distinctly.
+- Day 1 Design Doc workspace is available.
+- The Day 1 layout uses a three-column structure.
+- Project Brief is shown in the right rail.
+- The editor uses Tiptap.
+- Bubble menu formatting covers Bold, Italic, Code, and Link.
+- Slash commands are available.
+- Autosave runs every 8 seconds, on blur, and through manual Save as draft.
+- Autosave failure and retry handling are covered.
+- The Day 1 submit dialog is implemented.
+- Final submit and duplicate-submit handling are covered.
+- Started/closed state copy is distinct from true pre-start scheduled copy.
+- Product terminology cleanup is applied across Task 8 surfaces.
 
-## Verification
+## Iteration 10 Final Fix
 
-```bash
-npm test -- --runInBand tests/unit/features/talent-partner/winoe-report/winoeReport.normalizeReport.test.ts tests/unit/features/talent-partner/winoe-report/winoeReport.viewModel.test.ts tests/integration/talent-partner/trials/candidates/WinoeReportPage.rendering.test.tsx tests/integration/talent-partner/trials/candidates/WinoeReportPage.printProof.test.tsx
-./precommit.sh
-```
+`Day1MarkdownEditor` now disables StarterKit’s built-in link extension and keeps the explicit `Link` extension. This removes the duplicate Tiptap link warning while preserving bubble-menu Link behavior.
 
-Final outcome:
+File:
 
-- targeted Winoe Report tests passed
-- frontend precommit passed
-- build / typecheck passed
+`src/features/candidate/tasks/components/Day1MarkdownEditor.tsx`
 
-## Manual QA Evidence
+## Frontend Checks
 
-- Browser verified Sarah Chen Winoe Report at local URL.
-- Winoe Score displayed as `78`.
-- exactly 8 dimensions displayed.
-- expected labels displayed.
-- Evidence Trail opened successfully.
-- Day 1-5 artifacts visible and accessible.
-- no legacy terms visible.
-- candidate dashboard smoke passed.
+| Command | Result | Notes |
+|---|---|---|
+| npm run lint | PASS | ESLint and Prettier clean |
+| npx jest tests/unit/features/candidate/tasks/components/day1MarkdownEditorActions.test.ts --runInBand | PASS | Bubble-menu action coverage passed |
+| npx jest tests/integration/candidate/CandidateSessionPageClient.behavior.scheduleSuccess.test.tsx tests/integration/candidate/CandidateSessionPageClient.behavior.scheduleAuthConflict.test.tsx tests/integration/candidate/CandidateSessionPageClient.behavior.lockedProxy.test.tsx --runInBand | PASS | Candidate session integration checks passed |
+| ./precommit.sh | PASS | Lint, Jest CI/coverage, typecheck, and build passed |
 
-## Known Warnings / Follow-ups
+## Browser QA
 
-- Local login is magic-link based; QA used `/api/dev/qa-login`.
-- PDF export behaves as print mode rather than a downloaded file.
-- This was accepted as non-blocking for Task 10.
+| Flow | Result | Notes |
+|---|---|---|
+| Real-backend editor smoke | PASS | Used local QA login with real backend draft endpoints |
+| Bubble menu duplicate link warning check | PASS | No duplicate-link warning in fresh browser console |
+| Bubble menu Bold / Italic / Code / Link | PASS | Formatting persisted after reload |
+| Slash command smoke | PASS | `/h2` applied successfully |
+| Autosave reload smoke | PASS | Draft restored after reload |
+| Submit dialog smoke | PASS | Dialog opened by normal click; Keep working preserved editor content |
 
-## Final QA Result
+## Frontend Warning
 
-`Task 10 FINAL QA PASS — ready to finish / raise PRs.`
+React key warning remains in `SubmissionReviewPage` / `SubmissionReviewCodePreview` / `Highlight` stack. This is outside Task 8 candidate/editor surfaces and should be handled separately.
 
-Final verification confirmed:
+## Final QA Verdict
 
-- normal seed command exits 0 after documented reset repair path
-- seeded data is idempotent and stable
-- fake GitHub provider is used in demo mode
-- production demo mode is rejected
-- dashboard shows 3 Trials
-- Trial A and Trial C candidate lists work
-- Sarah Chen Winoe Report renders with Winoe Score 78 and exactly 8 dimensions
-- Evidence Trail and Day 1-5 artifacts are accessible
-- legacy guard passes
-- backend precommit passes
-- frontend precommit passes
+TASK 8 FULL QA PASSED WITH WARNINGS.
+
+Task 8 passed full manual QA after iterative blocker repairs and warning cleanup. The remaining warnings are non-Task-8 or repo-wide debt:
+
+1. Backend full precommit remains red on known repo-wide coverage / rate-limit debt.
+2. Frontend React key warning remains in non-Task-8 Submission Review surfaces.
+
+No Task 8 blockers remain.

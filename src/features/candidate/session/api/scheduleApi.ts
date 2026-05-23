@@ -79,6 +79,12 @@ export async function scheduleCandidateSession(
             backendMsg || 'Start date must be in the future.',
             details,
           );
+        if (code === 'SCHEDULE_START_OUTSIDE_WINDOW')
+          throwScheduleError(
+            422,
+            backendMsg || 'Start date must be within the next 14 days.',
+            details,
+          );
         if (backendMsg.toLowerCase().includes('githubusername'))
           throwScheduleError(
             422,

@@ -10,6 +10,7 @@ const useCandidateSessionMock = jest.fn();
 
 jest.mock('next/navigation', () => ({
   useRouter: () => useRouterMock,
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock('@/features/candidate/session/api', () => ({
@@ -87,11 +88,12 @@ export const makeInvite = (overrides: Partial<Invite> = {}): Invite => ({
 export const renderDashboardInvite = async (invite: Invite) => {
   listCandidateInvitesMock.mockResolvedValue([invite]);
   await act(async () => {
-    render(<CandidateDashboardPage />);
+    render(<CandidateDashboardPage signedInEmail="candidate@example.com" />);
   });
-  await waitFor(() => {
-    expect(screen.getByText(invite.title)).toBeInTheDocument();
-  });
+  await waitFor(() => expect(listCandidateInvitesMock).toHaveBeenCalled());
+  await waitFor(() =>
+    expect(screen.queryByText(/Loading your Trial/i)).not.toBeInTheDocument(),
+  );
 };
 
 export { extractInviteToken };

@@ -26,11 +26,19 @@ export function SchedulingView({
   return (
     <div className="mx-auto max-w-3xl space-y-5 p-6">
       <div>
-        <h1 className="text-lg font-semibold">Pick your start date</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Choose when your 5-day Trial begins. Trial content unlocks only when
-          Day 1 opens for {title || 'your Trial'}
-          {role ? ` (${role})` : ''}.
+        <h1 className="text-lg font-semibold text-gray-900">
+          Schedule your Trial start
+        </h1>
+        <p className="mt-1 text-sm font-medium text-gray-800">
+          {role}
+          {title ? ` · ${title}` : ''}
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-gray-600">
+          Pick Day 1 on your calendar.{' '}
+          <span className="text-gray-800">
+            Your Trial unlocks at 9 AM your local time. Days 1–4 close at 5 PM.
+            Day 5 closes at 9 PM as a kindness — reflection deserves space.
+          </span>
         </p>
       </div>
 
@@ -50,6 +58,7 @@ export function SchedulingView({
           scheduleDate={rest.scheduleDate}
           scheduleTimezone={rest.scheduleTimezone}
           scheduleGithubUsername={rest.scheduleGithubUsername}
+          scheduleIncludeWeekends={rest.scheduleIncludeWeekends}
           scheduleTimezoneDetected={rest.scheduleTimezoneDetected}
           scheduleTimezoneOptions={rest.scheduleTimezoneOptions}
           scheduleDateError={rest.scheduleDateError}
@@ -60,6 +69,7 @@ export function SchedulingView({
           onScheduleDateChange={rest.onScheduleDateChange}
           onScheduleTimezoneChange={rest.onScheduleTimezoneChange}
           onScheduleGithubUsernameChange={rest.onScheduleGithubUsernameChange}
+          onIncludeWeekendsChange={rest.onIncludeWeekendsChange}
           onScheduleContinue={rest.onScheduleContinue}
           onDashboard={rest.onDashboard}
         />

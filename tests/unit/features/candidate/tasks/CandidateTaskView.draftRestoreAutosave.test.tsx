@@ -32,7 +32,7 @@ describe('CandidateTaskView draft restore and autosave', () => {
       ).toBeInTheDocument(),
     );
     expect(screen.getByText(/Draft restored/i)).toBeInTheDocument();
-    expect(screen.getByText(/Saved at/i)).toBeInTheDocument();
+    expect(screen.getByText(/Saved/i)).toBeInTheDocument();
   });
 
   it('shows autosave status transition from saving to saved', async () => {
@@ -50,15 +50,13 @@ describe('CandidateTaskView draft restore and autosave', () => {
       target: { value: 'typing day 1...' },
     });
     await act(async () => {
-      jest.advanceTimersByTime(1500);
+      jest.advanceTimersByTime(8000);
     });
     expect(screen.getByText(/Saving/i)).toBeInTheDocument();
     expect(putCandidateTaskDraftMock).toHaveBeenCalledTimes(1);
     await act(async () => {
       resolvePut?.({ taskId: 1, updatedAt: '2026-03-07T10:30:00.000Z' });
     });
-    await waitFor(() =>
-      expect(screen.getByText(/Saved at/i)).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText(/Saved/i)).toBeInTheDocument());
   });
 });

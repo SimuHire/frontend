@@ -46,7 +46,7 @@ export function Day5ReflectionCompletionView({ onReview, onDashboard }: Props) {
           ) : null}
           {onDashboard ? (
             <Button variant="secondary" onClick={onDashboard}>
-              Back to Candidate Dashboard
+              Back to your portal
             </Button>
           ) : null}
         </div>

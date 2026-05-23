@@ -31,10 +31,7 @@ export function TaskDayList({
       {days.map((day) => {
         const status = dayStatus(day, completedCount, currentDayIndex);
         const summary = DAY_SUMMARIES[day - 1];
-        const title =
-          day === currentDayIndex && currentTaskTitle
-            ? currentTaskTitle
-            : (summary?.title ?? `Day ${day}`);
+        const title = summary?.title ?? currentTaskTitle ?? `Day ${day}`;
         const statusMeta = dayStatusMeta(status, day);
 
         return (

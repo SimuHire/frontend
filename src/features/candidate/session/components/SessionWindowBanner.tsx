@@ -7,6 +7,7 @@ import {
 
 type Props = {
   windowState: DerivedWindowState;
+  started: boolean;
   lastDraftSavedAt: number | null;
   lastSubmissionAt: string | null;
   lastSubmissionId: number | null;
@@ -14,6 +15,7 @@ type Props = {
 
 export function SessionWindowBanner({
   windowState,
+  started,
   lastDraftSavedAt,
   lastSubmissionAt,
   lastSubmissionId,
@@ -25,7 +27,15 @@ export function SessionWindowBanner({
     return <SessionWindowOpenBanner windowState={windowState} />;
 
   if (windowState.phase === 'closed_before_start')
-    return <SessionWindowClosedBeforeStartBanner windowState={windowState} />;
+    return (
+      <SessionWindowClosedBeforeStartBanner
+        windowState={windowState}
+        started={started}
+        lastDraftSavedAt={lastDraftSavedAt}
+        lastSubmissionAt={lastSubmissionAt}
+        lastSubmissionId={lastSubmissionId}
+      />
+    );
 
   return (
     <SessionWindowClosedBanner

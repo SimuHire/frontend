@@ -121,6 +121,36 @@ describe('useTaskDraftAutosave edge cases', () => {
     expect(putCandidateTaskDraftMock).not.toHaveBeenCalled();
   });
 
+  it('clears persistent failure after a failed autosave then successful retry', async () => {
+    putCandidateTaskDraftMock
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce({
+        taskId: 10,
+        updatedAt: '2026-03-07T10:05:00.000Z',
+      });
+
+    const { result, rerender } = setupHook({ value: '' });
+    await act(async () => {
+      jest.advanceTimersByTime(0);
+      await Promise.resolve();
+    });
+    rerender({ value: 'retry succeeds' });
+    await act(async () => {
+      jest.advanceTimersByTime(1500);
+      await Promise.resolve();
+    });
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(2000);
+    });
+
+    await waitFor(() =>
+      expect(putCandidateTaskDraftMock).toHaveBeenCalledTimes(2),
+    );
+    expect(result.current.persistentFailure).toBe(false);
+    expect(result.current.status).toBe('saved');
+    expect(result.current.error).toBeNull();
+  });
+
   it('does not write initial starter text after an empty restore settles', async () => {
     const { rerender } = setupHook({ value: 'starter text' });
 

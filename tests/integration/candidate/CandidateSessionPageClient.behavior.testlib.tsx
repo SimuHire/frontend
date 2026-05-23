@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import type { UserEvent } from '@testing-library/user-event';
 import { __resetHttpClientCache } from '@/platform/api-client/client';
 import { renderCandidateWithProviders } from '../../setup';
@@ -102,16 +102,34 @@ export function expectAllScheduleDaysVisible() {
   }
 }
 
+export function scheduleDateWithinBookingWindow(daysAhead = 3): string {
+  const date = new Date();
+  for (let offset = daysAhead; offset < 14; offset += 1) {
+    const candidate = new Date(date);
+    candidate.setUTCDate(candidate.getUTCDate() + offset);
+    const weekday = candidate.getUTCDay();
+    if (weekday !== 0 && weekday !== 6) {
+      return candidate.toISOString().slice(0, 10);
+    }
+  }
+  throw new Error('No weekday found within the booking window');
+}
+
 export const fillScheduleAndContinue = async (user: UserEvent) => {
-  expect(await screen.findByText(/Pick your start date/i)).toBeInTheDocument();
-  const startDateInput = screen.getByLabelText('Start date');
+  expect(
+    await screen.findByText(/Pick Day 1 on your calendar/i),
+  ).toBeInTheDocument();
+  const startDateInput = screen.getByLabelText('Day 1 start date');
   await user.clear(startDateInput);
-  await user.type(startDateInput, '2099-01-01');
+  await user.type(startDateInput, scheduleDateWithinBookingWindow(7));
   const timezoneInput = screen.getByLabelText('Timezone');
   await user.clear(timezoneInput);
   await user.type(timezoneInput, 'America/New_York');
   const githubUsernameInput = screen.getByLabelText('GitHub username');
   await user.clear(githubUsernameInput);
   await user.type(githubUsernameInput, 'octocat');
-  await user.click(screen.getByRole('button', { name: /Continue/i }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: /^Continue$/i })).toBeEnabled(),
+  );
+  await user.click(screen.getByRole('button', { name: /^Continue$/i }));
 };

@@ -54,11 +54,11 @@ describe('TaskActions', () => {
       screen.getByRole('button', { name: /submit & continue/i }),
     );
     expect(
-      screen.getByRole('dialog', { name: /submit day 1 design document/i }),
+      screen.getByRole('dialog', { name: /submit day 1/i }),
     ).toHaveAttribute('aria-modal', 'true');
 
     const confirmButton = screen.getByRole('button', {
-      name: /submit and lock/i,
+      name: /submit day 1/i,
     });
     await user.click(confirmButton);
     await user.click(confirmButton);

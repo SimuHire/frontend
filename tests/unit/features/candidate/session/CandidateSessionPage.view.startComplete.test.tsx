@@ -66,7 +66,9 @@ describe('CandidateSessionPage view - completion and start state', () => {
     expect(screen.getByText('Winoe')).toBeInTheDocument();
     expect(screen.getByText(/completion date/i)).toBeInTheDocument();
     expect(screen.getByText('May 5, 2026')).toBeInTheDocument();
-    expect(screen.getByText(/day 1: design doc/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/day 1: planning & design doc/i),
+    ).toBeInTheDocument();
   });
 
   it('navigates to read-only review from the completion screen', async () => {
@@ -158,8 +160,8 @@ describe('CandidateSessionPage view - completion and start state', () => {
     );
     await act(async () => render(<CandidateSessionPage token="inv" />));
     fireEvent.click(
-      screen.getByRole('button', { name: /Back to Candidate Dashboard/i }),
+      screen.getByRole('button', { name: /Back to your portal/i }),
     );
-    expect(routerMock.push).toHaveBeenCalledWith('/candidate/dashboard');
+    expect(routerMock.push).toHaveBeenCalledWith('/candidate/portal');
   });
 });

@@ -96,7 +96,7 @@ export async function requireBffAuth(
     });
   }
 
-  const session = await getSessionNormalized();
+  const session = await getSessionNormalized(req);
   if (!session) {
     logPerf('unauthenticated');
     return buildNotAuthenticatedResult(cookieCarrier);

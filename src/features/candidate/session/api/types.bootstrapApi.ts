@@ -32,6 +32,7 @@ export type CandidateSessionBootstrapResponse = {
 
 export type CandidateInvite = {
   candidateSessionId: number;
+  trialId?: number | null;
   candidateEmail?: string | null;
   inviteEmail?: string | null;
   token: string | null;

@@ -19,7 +19,7 @@ describe('CandidateDashboardPage content states', () => {
   it('shows loading state initially', async () => {
     listCandidateInvitesMock.mockImplementation(() => new Promise(() => {}));
     await renderDashboardPage();
-    expect(screen.getByText(/Your invitations/)).toBeInTheDocument();
+    expect(screen.getByText(/Loading your Trial/)).toBeInTheDocument();
   });
 
   it('displays signed-in email when provided', async () => {
@@ -36,11 +36,13 @@ describe('CandidateDashboardPage content states', () => {
     listCandidateInvitesMock.mockResolvedValue([]);
     await renderDashboardPage();
     await waitFor(() => {
-      expect(screen.getByText(/No invites yet/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/No active Trial is linked to this account yet/i),
+      ).toBeInTheDocument();
     });
   });
 
-  it('renders invite card metadata and progress', async () => {
+  it('renders trial hero for the primary invite', async () => {
     listCandidateInvitesMock.mockResolvedValue([
       {
         candidateSessionId: 1,
@@ -55,17 +57,25 @@ describe('CandidateDashboardPage content states', () => {
         expiresAt: '2024-02-15T00:00:00Z',
         candidateEmail: 'test@example.com',
         talentPartnerName: 'Avery',
+        scheduledStartAt: '2024-01-01T00:00:00Z',
+        dayWindows: [
+          {
+            dayIndex: 1,
+            windowStartAt: '2024-01-01T00:00:00Z',
+            windowEndAt: '2024-01-01T23:59:59Z',
+          },
+        ],
       },
     ]);
     await renderDashboardPage({ signedInEmail: 'test@example.com' });
     await waitFor(() => {
-      expect(screen.getByText('Test Trial')).toBeInTheDocument();
+      expect(screen.getByText(/Developer/i)).toBeInTheDocument();
     });
     expect(screen.getByText(/TestCo/)).toBeInTheDocument();
-    expect(screen.getByText(/Talent Partner: Avery/i)).toBeInTheDocument();
-    expect(screen.getByText(/Current day: Day 3 of 5/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /open your trial/i }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Progress: 2\/5/)).toBeInTheDocument();
-    expect(screen.getByText('Day 3 open')).toBeInTheDocument();
   });
 
   it('filters out invites that do not belong to the signed-in email', async () => {
@@ -79,6 +89,14 @@ describe('CandidateDashboardPage content states', () => {
         isExpired: false,
         token: 'other-token',
         candidateEmail: 'other@example.com',
+        scheduledStartAt: '2024-01-01T00:00:00Z',
+        dayWindows: [
+          {
+            dayIndex: 1,
+            windowStartAt: '2024-01-01T00:00:00Z',
+            windowEndAt: '2024-01-01T23:59:59Z',
+          },
+        ],
       },
       {
         candidateSessionId: 11,
@@ -89,12 +107,20 @@ describe('CandidateDashboardPage content states', () => {
         isExpired: false,
         token: 'mine-token',
         candidateEmail: 'me@example.com',
+        scheduledStartAt: '2024-01-01T00:00:00Z',
+        dayWindows: [
+          {
+            dayIndex: 1,
+            windowStartAt: '2024-01-01T00:00:00Z',
+            windowEndAt: '2024-01-01T23:59:59Z',
+          },
+        ],
       },
     ]);
     await renderDashboardPage({ signedInEmail: 'me@example.com' });
     await waitFor(() => {
-      expect(screen.getByText('My Trial')).toBeInTheDocument();
+      expect(screen.getByText(/MyCo/)).toBeInTheDocument();
     });
-    expect(screen.queryByText('Other Candidate Trial')).not.toBeInTheDocument();
+    expect(screen.queryByText(/OtherCo/)).not.toBeInTheDocument();
   });
 });

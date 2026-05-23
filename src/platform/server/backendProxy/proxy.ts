@@ -14,6 +14,7 @@ import {
   enforceMutationSameOrigin,
   enforceProxyMethodPolicy,
 } from './requestSecurity';
+import { isPublicBackendProxyPath } from './requestSecurity.path';
 import { mergeAuthCookies, requireProxyAuth } from './proxyAuth';
 import { buildBackendProxySuccessResponse } from './proxyUpstreamResponse';
 
@@ -34,14 +35,28 @@ export async function proxyToBackend(
   const originError = enforceMutationSameOrigin(req, method, requestId);
   if (originError) return originError;
 
-  const auth = await requireProxyAuth(req);
+  const publicProxyPath = isPublicBackendProxyPath(pathSegments);
+  const auth = publicProxyPath
+    ? { ok: true as const, accessToken: '', cookies: null }
+    : await requireProxyAuth(req);
   if (!auth.ok) {
     mergeAuthCookies(auth.cookies, auth.response);
     auth.response.headers.set(REQUEST_ID_HEADER, requestId);
     return auth.response;
   }
   const headers = forwardHeaders(req);
-  headers.Authorization = `Bearer ${auth.accessToken}`;
+  if (auth.accessToken) {
+    headers.Authorization = `Bearer ${auth.accessToken}`;
+    if (!headers['x-dev-user-email'] && auth.accessToken.includes(':')) {
+      const devUserEmail = auth.accessToken
+        .slice(auth.accessToken.indexOf(':') + 1)
+        .trim()
+        .toLowerCase();
+      if (devUserEmail) {
+        headers['x-dev-user-email'] = devUserEmail;
+      }
+    }
+  }
 
   try {
     if (DEBUG_PROXY) {

@@ -20,7 +20,7 @@ export function MarketingHomeSignedIn({ name }: { name?: string | null }) {
           Go to dashboard
         </Link>
 
-        <Link href="/candidate/dashboard" className={secondaryCtaClass}>
+        <Link href="/candidate/portal" className={secondaryCtaClass}>
           Candidate portal
         </Link>
 

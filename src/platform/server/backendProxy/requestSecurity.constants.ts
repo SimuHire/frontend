@@ -25,7 +25,15 @@ export const MUTATION_HINT_SEGMENTS = new Set([
   'terminate',
 ]);
 
+export const PUBLIC_BACKEND_PROXY_PATTERNS = [
+  /^candidate\/invite-tokens\/[^/]+\/summary$/,
+] as const;
+
 export const METHOD_RULES: MethodRule[] = [
+  {
+    pattern: /^candidate\/invite-tokens\/[^/]+\/summary$/,
+    methods: ['GET', 'HEAD'],
+  },
   { pattern: /^candidate\/invites$/, methods: ['GET', 'HEAD'] },
   { pattern: /^candidate\/session\/[^/]+$/, methods: ['GET', 'HEAD'] },
   { pattern: /^candidate\/session\/[^/]+\/schedule$/, methods: ['POST'] },

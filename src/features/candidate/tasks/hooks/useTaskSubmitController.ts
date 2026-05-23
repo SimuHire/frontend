@@ -126,6 +126,7 @@ export function useTaskSubmitController({
     draftAutosaveStatus: draft.draftAutosave.status,
     draftRestoreApplied: draft.draftAutosave.restoreApplied,
     draftError: draft.draftAutosave.error,
+    draftPersistentFailure: draft.draftPersistentFailure,
     saveDraftNow: draft.saveDraftNow,
     actionStatus: status.actionStatus,
     displayStatus: status.displayStatus,

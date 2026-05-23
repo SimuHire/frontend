@@ -33,6 +33,7 @@ describe('resolveCandidateSessionView', () => {
     const view = resolveCandidateSessionView({
       view: 'locked',
       hasTaskData: true,
+      started: true,
       bootstrap,
       scheduleResponseWindowCount: 3,
       clockNowMs: Date.parse('2026-04-22T22:30:00Z'),
@@ -45,6 +46,7 @@ describe('resolveCandidateSessionView', () => {
     const view = resolveCandidateSessionView({
       view: 'locked',
       hasTaskData: false,
+      started: false,
       bootstrap,
       scheduleResponseWindowCount: 3,
       clockNowMs: Date.parse('2026-04-22T22:30:00Z'),

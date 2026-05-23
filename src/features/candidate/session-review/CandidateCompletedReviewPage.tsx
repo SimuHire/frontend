@@ -34,7 +34,7 @@ type ReviewDayConfig = {
 const REVIEW_DAYS: ReviewDayConfig[] = [
   {
     dayIndex: 1,
-    label: 'Day 1 — Design Doc',
+    label: 'Day 1 — Planning & Design Doc',
     emptyMessage: 'No design doc content was captured for this day.',
   },
   {
@@ -105,7 +105,7 @@ function ReviewMetadata({
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={onDashboard}>
-            Back to Candidate Dashboard
+            Back to your portal
           </Button>
         </div>
       </div>
@@ -335,15 +335,17 @@ function TestResultsSection({
   if (!testResults) {
     return (
       <UnavailableArtifactSection
-        title="Test results"
-        message="Test results are unavailable for this day."
+        title="Validation results"
+        message="Validation results are unavailable for this day."
       />
     );
   }
 
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-      <div className="text-sm font-medium text-slate-900">Test results</div>
+      <div className="text-sm font-medium text-slate-900">
+        Validation results
+      </div>
       <dl className="mt-3 grid gap-3 text-sm text-slate-700 md:grid-cols-3">
         <SummaryTile label="Passed" value={testResults.passed} />
         <SummaryTile label="Failed" value={testResults.failed} />
@@ -604,8 +606,8 @@ export default function CandidateCompletedReviewPage({ token }: Props) {
         title="Trial not complete yet"
         description="This Trial is not complete yet. Finish the active session before opening read-only review."
         primaryAction={{
-          label: 'Back to Candidate Dashboard',
-          onClick: () => router.push('/candidate/dashboard'),
+          label: 'Back to your portal',
+          onClick: () => router.push('/candidate/portal'),
         }}
         secondaryAction={{
           label: 'Return to active session',
@@ -629,8 +631,8 @@ export default function CandidateCompletedReviewPage({ token }: Props) {
               )
         }
         primaryAction={{
-          label: 'Back to Candidate Dashboard',
-          onClick: () => router.push('/candidate/dashboard'),
+          label: 'Back to your portal',
+          onClick: () => router.push('/candidate/portal'),
         }}
         secondaryAction={{
           label: 'Reload review',
@@ -652,7 +654,7 @@ export default function CandidateCompletedReviewPage({ token }: Props) {
     >
       <ReviewMetadata
         review={reviewQuery.data}
-        onDashboard={() => router.push('/candidate/dashboard')}
+        onDashboard={() => router.push('/candidate/portal')}
       />
       <div className="grid gap-6">
         {REVIEW_DAYS.map((day) => (

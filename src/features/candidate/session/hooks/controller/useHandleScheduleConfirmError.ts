@@ -73,6 +73,13 @@ export async function handleScheduleConfirmError({
     setView('scheduling');
     return;
   }
+  if (status === 422 && code === 'SCHEDULE_START_OUTSIDE_WINDOW') {
+    setScheduleDateError(
+      message || 'Start date must be within the next 14 days in your timezone.',
+    );
+    setView('scheduling');
+    return;
+  }
   if (status === 422 && code === 'SCHEDULE_START_IN_PAST') {
     setScheduleDateError(message || 'Start date cannot be in the past.');
     setView('scheduling');

@@ -38,7 +38,9 @@ describe('CandidateSessionPage auth flow schedule auth/conflict handling', () =>
     const user = userEvent.setup();
     renderSessionPage('valid-token');
     await fillScheduleAndContinue(user);
-    await user.click(screen.getByRole('button', { name: /Confirm schedule/i }));
+    await user.click(
+      screen.getByRole('button', { name: /Confirm and lock in/i }),
+    );
     await waitFor(() =>
       expect(routerMock.replace).toHaveBeenCalledWith(
         expect.stringContaining('/auth/login?'),
@@ -57,6 +59,7 @@ describe('CandidateSessionPage auth flow schedule auth/conflict handling', () =>
           return jsonResponse(
             initCalls > 1
               ? baseSession({
+                  status: 'not_started',
                   scheduledStartAt: '2099-01-01T14:00:00Z',
                   candidateTimezone: 'America/New_York',
                   dayWindows: sampleWindows,
@@ -83,9 +86,11 @@ describe('CandidateSessionPage auth flow schedule auth/conflict handling', () =>
     const user = userEvent.setup();
     renderSessionPage('valid-token');
     await fillScheduleAndContinue(user);
-    await user.click(screen.getByRole('button', { name: /Confirm schedule/i }));
+    await user.click(
+      screen.getByRole('button', { name: /Confirm and lock in/i }),
+    );
     expect(
-      await screen.findByText(/Trial locked until start/i),
+      await screen.findByText(/Almost there — your Trial is scheduled/i),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Schedule already set/i)).not.toBeInTheDocument();
     await waitFor(() =>

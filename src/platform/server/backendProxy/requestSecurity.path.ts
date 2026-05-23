@@ -1,4 +1,7 @@
-import { MUTATION_HINT_SEGMENTS } from './requestSecurity.constants';
+import {
+  MUTATION_HINT_SEGMENTS,
+  PUBLIC_BACKEND_PROXY_PATTERNS,
+} from './requestSecurity.constants';
 
 export function normalizePath(pathSegments: string[]) {
   return pathSegments
@@ -16,4 +19,9 @@ export function isLikelyMutationGet(path: string): boolean {
   return path
     .split('/')
     .some((segment) => MUTATION_HINT_SEGMENTS.has(segment.toLowerCase()));
+}
+
+export function isPublicBackendProxyPath(pathSegments: string[]): boolean {
+  const path = normalizePath(pathSegments);
+  return PUBLIC_BACKEND_PROXY_PATTERNS.some((pattern) => pattern.test(path));
 }

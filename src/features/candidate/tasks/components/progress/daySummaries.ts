@@ -2,12 +2,12 @@ export type DayStatus = 'completed' | 'current' | 'locked';
 
 export const DAY_SUMMARIES = [
   {
-    title: 'Kickoff brief',
+    title: 'Planning & Design Doc',
     detail: 'Understand the prompt and outline your approach.',
     hint: 'Submit your written response.',
   },
   {
-    title: 'Build in GitHub',
+    title: 'Implementation Kickoff',
     detail: 'Implement the feature in your workspace.',
     hint: 'Workspace + tests.',
   },
@@ -22,7 +22,7 @@ export const DAY_SUMMARIES = [
     hint: 'Demo video.',
   },
   {
-    title: 'Reflection essay',
+    title: 'Reflection Essay',
     detail: 'Capture your experience in a final markdown reflection.',
     hint: 'Markdown editor.',
   },

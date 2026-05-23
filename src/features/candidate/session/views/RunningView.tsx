@@ -10,6 +10,7 @@ export function RunningView({
   role,
   completedCount,
   currentDayIndex,
+  started,
   currentTask,
   candidateSessionId,
   taskError,
@@ -34,9 +35,10 @@ export function RunningView({
   onCodingWorkspaceSnapshot,
 }: RunningViewProps) {
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-4">
+    <div className="p-6 max-w-7xl mx-auto space-y-4 w-full">
       <SessionWindowBanner
         windowState={windowState}
+        started={started}
         lastDraftSavedAt={lastDraftSavedAt}
         lastSubmissionAt={lastSubmissionAt}
         lastSubmissionId={lastSubmissionId}
@@ -56,6 +58,7 @@ export function RunningView({
         currentTask={currentTask}
         candidateSessionId={candidateSessionId}
         resourceLink={resourceLink}
+        trialRole={role}
         submitting={submitting}
         showWorkspacePanel={showWorkspacePanel}
         showRecordingPanel={showRecordingPanel}

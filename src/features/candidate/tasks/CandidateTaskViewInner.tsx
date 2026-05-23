@@ -18,6 +18,7 @@ import {
 export function CandidateTaskViewInner({
   candidateSessionId,
   task,
+  trialRole = '',
   onSubmit,
   submitting,
   submitError,
@@ -34,14 +35,12 @@ export function CandidateTaskViewInner({
     onTaskWindowClosed,
     actionGate: actionGate ?? DEFAULT_ACTION_GATE,
   });
-  const showDay1DraftStatus = controller.textTask && task.dayIndex === 1;
-  const showDay5DraftStatus = controller.textTask && task.dayIndex === 5;
   const isDay1DesignDoc = controller.textTask && task.dayIndex === 1;
+  const showDay5DraftStatus = controller.textTask && task.dayIndex === 5;
   const comeBackAt = (actionGate ?? DEFAULT_ACTION_GATE).comeBackAt;
   const hideDay1Actions = isDay1DesignDoc && controller.readOnly && !comeBackAt;
   const draftStatus = TaskDraftStatusSlots({
-    showDay1DraftStatus:
-      showDay1DraftStatus && (!controller.readOnly || !!controller.draftError),
+    showDay1DraftStatus: false,
     showDay5DraftStatus,
     draftAutosaveStatus: controller.draftAutosaveStatus,
     savedAt: controller.savedAt,
@@ -50,26 +49,45 @@ export function CandidateTaskViewInner({
   });
 
   return (
-    <TaskContainer>
-      <TaskHeader
-        task={displayTask}
-        statusSlot={draftStatus.headerStatusSlot}
-      />
+    <TaskContainer
+      className={
+        isDay1DesignDoc
+          ? 'mx-auto w-full min-w-0 max-w-[min(100%,76rem)] overflow-x-hidden'
+          : undefined
+      }
+    >
+      {isDay1DesignDoc ? null : (
+        <TaskHeader
+          task={displayTask}
+          statusSlot={draftStatus.headerStatusSlot}
+        />
+      )}
       {isDay1DesignDoc ? null : (
         <TaskDescription description={displayTask.description} />
       )}
       <TaskWorkArea
         dayIndex={task.dayIndex}
+        trialRole={trialRole}
+        candidateSessionId={candidateSessionId}
         projectBrief={displayTask.description}
         cutoffAt={task.cutoffAt}
         githubNative={controller.githubNative}
         readOnly={controller.readOnly}
         disabledReason={controller.disabledReason}
         draftError={controller.draftError}
+        draftPersistentFailure={controller.draftPersistentFailure}
+        draftAutosaveStatus={controller.draftAutosaveStatus}
+        draftRestoreApplied={controller.draftRestoreApplied}
         text={controller.text}
         disabled={controller.disabled}
         savedAt={controller.savedAt}
         onChangeText={controller.setText}
+        onFlushDraft={controller.saveDraftNow}
+        onSaveDraft={controller.saveDraftNow}
+        onSubmit={controller.saveAndSubmit}
+        submitDisabled={controller.disabled}
+        submitLabel="Submit & continue to Day 2"
+        actionStatus={controller.actionStatus}
       />
       {draftStatus.stickyDraftStatus}
       <TaskStatus
@@ -80,7 +98,7 @@ export function CandidateTaskViewInner({
         submittedSha={controller.submittedSha}
       />
       <TaskPanelErrorBanner message={controller.errorToShow} />
-      {hideDay1Actions ? null : (
+      {hideDay1Actions || isDay1DesignDoc ? null : (
         <TaskActions
           isTextTask={controller.textTask}
           displayStatus={controller.actionStatus}
@@ -90,10 +108,7 @@ export function CandidateTaskViewInner({
             controller.textTask ? controller.saveDraftNow : undefined
           }
           onSubmit={controller.saveAndSubmit}
-          requireSubmitConfirmation={isDay1DesignDoc}
-          submitLabel={
-            task.dayIndex === 3 ? 'Submit Implementation Wrap-Up' : undefined
-          }
+          requireSubmitConfirmation={false}
         />
       )}
     </TaskContainer>

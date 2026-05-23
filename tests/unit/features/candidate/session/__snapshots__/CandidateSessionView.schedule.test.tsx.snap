@@ -3,37 +3,46 @@
 exports[`CandidateSessionView scheduling states renders locked state with countdown and day windows 1`] = `
 <DocumentFragment>
   <div
-    class="mx-auto max-w-3xl space-y-4 p-6"
+    class="mx-auto max-w-3xl space-y-6 p-6 text-center"
   >
     <div>
       <h1
-        class="text-lg font-semibold"
+        class="text-xl font-semibold text-gray-900"
       >
-        Trial locked until start
+        Almost there — your Trial is scheduled
       </h1>
       <p
-        class="mt-1 text-sm text-gray-600"
+        class="mt-2 text-sm leading-relaxed text-gray-600"
       >
-        Infra Trial (Backend Engineer) opens when Day 1 starts. Come back at the scheduled opening time.
+        Infra Trial (Backend Engineer) stays calm and locked until Day 1 opens. Take a breath; we'll meet you at the start line.
       </p>
     </div>
     <div
-      class="rounded-md border border-wheat-100 bg-wheat-50 p-4 text-wheat-900"
+      class="mx-auto max-w-lg rounded-2xl border border-wheat-100 bg-wheat-50/70 px-8 py-10 text-center text-wheat-950"
     >
       <p
-        class="text-sm"
+        class="text-sm font-medium text-wheat-900"
       >
-        Starts in 
+        Day 1 unlocks in
+      </p>
+      <div
+        class="mt-4 flex justify-center"
+      >
         <span
-          class="font-semibold"
+          data-testid="countdown-timer"
         >
-          2d 01h 30m 10s
+          2d 01h
         </span>
+      </div>
+      <p
+        class="mt-6 text-xs text-wheat-800"
+      >
+        We'll email you when it begins.
       </p>
       <p
-        class="mt-1 text-xs text-wheat-700"
+        class="mt-3 text-xs text-wheat-800 tabular-nums"
       >
-        Your Trial opens on Thu, Jan 1, 2099 at 9:00 AM America/New_York. Come back then.
+        Thu, Jan 1, 2099 · 9:00 AM · America/New_York
       </p>
     </div>
     <div
@@ -165,14 +174,24 @@ exports[`CandidateSessionView scheduling states renders scheduling confirm state
   >
     <div>
       <h1
-        class="text-lg font-semibold"
+        class="text-lg font-semibold text-gray-900"
       >
-        Pick your start date
+        Schedule your Trial start
       </h1>
       <p
-        class="mt-1 text-sm text-gray-600"
+        class="mt-1 text-sm font-medium text-gray-800"
       >
-        Choose when your 5-day Trial begins. Trial content unlocks only when Day 1 opens for Infra Trial (Backend Engineer).
+        Backend Engineer · Infra Trial
+      </p>
+      <p
+        class="mt-2 text-sm leading-relaxed text-gray-600"
+      >
+        Pick Day 1 on your calendar. 
+        <span
+          class="text-gray-800"
+        >
+          Your Trial unlocks at 9 AM your local time. Days 1–4 close at 5 PM. Day 5 closes at 9 PM as a kindness — reflection deserves space.
+        </span>
       </p>
     </div>
     <div
@@ -216,7 +235,7 @@ exports[`CandidateSessionView scheduling states renders scheduling confirm state
         class="rounded-md border border-wheat-100 bg-wheat-50 p-3 text-sm text-wheat-900"
       >
         <p>
-          Your Trial opens on 
+          Day 1 will unlock on 
           <span
             class="font-semibold"
           >
@@ -226,14 +245,14 @@ exports[`CandidateSessionView scheduling states renders scheduling confirm state
           <span
             class="font-semibold"
           >
-            9:00 AM America/New_York
+            9:00 AM (America/New_York)
           </span>
           .
         </p>
         <p
           class="mt-2"
         >
-          Trial content unlocks only when Day 1 opens. Confirm this schedule before the Talent Partner is notified.
+          We'll email you a calendar invite and reminders.
         </p>
       </div>
       <div>
@@ -365,7 +384,7 @@ exports[`CandidateSessionView scheduling states renders scheduling confirm state
         <button
           class="inline-flex items-center justify-center rounded-md border font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 bg-wheat-500 text-on-accent border-transparent hover:bg-wheat-700 focus:ring-wheat-500 px-4 py-2 text-sm"
         >
-          Confirm schedule
+          Confirm and lock in
         </button>
       </div>
     </div>
@@ -380,14 +399,24 @@ exports[`CandidateSessionView scheduling states renders scheduling form state 1`
   >
     <div>
       <h1
-        class="text-lg font-semibold"
+        class="text-lg font-semibold text-gray-900"
       >
-        Pick your start date
+        Schedule your Trial start
       </h1>
       <p
-        class="mt-1 text-sm text-gray-600"
+        class="mt-1 text-sm font-medium text-gray-800"
       >
-        Choose when your 5-day Trial begins. Trial content unlocks only when Day 1 opens for Infra Trial (Backend Engineer).
+        Backend Engineer · Infra Trial
+      </p>
+      <p
+        class="mt-2 text-sm leading-relaxed text-gray-600"
+      >
+        Pick Day 1 on your calendar. 
+        <span
+          class="text-gray-800"
+        >
+          Your Trial unlocks at 9 AM your local time. Days 1–4 close at 5 PM. Day 5 closes at 9 PM as a kindness — reflection deserves space.
+        </span>
       </p>
     </div>
     <div
@@ -432,16 +461,38 @@ exports[`CandidateSessionView scheduling states renders scheduling form state 1`
           class="block text-sm font-medium text-gray-800"
           for="schedule-start-date"
         >
-          Start date
+          Day 1 start date
         </label>
         <input
           aria-invalid="false"
-          aria-label="Start date"
-          class="block w-full rounded-md border border-strong bg-primary px-3 py-2 text-sm shadow-sm focus:border-wheat-500 focus:outline-none focus:ring-1 focus:ring-wheat-500 text-primary"
+          aria-label="Day 1 start date"
+          class="block w-full rounded-md border border-strong bg-primary px-3 py-2 text-sm shadow-sm focus:border-wheat-500 focus:outline-none focus:ring-1 focus:ring-wheat-500 text-primary border-wheat-400 bg-wheat-50/40"
           id="schedule-start-date"
+          max="2026-05-31"
+          min="2026-05-17"
           type="date"
           value="2099-01-01"
         />
+        <p
+          class="mt-1 text-xs text-gray-500"
+        >
+          Choose any date through your 14-day window. Weekend starts require the toggle below.
+        </p>
+      </div>
+      <div
+        class="flex items-center gap-2"
+      >
+        <input
+          class="h-4 w-4 rounded border-gray-300 text-wheat-700 focus:ring-wheat-500"
+          id="schedule-include-weekends"
+          type="checkbox"
+        />
+        <label
+          class="text-sm text-gray-800"
+          for="schedule-include-weekends"
+        >
+          Show weekends (Sat–Sun) as selectable start days
+        </label>
       </div>
       <div>
         <label
@@ -501,7 +552,7 @@ exports[`CandidateSessionView scheduling states renders scheduling form state 1`
       <div
         class="rounded-md border border-wheat-100 bg-wheat-50 p-3 text-sm text-wheat-900"
       >
-        Your Trial opens on 
+        Day 1 will unlock on 
         <span
           class="font-semibold"
         >
@@ -511,7 +562,7 @@ exports[`CandidateSessionView scheduling states renders scheduling form state 1`
         <span
           class="font-semibold"
         >
-          9:00 AM America/New_York
+          9:00 AM (America/New_York)
         </span>
         .
       </div>
@@ -519,7 +570,7 @@ exports[`CandidateSessionView scheduling states renders scheduling form state 1`
         <h2
           class="text-sm font-semibold text-gray-900"
         >
-          5-day schedule preview
+          Five-day window preview
         </h2>
         <ul
           class="mt-2 space-y-2"
@@ -537,6 +588,11 @@ exports[`CandidateSessionView scheduling states renders scheduling form state 1`
             >
               Thu, Jan 1, 2099
             </div>
+            <div
+              class="text-gray-600"
+            >
+              9:00 AM - 5:00 PM
+            </div>
           </li>
           <li
             class="rounded-md border border-gray-200 p-3 text-sm"
@@ -550,6 +606,11 @@ exports[`CandidateSessionView scheduling states renders scheduling form state 1`
               class="text-gray-700"
             >
               Fri, Jan 2, 2099
+            </div>
+            <div
+              class="text-gray-600"
+            >
+              9:00 AM - 5:00 PM
             </div>
           </li>
           <li
@@ -565,6 +626,11 @@ exports[`CandidateSessionView scheduling states renders scheduling form state 1`
             >
               Sat, Jan 3, 2099
             </div>
+            <div
+              class="text-gray-600"
+            >
+              9:00 AM - 5:00 PM
+            </div>
           </li>
           <li
             class="rounded-md border border-gray-200 p-3 text-sm"
@@ -578,6 +644,11 @@ exports[`CandidateSessionView scheduling states renders scheduling form state 1`
               class="text-gray-700"
             >
               Sun, Jan 4, 2099
+            </div>
+            <div
+              class="text-gray-600"
+            >
+              9:00 AM - 5:00 PM
             </div>
           </li>
           <li
@@ -593,6 +664,11 @@ exports[`CandidateSessionView scheduling states renders scheduling form state 1`
             >
               Mon, Jan 5, 2099
             </div>
+            <div
+              class="text-gray-600"
+            >
+              9:00 AM - 5:00 PM
+            </div>
           </li>
         </ul>
       </div>
@@ -602,7 +678,7 @@ exports[`CandidateSessionView scheduling states renders scheduling form state 1`
         <button
           class="inline-flex items-center justify-center rounded-md border font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 bg-elevated text-primary border-strong hover:bg-secondary focus:ring-wheat-500 px-4 py-2 text-sm"
         >
-          Back to dashboard
+          Back to portal
         </button>
         <button
           class="inline-flex items-center justify-center rounded-md border font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 bg-wheat-500 text-on-accent border-transparent hover:bg-wheat-700 focus:ring-wheat-500 px-4 py-2 text-sm"

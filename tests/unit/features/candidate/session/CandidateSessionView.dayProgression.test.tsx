@@ -29,9 +29,11 @@ describe('CandidateSessionView day progression checkpoints', () => {
 
     render(<CandidateSessionView {...props} />);
 
-    expect(screen.getByRole('textbox')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Save draft/i }),
+      screen.getByRole('textbox', { name: /markdown editor/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /submit & continue to day 2/i }),
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/This day is closed and read-only/i),
@@ -81,7 +83,7 @@ describe('CandidateSessionView day progression checkpoints', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows lockout-visible state for Day 5 when the window is closed', () => {
+  it('shows closed-session copy for Day 5 when the window is closed', () => {
     const props = buildCandidateSessionViewProps();
     props.currentTask = {
       id: 15,
@@ -109,11 +111,12 @@ describe('CandidateSessionView day progression checkpoints', () => {
 
     render(<CandidateSessionView {...props} />);
 
-    expect(screen.getByText(/^Day 5 is not open yet$/i)).toBeInTheDocument();
+    expect(screen.getByText(/Day 5 is closed/i)).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', {
-        name: /day 5 opens at 9:00 am local time/i,
-      }),
+      screen.getByText(/Your saved Day 5 work stays locked in/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Next window starts in 0d 01h 00m 00s/i),
     ).toBeInTheDocument();
     expect(screen.getByText(/come back at/i)).toBeInTheDocument();
     expect(

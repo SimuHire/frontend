@@ -2,46 +2,83 @@
 
 import { TaskTextInput } from './TaskTextInput';
 import { Day1DesignDocWorkspace } from './Day1DesignDocWorkspace';
+import type { TaskDraftAutosaveStatus } from '../hooks/useTaskDraftAutosave';
 
 type TaskWorkAreaProps = {
   dayIndex: number;
+  trialRole?: string;
+  candidateSessionId: number | null;
+  candidateName?: string | null;
   projectBrief: string;
   cutoffAt?: string | null;
   githubNative: boolean;
   readOnly: boolean;
   disabledReason: string | null;
   draftError: string | null;
+  draftPersistentFailure?: boolean;
+  draftAutosaveStatus?: TaskDraftAutosaveStatus;
+  draftRestoreApplied?: boolean;
   text: string;
   disabled: boolean;
   savedAt: number | null;
   onChangeText: (value: string) => void;
+  onFlushDraft?: () => void;
+  onSaveDraft?: () => void;
+  onSubmit?: () => void | Promise<unknown>;
+  submitDisabled?: boolean;
+  submitLabel?: string;
+  actionStatus?: 'idle' | 'submitting' | 'submitted';
 };
 
 export function TaskWorkArea({
   dayIndex,
+  trialRole = '',
+  candidateSessionId,
+  candidateName,
   projectBrief,
   cutoffAt,
   githubNative,
   readOnly,
   disabledReason,
   draftError,
+  draftPersistentFailure,
+  draftAutosaveStatus = 'disabled',
+  draftRestoreApplied = false,
   text,
   disabled,
   savedAt,
   onChangeText,
+  onFlushDraft,
+  onSaveDraft,
+  onSubmit,
+  submitDisabled = true,
+  submitLabel = 'Submit & continue to Day 2',
+  actionStatus = 'idle',
 }: TaskWorkAreaProps) {
   if (!githubNative && dayIndex === 1) {
     return (
       <Day1DesignDocWorkspace
+        role={trialRole || 'Your role'}
+        candidateName={candidateName}
         projectBrief={projectBrief}
         value={text}
         disabled={disabled}
         readOnly={readOnly}
         readOnlyReason={disabledReason}
         draftError={draftError}
+        draftPersistentFailure={draftPersistentFailure}
+        draftAutosaveStatus={draftAutosaveStatus}
         savedAt={savedAt}
+        draftRestoreApplied={draftRestoreApplied}
         cutoffAt={cutoffAt}
+        editorKey={`${candidateSessionId ?? 'na'}-day1`}
         onChange={onChangeText}
+        onFlushDraft={onFlushDraft}
+        onSaveDraft={onSaveDraft}
+        onSubmit={onSubmit ?? (() => undefined)}
+        submitDisabled={submitDisabled}
+        submitLabel={submitLabel}
+        actionStatus={actionStatus}
       />
     );
   }

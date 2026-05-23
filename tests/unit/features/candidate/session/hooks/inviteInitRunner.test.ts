@@ -1,5 +1,8 @@
 import { createInviteInit } from '@/features/candidate/session/hooks/useInviteInitRunner';
-import { INVITE_ALREADY_CLAIMED_MESSAGE } from '@/platform/copy/invite';
+import {
+  INVITE_ALREADY_CLAIMED_MESSAGE,
+  INVITE_INVALID_MESSAGE,
+} from '@/platform/copy/invite';
 
 const resolveCandidateInviteTokenMock = jest.fn();
 
@@ -61,9 +64,7 @@ describe('inviteInitRunner auth handling', () => {
     expect(params.setInviteErrorState).toHaveBeenCalledWith('invalid');
     expect(params.setErrorStatus).toHaveBeenCalledWith(401);
     expect(params.setView).toHaveBeenCalledWith('error');
-    expect(params.setErrorMessage).toHaveBeenCalledWith(
-      'This invite link is invalid. Please open the latest invite email or contact Winoe AI support for help.',
-    );
+    expect(params.setErrorMessage).toHaveBeenCalledWith(INVITE_INVALID_MESSAGE);
     expect(params.markEnd).toHaveBeenCalledWith('candidate:init', {
       status: 'error',
       inviteErrorState: 'invalid',
@@ -79,9 +80,7 @@ describe('inviteInitRunner auth handling', () => {
     expect(params.setInviteErrorState).toHaveBeenCalledWith('invalid');
     expect(params.setErrorStatus).toHaveBeenCalledWith(400);
     expect(params.setView).toHaveBeenCalledWith('error');
-    expect(params.setErrorMessage).toHaveBeenCalledWith(
-      'This invite link is invalid. Please open the latest invite email or contact Winoe AI support for help.',
-    );
+    expect(params.setErrorMessage).toHaveBeenCalledWith(INVITE_INVALID_MESSAGE);
   });
 
   it('sets accessDenied flow for 403 bootstrap failures', async () => {
@@ -132,9 +131,7 @@ describe('inviteInitRunner auth handling', () => {
     expect(params.setInviteErrorState).toHaveBeenCalledWith('invalid');
     expect(params.setErrorStatus).toHaveBeenCalledWith(422);
     expect(params.setView).toHaveBeenCalledWith('error');
-    expect(params.setErrorMessage).toHaveBeenCalledWith(
-      'This invite link is invalid. Please open the latest invite email or contact Winoe AI support for help.',
-    );
+    expect(params.setErrorMessage).toHaveBeenCalledWith(INVITE_INVALID_MESSAGE);
   });
 
   it('routes malformed token validation errors to the invite error view', async () => {
@@ -160,9 +157,7 @@ describe('inviteInitRunner auth handling', () => {
     expect(params.setInviteErrorState).toHaveBeenCalledWith('invalid');
     expect(params.setErrorStatus).toHaveBeenCalledWith(422);
     expect(params.setView).toHaveBeenCalledWith('error');
-    expect(params.setErrorMessage).toHaveBeenCalledWith(
-      'This invite link is invalid. Please open the latest invite email or contact Winoe AI support for help.',
-    );
+    expect(params.setErrorMessage).toHaveBeenCalledWith(INVITE_INVALID_MESSAGE);
   });
 
   it('routes expired invite states to the expired view', async () => {

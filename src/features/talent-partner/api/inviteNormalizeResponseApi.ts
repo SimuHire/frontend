@@ -1,5 +1,21 @@
 import type { InviteCandidateResponse } from './typesApi';
 
+function canonicalInviteUrl(
+  providedUrl: string,
+  token: string,
+  buildInviteUrl: (token: string) => string,
+): string {
+  const trimmed = providedUrl.trim();
+  if (!trimmed) return buildInviteUrl(token);
+  if (trimmed.includes('/candidate/session/')) {
+    return trimmed.replace(
+      /\/candidate\/session\/([^/?#]+)/,
+      `/invite/${encodeURIComponent(token)}`,
+    );
+  }
+  return trimmed;
+}
+
 export const normalizeInviteResponse = (
   raw: unknown,
   buildInviteUrl: (token: string) => string,
@@ -27,7 +43,9 @@ export const normalizeInviteResponse = (
       : typeof rec.invite_url === 'string'
         ? rec.invite_url
         : '';
-  const inviteUrl = providedUrl?.trim() || (token ? buildInviteUrl(token) : '');
+  const inviteUrl = token
+    ? canonicalInviteUrl(providedUrl, token, buildInviteUrl)
+    : providedUrl?.trim() || '';
 
   return {
     candidateSessionId: String(

@@ -1,10 +1,12 @@
 import { formatDate, formatTime } from './lockedView.format';
+import { CountdownTimer } from '@/shared/ui/CountdownTimer';
 
 type Props = {
   countdownLabel: string;
   countdownTargetAt: string | null;
   timezone: string | null;
   scheduledStartAt: string | null;
+  dayIndex: number | null;
 };
 
 export function LockedViewCountdownCard({
@@ -12,21 +14,31 @@ export function LockedViewCountdownCard({
   countdownTargetAt,
   timezone,
   scheduledStartAt,
+  dayIndex,
 }: Props) {
+  const target = countdownTargetAt || scheduledStartAt;
+  const labelDayIndex = dayIndex && dayIndex > 0 ? dayIndex : 1;
   return (
-    <div className="rounded-md border border-wheat-100 bg-wheat-50 p-4 text-wheat-900">
-      <p className="text-sm">
-        Starts in <span className="font-semibold">{countdownLabel}</span>
+    <div className="mx-auto max-w-lg rounded-2xl border border-wheat-100 bg-wheat-50/70 px-8 py-10 text-center text-wheat-950">
+      <p className="text-sm font-medium text-wheat-900">
+        Day {labelDayIndex} unlocks in
       </p>
-      {countdownTargetAt && timezone ? (
-        <p className="mt-1 text-xs text-wheat-700">
-          Your Trial opens on {formatDate(countdownTargetAt, timezone)} at{' '}
-          {formatTime(countdownTargetAt, timezone)} {timezone}. Come back then.
+      {target ? (
+        <div className="mt-4 flex justify-center">
+          <CountdownTimer mode="large" targetAt={target} />
+        </div>
+      ) : (
+        <p className="mt-4 text-2xl font-semibold tabular-nums text-gray-900">
+          {countdownLabel}
         </p>
-      ) : scheduledStartAt && timezone ? (
-        <p className="mt-1 text-xs text-wheat-700">
-          Your Trial opens on {formatDate(scheduledStartAt, timezone)} at{' '}
-          {formatTime(scheduledStartAt, timezone)} {timezone}. Come back then.
+      )}
+      <p className="mt-6 text-xs text-wheat-800">
+        We&apos;ll email you when it begins.
+      </p>
+      {target && timezone ? (
+        <p className="mt-3 text-xs text-wheat-800 tabular-nums">
+          {formatDate(target, timezone)} · {formatTime(target, timezone)} ·{' '}
+          {timezone}
         </p>
       ) : null}
     </div>

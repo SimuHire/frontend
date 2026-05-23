@@ -86,7 +86,7 @@ describe('/api/dev/qa-login route', () => {
     );
     expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe(
-      'http://localhost/candidate/dashboard',
+      'http://localhost/candidate/portal',
     );
   });
 

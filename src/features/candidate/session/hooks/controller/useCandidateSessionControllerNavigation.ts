@@ -19,7 +19,7 @@ export function useCandidateSessionControllerNavigation(token: string) {
   }, [loginHref, router]);
 
   const onDashboard = useCallback(() => {
-    router.push('/candidate/dashboard');
+    router.push('/candidate/portal');
   }, [router]);
 
   const onReview = useCallback(() => {

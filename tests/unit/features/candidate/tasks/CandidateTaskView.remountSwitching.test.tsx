@@ -59,7 +59,7 @@ describe('CandidateTaskView task switch remount behavior', () => {
       target: { value: 'Task 1 draft text' },
     });
     await act(async () => {
-      jest.advanceTimersByTime(1500);
+      jest.advanceTimersByTime(8000);
     });
     expect(screen.getByText(/Saving/i)).toBeInTheDocument();
 

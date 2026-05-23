@@ -7,6 +7,7 @@ import {
   renderSessionPage,
   resetBehaviorEnv,
   restoreFetch,
+  scheduleDateWithinBookingWindow,
 } from './CandidateSessionPageClient.behavior.testlib';
 import { jsonResponse } from '../../setup/responseHelpers';
 
@@ -43,11 +44,15 @@ describe('CandidateSessionPage auth flow schedule validation errors', () => {
     const user = userEvent.setup();
     renderSessionPage('valid-token');
     await fillScheduleAndContinue(user);
-    await user.click(screen.getByRole('button', { name: /Confirm schedule/i }));
+    await user.click(
+      screen.getByRole('button', { name: /Confirm and lock in/i }),
+    );
     expect(
       await screen.findByText(/Timezone is invalid\./i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Pick your start date/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Pick Day 1 on your calendar/i),
+    ).toBeInTheDocument();
   }, 15000);
 
   it('maps backend start-in-past error to inline date validation', async () => {
@@ -74,11 +79,15 @@ describe('CandidateSessionPage auth flow schedule validation errors', () => {
     const user = userEvent.setup();
     renderSessionPage('valid-token');
     await fillScheduleAndContinue(user);
-    await user.click(screen.getByRole('button', { name: /Confirm schedule/i }));
+    await user.click(
+      screen.getByRole('button', { name: /Confirm and lock in/i }),
+    );
     expect(
       await screen.findByText(/Start date is in the past\./i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Pick your start date/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Pick Day 1 on your calendar/i),
+    ).toBeInTheDocument();
   }, 15000);
 
   it('requires a GitHub username before continuing', async () => {
@@ -91,19 +100,21 @@ describe('CandidateSessionPage auth flow schedule validation errors', () => {
     const user = userEvent.setup();
     renderSessionPage('valid-token');
     expect(
-      await screen.findByText(/Pick your start date/i),
+      await screen.findByText(/Pick Day 1 on your calendar/i),
     ).toBeInTheDocument();
-    const startDateInput = screen.getByLabelText('Start date');
+    const startDateInput = screen.getByLabelText('Day 1 start date');
     await user.clear(startDateInput);
-    await user.type(startDateInput, '2099-01-01');
+    await user.type(startDateInput, scheduleDateWithinBookingWindow(7));
     const timezoneInput = screen.getByLabelText('Timezone');
     await user.clear(timezoneInput);
     await user.type(timezoneInput, 'America/New_York');
-    await user.click(screen.getByRole('button', { name: /Continue/i }));
+    await user.click(screen.getByRole('button', { name: /^Continue$/i }));
     expect(
       await screen.findByText(/Enter your GitHub username\./i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Pick your start date/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Pick Day 1 on your calendar/i),
+    ).toBeInTheDocument();
   }, 15000);
 
   it('rejects a past start date before confirmation', async () => {
@@ -116,15 +127,15 @@ describe('CandidateSessionPage auth flow schedule validation errors', () => {
     const user = userEvent.setup();
     renderSessionPage('valid-token');
     expect(
-      await screen.findByText(/Pick your start date/i),
+      await screen.findByText(/Pick Day 1 on your calendar/i),
     ).toBeInTheDocument();
-    const startDateInput = screen.getByLabelText('Start date');
+    const startDateInput = screen.getByLabelText('Day 1 start date');
     await user.clear(startDateInput);
     await user.type(startDateInput, '2000-01-01');
     expect(
       await screen.findByText(/Start date cannot be in the past\./i),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Continue/i })).toBeDisabled();
-    expect(screen.queryByText(/Confirm schedule/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Confirm and lock in/i)).not.toBeInTheDocument();
   }, 15000);
 });

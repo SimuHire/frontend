@@ -94,6 +94,11 @@ export function normalizeCandidateInvite(raw: unknown): CandidateInvite {
   const candidateSessionId = toCandidateSessionId(
     rec.candidateSessionId ?? rec.candidate_session_id ?? rec.id,
   );
+  let trialId: number | null = toNumberOrNull(rec.trialId ?? rec.trial_id);
+  const trialRaw = rec.trial;
+  if (trialId === null && trialRaw && typeof trialRaw === 'object') {
+    trialId = toNumberOrNull((trialRaw as Record<string, unknown>).id);
+  }
   const candidateEmail =
     toStringOrNull(rec.candidateEmail ?? rec.candidate_email ?? rec.email) ??
     null;
@@ -192,6 +197,7 @@ export function normalizeCandidateInvite(raw: unknown): CandidateInvite {
     candidateSessionId: Number.isFinite(candidateSessionId)
       ? (candidateSessionId as number)
       : 0,
+    trialId: trialId ?? null,
     token: token ?? null,
     title,
     role,

@@ -22,7 +22,7 @@ export function TaskFallback({ hasTask, onRetry, onDashboard }: Props) {
       </div>
       <div className="text-sm text-gray-600">
         We couldn’t fetch your current task. Retry to refresh your workspace, or
-        head back to the candidate dashboard to reopen your invite.
+        head back to your portal to reopen your invite.
       </div>
       <div className="flex flex-wrap gap-2">
         <Button onClick={onRetry}>Retry</Button>

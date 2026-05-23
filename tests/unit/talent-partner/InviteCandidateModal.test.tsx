@@ -117,7 +117,7 @@ describe('InviteCandidateModal', () => {
         state={{
           status: 'success',
           message: 'Invite sent.',
-          inviteUrl: 'https://example.com/candidate/session/token-123',
+          inviteUrl: 'https://example.com/invite/token-123',
           candidateName: 'Jane Doe',
           candidateEmail: 'jane@example.com',
           outcome: 'created',
@@ -134,7 +134,7 @@ describe('InviteCandidateModal', () => {
       screen.getByRole('heading', { name: /Invite candidates/i }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/Invite URL/i)).toHaveValue(
-      'https://example.com/candidate/session/token-123',
+      'https://example.com/invite/token-123',
     );
     expect(screen.queryByText(/evidence/i)).not.toBeInTheDocument();
 
@@ -163,7 +163,7 @@ describe('InviteCandidateModal', () => {
           status: 'warning',
           message:
             'Invite link created, but email delivery was rate limited. Copy the invite URL and retry later.',
-          inviteUrl: 'https://example.com/candidate/session/invite-token',
+          inviteUrl: 'https://example.com/invite/invite-token',
           candidateName: 'Jane Doe',
           candidateEmail: 'jane@example.com',
           candidateSessionId: '99',
@@ -184,7 +184,7 @@ describe('InviteCandidateModal', () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/Invite URL/i)).toHaveValue(
-      'https://example.com/candidate/session/invite-token',
+      'https://example.com/invite/invite-token',
     );
     expect(
       screen.getByRole('button', { name: /Copy invite URL/i }),

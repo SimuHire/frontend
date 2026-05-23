@@ -18,7 +18,7 @@ const ROLE_PERMISSIONS: Record<QaRole, string[]> = {
 
 const ROLE_DEFAULT_RETURN_TO: Record<QaRole, string> = {
   talent_partner: '/talent-partner/trials',
-  candidate: '/candidate/dashboard',
+  candidate: '/candidate/portal',
 };
 
 const ONE_HOUR_SECONDS = 60 * 60;

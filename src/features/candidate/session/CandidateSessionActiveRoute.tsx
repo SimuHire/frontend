@@ -41,6 +41,7 @@ export function CandidateSessionActiveRoute({
       role={props.role}
       completedCount={props.completedCount}
       currentDayIndex={props.currentDayIndex}
+      started={props.started}
       currentTask={props.currentTask}
       candidateSessionId={props.candidateSessionId}
       taskError={props.taskError}

@@ -35,6 +35,7 @@ export function CandidateSessionSchedulingRoute({
       scheduleDate={props.scheduleDate}
       scheduleTimezone={props.scheduleTimezone}
       scheduleGithubUsername={props.scheduleGithubUsername}
+      scheduleIncludeWeekends={props.scheduleIncludeWeekends}
       scheduleTimezoneDetected={props.scheduleTimezoneDetected}
       scheduleTimezoneOptions={props.scheduleTimezoneOptions}
       scheduleDateError={props.scheduleDateError}
@@ -46,6 +47,7 @@ export function CandidateSessionSchedulingRoute({
       onScheduleDateChange={props.onScheduleDateChange}
       onScheduleTimezoneChange={props.onScheduleTimezoneChange}
       onScheduleGithubUsernameChange={props.onScheduleGithubUsernameChange}
+      onIncludeWeekendsChange={props.onIncludeWeekendsChange}
       onScheduleContinue={props.onScheduleContinue}
       onScheduleBack={props.onScheduleBack}
       onScheduleConfirm={props.onScheduleConfirm}

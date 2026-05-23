@@ -2,7 +2,6 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   baseSession,
-  expectAllScheduleDaysVisible,
   fetchMock,
   renderSessionPage,
   resetBehaviorEnv,
@@ -27,6 +26,7 @@ describe('CandidateSessionPage auth flow locked bootstrap and backend proxy', ()
         return jsonResponse(
           baseSession({
             candidateSessionId: 654,
+            status: 'not_started',
             scheduledStartAt: '2099-01-01T14:00:00Z',
             candidateTimezone: 'America/New_York',
             dayWindows: sampleWindows,
@@ -38,10 +38,9 @@ describe('CandidateSessionPage auth flow locked bootstrap and backend proxy', ()
     });
     renderSessionPage('locked-token');
     expect(
-      await screen.findByText(/Trial locked until start/i),
+      await screen.findByText(/Almost there — your Trial is scheduled/i),
     ).toBeInTheDocument();
     expect(screen.getByText(/5-day schedule preview/i)).toBeInTheDocument();
-    expectAllScheduleDaysVisible();
     expect(screen.queryByText(/Project Brief/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Repository URL/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Codespace/i)).not.toBeInTheDocument();
@@ -112,6 +111,10 @@ describe('CandidateSessionPage auth flow locked bootstrap and backend proxy', ()
         }),
       ),
     );
-    expect((await screen.findAllByText('Task One')).length).toBeGreaterThan(0);
+    expect(
+      await screen.findByRole('heading', {
+        name: /Day 1 — Planning & Design Doc/i,
+      }),
+    ).toBeInTheDocument();
   });
 });

@@ -84,8 +84,7 @@ describe('requireBffAuth', () => {
     getSessionNormalized.mockResolvedValue(null);
     const result = await requireBffAuth({} as never);
     expect(result.ok).toBe(false);
-    expect(getSessionNormalized).toHaveBeenCalledWith();
-    expect(getSessionNormalized).not.toHaveBeenCalledWith({} as never);
+    expect(getSessionNormalized).toHaveBeenCalledWith({} as never);
     if (!result.ok) expect(result.response.status).toBe(401);
   });
   it('returns 403 when permission missing', async () => {

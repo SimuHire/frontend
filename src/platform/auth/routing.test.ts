@@ -8,6 +8,7 @@ describe('candidate auth path detection', () => {
     expect(modeForPath('/candidate')).toBe('candidate');
     expect(modeForPath('/candidate/session/abc')).toBe('candidate');
     expect(modeForPath('/candidate/session')).toBe('candidate');
+    expect(modeForPath('/invite/some-token')).toBe('candidate');
     expect(modeForPath(legacyCandidatePath)).toBe('talent_partner');
     expect(requiresCandidateAccess('/candidate')).toBe(true);
     expect(requiresCandidateAccess('/candidate/session/abc')).toBe(true);

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import CandidateDashboardPage from '@/features/candidate/portal/CandidateDashboardPage';
 import { useCandidateSession } from '@/features/candidate/session/CandidateSessionProvider';
 import { listCandidateInvites } from '@/features/candidate/session/api';
@@ -26,6 +26,7 @@ const routerMock = {
 
 jest.mock('next/navigation', () => ({
   useRouter: () => routerMock,
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 const mockUseCandidateSession = useCandidateSession as jest.Mock;
@@ -56,6 +57,17 @@ const buildSession = (overrides?: {
   loadAccessToken: jest.fn(),
 });
 
+const activeScheduleFields = {
+  scheduledStartAt: '2025-01-14T00:00:00Z',
+  dayWindows: [
+    {
+      dayIndex: 1,
+      windowStartAt: '2025-01-14T00:00:00Z',
+      windowEndAt: '2025-12-31T23:59:59Z',
+    },
+  ],
+};
+
 describe('CandidateDashboardPage unit flow', () => {
   beforeEach(() => {
     jest.resetAllMocks();
@@ -72,29 +84,26 @@ describe('CandidateDashboardPage unit flow', () => {
     );
   });
 
-  it('sorts invites by last activity or expiry', async () => {
-    listInvitesMock.mockResolvedValueOnce(sortedInvites);
+  it('shows the most recent invite in the hero', async () => {
+    listInvitesMock.mockResolvedValueOnce(
+      sortedInvites.map((invite) => ({ ...invite, ...activeScheduleFields })),
+    );
 
     render(<CandidateDashboardPage signedInEmail="c@example.com" />);
 
-    const newer = await screen.findByText('Newer');
-    const older = await screen.findByText('Older');
+    await screen.findByRole('button', { name: /open your trial/i });
     expect(
-      newer.compareDocumentPosition(older) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+      screen.getByText(/more than one Trial on this account/i),
+    ).toBeInTheDocument();
   });
 
-  it('uses fallback token when invite is missing token', async () => {
+  it('shows unavailable invite link when token is missing', async () => {
     listInvitesMock.mockResolvedValueOnce([fallbackInvite]);
 
     render(<CandidateDashboardPage signedInEmail="c@example.com" />);
 
-    const button = await screen.findByRole('button', {
-      name: /Start trial/i,
-    });
-    fireEvent.click(button);
-    expect(routerMock.push).toHaveBeenCalledWith(
-      '/candidate/session/fallback-token',
-    );
+    expect(
+      await screen.findByText(/Invite link unavailable/i),
+    ).toBeInTheDocument();
   });
 });

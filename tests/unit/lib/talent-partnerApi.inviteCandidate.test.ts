@@ -49,7 +49,7 @@ describe('talentPartnerApi inviteCandidate', () => {
     ).toEqual({
       candidateSessionId: 'cs_1',
       token: 'tok_1',
-      inviteUrl: 'http://localhost:3000/candidate/session/tok_1',
+      inviteUrl: 'http://localhost:3000/invite/tok_1',
       outcome: 'created',
     });
     mockTalentPartnerRequest.mockResolvedValueOnce({
@@ -65,7 +65,7 @@ describe('talentPartnerApi inviteCandidate', () => {
     ).toEqual({
       candidateSessionId: 'cs_2',
       token: 'tok_2',
-      inviteUrl: 'http://localhost:3000/candidate/session/tok_2',
+      inviteUrl: 'http://localhost:3000/invite/tok_2',
       outcome: 'created',
     });
   });
@@ -83,7 +83,7 @@ describe('talentPartnerApi inviteCandidate', () => {
       'Jane Doe',
       'jane@example.com',
     );
-    expect(result.inviteUrl).toBe('/candidate/session/tok_3');
+    expect(result.inviteUrl).toBe('/invite/tok_3');
     expect(result.outcome).toBe('created');
     if (originalWindow) globalAny.window = originalWindow;
   });

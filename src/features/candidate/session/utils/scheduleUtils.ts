@@ -2,6 +2,10 @@ export {
   buildSchedulePreview,
   isScheduleDateInPast,
   localDateAtHourToUtcIso,
+  localTodayYmdInTimezone,
+  plusCalendarDaysYmd,
+  isScheduleDateOutsideBookingWindow,
+  isWeekendDateInput,
 } from './scheduleConversionUtils';
 export type { SchedulePreviewWindow } from './scheduleConversionUtils';
 export { countdownFromUtc, formatCountdown } from './scheduleCountdownUtils';
