@@ -6,6 +6,7 @@ import {
 } from './WorkspacePanelBodyStates';
 
 type Props = {
+  dayIndex: number;
   workspace: CandidateWorkspaceStatus | null;
   loading: boolean;
   error: string | null;
@@ -19,6 +20,7 @@ type Props = {
   readOnlyReason: string | null;
 };
 export function WorkspacePanelBody({
+  dayIndex,
   workspace,
   loading,
   error,
@@ -38,6 +40,12 @@ export function WorkspacePanelBody({
       <div className="text-[10px] font-semibold uppercase tracking-wide text-wheat-700">
         Primary work environment
       </div>
+      {workspace?.codespaceState ? (
+        <div className="mt-1 text-xs text-wheat-700">
+          Status:{' '}
+          <span className="font-medium">{workspace.codespaceState}</span>
+        </div>
+      ) : null}
       <a
         aria-label="Open Codespace"
         className="mt-1 block text-sm font-semibold hover:underline"
@@ -55,6 +63,32 @@ export function WorkspacePanelBody({
       </p>
     </div>
   ) : null;
+  const dayContext =
+    dayIndex === 2 ? (
+      <section className="rounded-md border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+        <h3 className="text-sm font-semibold text-gray-950">
+          What&apos;s in your Codespace
+        </h3>
+        <ul className="mt-3 space-y-2">
+          <li>.devcontainer/ with the language toolchain</li>
+          <li>README.md with the Project Brief</li>
+          <li>GitHub Actions workflow that captures Evidence Trail data</li>
+          <li>No starter code. You build the application from scratch.</li>
+        </ul>
+      </section>
+    ) : dayIndex === 3 ? (
+      <section className="rounded-md border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+        <h3 className="text-sm font-semibold text-gray-950">
+          Today&apos;s focus
+        </h3>
+        <ul className="mt-3 space-y-2">
+          <li>Strengthen test coverage where it matters.</li>
+          <li>Refactor for clarity, not cleverness.</li>
+          <li>Document decisions in commit messages.</li>
+          <li>Optionally tag a v1.0 release commit when ready.</li>
+        </ul>
+      </section>
+    ) : null;
   if (loading) return <WorkspacePanelLoadingState />;
   if (error) {
     return (
@@ -78,6 +112,7 @@ export function WorkspacePanelBody({
           {notice}
         </div>
       ) : null}
+      {dayContext ? <div>{dayContext}</div> : null}
       {integrityCallout ? <div>{integrityCallout}</div> : null}
       {fallbackPanel ? <div>{fallbackPanel}</div> : null}
       <div>{message}</div>

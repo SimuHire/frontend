@@ -1,5 +1,5 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
-import { renderTaskView } from './CandidateTaskView.testlib';
+import { baseTask, renderTaskView } from './CandidateTaskView.testlib';
 
 describe('CandidateTaskView submit feedback statuses', () => {
   beforeEach(() => {
@@ -10,7 +10,24 @@ describe('CandidateTaskView submit feedback statuses', () => {
     jest.useRealTimers();
   });
 
-  it('shows checkpoint feedback with checkpoint sha for day2 code submit', async () => {
+  it('preserves the Day 1 submit label', () => {
+    renderTaskView({
+      task: {
+        ...baseTask,
+        id: 1,
+        dayIndex: 1,
+        type: 'design',
+        title: 'Design',
+        description: 'Plan the work',
+      },
+    });
+
+    expect(
+      screen.getByRole('button', { name: 'Submit & continue to Day 2' }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows checkpoint feedback with the Day 2 submit label', async () => {
     const onSubmit = jest.fn().mockResolvedValue({
       submissionId: 201,
       taskId: 2,
@@ -32,7 +49,11 @@ describe('CandidateTaskView submit feedback statuses', () => {
       },
       onSubmit,
     });
-    fireEvent.click(screen.getByRole('button', { name: /submit & continue/i }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Submit Day 2 & continue tomorrow at 9 AM',
+      }),
+    );
     await waitFor(() =>
       expect(screen.getByText(/Checkpoint recorded/i)).toBeInTheDocument(),
     );
@@ -44,7 +65,7 @@ describe('CandidateTaskView submit feedback statuses', () => {
     expect(screen.getByText(/Checkpoint recorded/i)).toBeInTheDocument();
   });
 
-  it('shows final feedback with commit fallback for Day 3 implementation wrap-up submit', async () => {
+  it('shows final feedback with the Day 3 submit label', async () => {
     const onSubmit = jest.fn().mockResolvedValue({
       submissionId: 301,
       taskId: 3,
@@ -66,7 +87,11 @@ describe('CandidateTaskView submit feedback statuses', () => {
       },
       onSubmit,
     });
-    fireEvent.click(screen.getByRole('button', { name: /submit & continue/i }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Submit Day 3 & continue to Day 4 — Demo handoff',
+      }),
+    );
     await waitFor(() =>
       expect(screen.getByText(/Final recorded/i)).toBeInTheDocument(),
     );

@@ -5,7 +5,7 @@ import {
 
 describe('runTestsMessages', () => {
   it('maps statuses to run states', () => {
-    expect(statusMap.passed).toBe('success');
+    expect(statusMap.passed).toBe('succeeded');
     expect(statusMap.failed).toBe('failed');
     expect(statusMap.timeout).toBe('timeout');
   });

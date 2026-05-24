@@ -15,7 +15,9 @@ export const baseResult = {
   commitSha: null,
 };
 export const getTestsButton = () =>
-  screen.getByRole('button', { name: /^(run|re-run|retry|running)\s+tests/i });
+  screen.getByRole('button', {
+    name: /^(run|re-run|retry|running)\s+tests|^run again$|^re-run$|^running\.\.\.$/i,
+  });
 
 jest.mock('@/shared/notifications', () => ({
   useNotifications: () => ({ notify: notifyMock }),

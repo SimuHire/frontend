@@ -54,7 +54,7 @@ describe('RunTestsPanel - misc behavior', () => {
     });
     expect(notifyMock).toHaveBeenCalled();
     notifyMock.mockClear();
-    await user.click(screen.getByRole('button', { name: /re-run tests/i }));
+    await user.click(screen.getByRole('button', { name: /run again/i }));
     await act(async () => {
       jest.advanceTimersByTime(1500);
       await Promise.resolve();

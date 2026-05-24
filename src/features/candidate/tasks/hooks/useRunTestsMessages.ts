@@ -1,5 +1,5 @@
-export const statusMap: Record<string, 'success' | 'failed' | 'timeout'> = {
-  passed: 'success',
+export const statusMap: Record<string, 'succeeded' | 'failed' | 'timeout'> = {
+  passed: 'succeeded',
   failed: 'failed',
   timeout: 'timeout',
 };

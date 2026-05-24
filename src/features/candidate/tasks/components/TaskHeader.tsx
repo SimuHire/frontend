@@ -23,7 +23,7 @@ export const TaskHeader = memo(function TaskHeader({
     <div className="flex items-start justify-between gap-4">
       <div>
         <div className="text-sm text-gray-500">
-          Day {task.dayIndex} • {dayLabel}
+          Day {task.dayIndex} — {dayLabel}
         </div>
         <div className="mt-1 text-2xl font-bold">{task.title}</div>
       </div>

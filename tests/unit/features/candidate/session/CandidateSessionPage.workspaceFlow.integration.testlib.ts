@@ -9,6 +9,9 @@ export const routerMock = { push: jest.fn(), replace: jest.fn() };
 jest.mock('@/features/candidate/session/CandidateSessionProvider', () => ({
   useCandidateSession: () => useCandidateSessionMock(),
 }));
+jest.mock('@/features/candidate/session/state/context', () => ({
+  useOptionalCandidateSession: () => useCandidateSessionMock(),
+}));
 jest.mock(
   '@/features/candidate/session/hooks/useCandidateSessionActions',
   () => ({
@@ -48,6 +51,7 @@ export function buildSessionContext(task: CandidateTask) {
         candidateSessionId: 99,
         status: 'in_progress' as const,
         trial: { title: 'Trial', role: 'Engineer' },
+        githubUsername: 'octocat',
       },
       started: true,
       taskState: {

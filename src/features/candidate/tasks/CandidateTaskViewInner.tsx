@@ -15,6 +15,16 @@ import {
   type CandidateTaskViewProps,
 } from './CandidateTaskView.types';
 
+function resolveSubmitLabel(dayIndex: number): string {
+  if (dayIndex === 2) {
+    return 'Submit Day 2 & continue tomorrow at 9 AM';
+  }
+  if (dayIndex === 3) {
+    return 'Submit Day 3 & continue to Day 4 — Demo handoff';
+  }
+  return 'Submit & continue to Day 2';
+}
+
 export function CandidateTaskViewInner({
   candidateSessionId,
   task,
@@ -26,6 +36,7 @@ export function CandidateTaskViewInner({
   onTaskWindowClosed,
 }: CandidateTaskViewProps) {
   const displayTask = withDay3ImplementationWrapUpCopy(task);
+  const submitLabel = resolveSubmitLabel(task.dayIndex);
   const controller = useTaskSubmitController({
     candidateSessionId,
     task,
@@ -86,7 +97,7 @@ export function CandidateTaskViewInner({
         onSaveDraft={controller.saveDraftNow}
         onSubmit={controller.saveAndSubmit}
         submitDisabled={controller.disabled}
-        submitLabel="Submit & continue to Day 2"
+        submitLabel={submitLabel}
         actionStatus={controller.actionStatus}
       />
       {draftStatus.stickyDraftStatus}
@@ -108,6 +119,7 @@ export function CandidateTaskViewInner({
             controller.textTask ? controller.saveDraftNow : undefined
           }
           onSubmit={controller.saveAndSubmit}
+          submitLabel={submitLabel}
           requireSubmitConfirmation={false}
         />
       )}
