@@ -54,6 +54,21 @@ describe('CandidateTaskView Day 1 design document workspace', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows Day 1 help copy without retired template wording', async () => {
+    renderTaskView();
+    await settleInitialRestore();
+
+    fireEvent.click(screen.getByRole('button', { name: /more/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /^help$/i }));
+
+    expect(
+      screen.getByRole('dialog', { name: /day 1 help/i }),
+    ).toHaveTextContent(/not a perfect answer/i);
+    expect(
+      screen.getByRole('dialog', { name: /day 1 help/i }),
+    ).not.toHaveTextContent(/template/i);
+  });
+
   it('shows unavailable state when Project Brief is missing', async () => {
     renderTaskView({
       task: {

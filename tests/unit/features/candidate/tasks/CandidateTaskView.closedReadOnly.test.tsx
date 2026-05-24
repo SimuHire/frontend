@@ -48,16 +48,18 @@ describe('CandidateTaskView closed/read-only states', () => {
       },
       actionGate: {
         isReadOnly: true,
-        disabledReason: 'Day closed.',
+        disabledReason: null,
         comeBackAt: null,
       },
     });
-    await waitFor(() =>
-      expect(
-        screen.getByText(/the day 5 reflection window has closed/i),
-      ).toBeInTheDocument(),
-    );
-    expect(screen.getByText(/day closed/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /The Day 5 reflection window has closed/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/The Day 5 reflection window has closed for the day\./i),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).toBeNull();
     expect(
       screen.queryByRole('button', { name: /submit reflection essay/i }),
@@ -85,7 +87,7 @@ describe('CandidateTaskView closed/read-only states', () => {
       ).length,
     ).toBeGreaterThan(0);
     const submitButton = screen.getByRole('button', {
-      name: /Submit & Continue/i,
+      name: 'Submit Day 2 & continue tomorrow at 9 AM',
     });
     expect(submitButton).toBeDisabled();
     fireEvent.click(submitButton);

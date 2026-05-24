@@ -21,7 +21,7 @@ const DAY_LABELS: Record<number, string> = {
 };
 
 const HELP_COPY =
-  'Use Day 1 to explain how you plan to approach the build. Winoe is looking for your decisions, tradeoffs, and clarity — not a perfect template.';
+  'Use Day 1 to explain how you plan to approach the build. Winoe is looking for your decisions, tradeoffs, and clarity — not a perfect answer.';
 
 function candidateInitials(name: string | null | undefined): string {
   const trimmed = name?.trim() ?? '';

@@ -2,7 +2,7 @@ import { runTestsDisplayMeta } from '@/features/candidate/tasks/hooks/useRunTest
 
 describe('runTestsDisplayMeta', () => {
   it('uses test results when available', () => {
-    const meta = runTestsDisplayMeta('success', {
+    const meta = runTestsDisplayMeta('succeeded', {
       status: 'passed',
       passed: 5,
       failed: 0,
@@ -39,6 +39,6 @@ describe('runTestsDisplayMeta', () => {
       commitSha: null,
     });
     expect(idleMeta.ctaLabel).toMatch(/Run tests/i);
-    expect(failedMeta.ctaLabel).toMatch(/Retry tests/i);
+    expect(failedMeta.ctaLabel).toBe('Re-run');
   });
 });

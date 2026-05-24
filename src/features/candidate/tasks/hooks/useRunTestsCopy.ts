@@ -5,7 +5,7 @@ export const statusLabel: Record<RunState, string> = {
   idle: 'Idle',
   starting: 'Initializing',
   running: 'Running',
-  success: 'Passed',
+  succeeded: 'Succeeded',
   failed: 'Failed',
   timeout: 'Timed out',
   error: 'Error',
@@ -18,7 +18,7 @@ export const statusTone: Record<
   idle: 'muted',
   starting: 'info',
   running: 'info',
-  success: 'success',
+  succeeded: 'success',
   failed: 'warning',
   timeout: 'warning',
   error: 'warning',
@@ -26,22 +26,24 @@ export const statusTone: Record<
 
 export const ctaLabel = (state: RunState) =>
   state === 'starting'
-    ? 'Initializing…'
+    ? 'Spinning up runner...'
     : state === 'running'
-      ? 'Running tests…'
-      : state === 'success'
-        ? 'Re-run tests'
-        : state === 'failed' || state === 'timeout' || state === 'error'
-          ? 'Retry tests'
-          : 'Run tests';
+      ? 'Running...'
+      : state === 'succeeded'
+        ? 'Run again'
+        : state === 'failed'
+          ? 'Re-run'
+          : state === 'timeout' || state === 'error'
+            ? 'Run tests'
+            : 'Run tests';
 
 export const fallbackMessage = (state: RunState, msg?: string) =>
   msg?.trim() ||
   (state === 'starting'
-    ? 'Preparing test run…'
+    ? 'Preparing test run...'
     : state === 'running'
       ? 'Tests are running. This can take a minute.'
-      : state === 'success'
+      : state === 'succeeded'
         ? 'Tests passed. You can submit your work.'
         : state === 'failed'
           ? 'Tests failed. Review the logs and try again.'
@@ -56,9 +58,13 @@ export const toastCopy = (
   message?: string,
 ): { tone: ToastTone; title: string; description: string } => {
   const tone =
-    state === 'success' ? 'success' : state === 'timeout' ? 'warning' : 'error';
+    state === 'succeeded'
+      ? 'success'
+      : state === 'timeout'
+        ? 'warning'
+        : 'error';
   const title =
-    state === 'success'
+    state === 'succeeded'
       ? 'Tests passed'
       : state === 'failed'
         ? 'Tests failed'

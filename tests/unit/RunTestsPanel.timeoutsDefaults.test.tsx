@@ -70,7 +70,7 @@ describe('RunTestsPanel - timeouts and defaults', () => {
     expect(
       await screen.findByText(/Tests passed\. You can submit your work\./i),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /re-run tests/i }));
+    await user.click(screen.getByRole('button', { name: /run again/i }));
     await act(async () => {
       jest.advanceTimersByTime(1000);
       await Promise.resolve();

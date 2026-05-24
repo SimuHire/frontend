@@ -45,7 +45,7 @@ describe('RunTestsPanel - core flow', () => {
     );
     expect(
       (
-        await screen.findByRole('button', { name: /Running tests/i })
+        await screen.findByRole('button', { name: /Running\.\.\./i })
       ).hasAttribute('disabled'),
     ).toBe(true);
     await act(async () => {
@@ -63,7 +63,7 @@ describe('RunTestsPanel - core flow', () => {
       await screen.findByRole('link', { name: /workflow run/i }),
     ).toHaveAttribute('href', 'https://github.com/acme/repo/actions/runs/1');
     expect(await screen.findByText(/Commit/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /re-run tests/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /run again/i })).toBeEnabled();
   });
 
   it('honors server pollAfterMs for the next poll', async () => {

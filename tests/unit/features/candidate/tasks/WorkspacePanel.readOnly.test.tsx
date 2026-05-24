@@ -24,7 +24,9 @@ describe('WorkspacePanel read-only and cutoff', () => {
       await screen.findByText(/GitHub Codespace ready/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Workspace actions are paused/i),
+      screen.getByText(
+        /Use this Codespace for all Day 2 and Day 3 implementation work/i,
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText(/Day closed for this task/i)).toBeInTheDocument();
     expect(

@@ -2,7 +2,7 @@ export type RunState =
   | 'idle'
   | 'starting'
   | 'running'
-  | 'success'
+  | 'succeeded'
   | 'failed'
   | 'timeout'
   | 'error';

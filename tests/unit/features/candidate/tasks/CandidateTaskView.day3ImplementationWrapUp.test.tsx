@@ -38,7 +38,9 @@ describe('CandidateTaskView Day 3 implementation wrap-up', () => {
     expect(screen.getByText(/optimize where useful/i)).toBeInTheDocument();
     expect(screen.getAllByText(/documentation/i).length).toBeGreaterThan(0);
     expect(
-      screen.getByRole('button', { name: /submit & continue/i }),
+      screen.getByRole('button', {
+        name: 'Submit Day 3 & continue to Day 4 — Demo handoff',
+      }),
     ).toBeInTheDocument();
 
     const pageText = document.body.textContent ?? '';
@@ -55,5 +57,8 @@ describe('CandidateTaskView Day 3 implementation wrap-up', () => {
       new RegExp(['offline', 'work'].join(' '), 'i'),
     );
     expect(pageText).not.toMatch(new RegExp(['local', 'work'].join(' '), 'i'));
+    expect(pageText).not.toMatch(
+      /Tenon|recruiter|simulation|fit profile|fit score/i,
+    );
   });
 });

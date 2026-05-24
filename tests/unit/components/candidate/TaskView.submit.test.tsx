@@ -106,7 +106,11 @@ describe('TaskView submission', () => {
     expect(
       screen.getByText(/Use your Codespace for all implementation work/i),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /submit & continue/i }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /submit day 2 & continue tomorrow at 9 am/i,
+      }),
+    );
     await act(async () => Promise.resolve());
     expect(onSubmit).toHaveBeenCalledWith({});
   });

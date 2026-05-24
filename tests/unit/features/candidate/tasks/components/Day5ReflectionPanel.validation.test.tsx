@@ -9,6 +9,7 @@ import {
   renderPanel,
   resetDay5PanelMocks,
 } from './Day5ReflectionPanel.testlib';
+import { DAY5_REFLECTION_WINDOW_COPY } from '@/features/candidate/tasks/utils/day5Reflection.copyUtils';
 
 describe('Day5ReflectionPanel validation and read-only states', () => {
   beforeEach(() => {
@@ -51,6 +52,12 @@ describe('Day5ReflectionPanel validation and read-only states', () => {
         ),
       ).toBeInTheDocument();
     });
+  });
+
+  it('frames the Day 5 deadline as 9 AM to 9 PM local time', () => {
+    renderPanel();
+
+    expect(screen.getByText(DAY5_REFLECTION_WINDOW_COPY)).toBeInTheDocument();
   });
 
   it('renders congratulations when the backend reports completion', () => {

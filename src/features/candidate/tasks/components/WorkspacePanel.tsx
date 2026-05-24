@@ -10,12 +10,14 @@ export function WorkspacePanel(props: WorkspacePanelProps) {
   return (
     <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
       <WorkspacePanelHeader
+        dayIndex={props.dayIndex}
         loading={panel.loading}
         refreshing={panel.refreshing}
         onRefresh={panel.refresh}
         readOnly={panel.readOnly}
       />
       <WorkspacePanelBody
+        dayIndex={props.dayIndex}
         workspace={panel.workspace}
         loading={panel.loading}
         error={panel.error}
