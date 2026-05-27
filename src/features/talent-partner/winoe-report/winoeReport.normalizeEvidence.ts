@@ -29,7 +29,10 @@ export function normalizeEvidence(value: unknown): WinoeReportEvidence | null {
     record.dayIndex ??
       record.day_index ??
       record.sourceDay ??
-      record.source_day,
+      record.source_day ??
+      record.day ??
+      record.taskDay ??
+      record.task_day,
   );
   const normalizedDayIndex =
     dayIndex === null ? null : Math.max(0, Math.round(dayIndex));
@@ -66,8 +69,26 @@ export function normalizeEvidence(value: unknown): WinoeReportEvidence | null {
       toNullableString(
         record.description ?? record.detail ?? record.details ?? record.note,
       ) ?? null,
-    ref: toNullableString(record.ref),
-    url: toNullableString(record.url),
+    ref:
+      toNullableString(
+        record.ref ??
+          record.artifactRef ??
+          record.artifact_ref ??
+          record.reference ??
+          record.locator ??
+          record.location ??
+          record.sourceRef ??
+          record.source_ref,
+      ) ?? null,
+    url:
+      toNullableString(
+        record.url ??
+          record.href ??
+          record.viewUrl ??
+          record.view_url ??
+          record.artifactUrl ??
+          record.artifact_url,
+      ) ?? null,
     excerpt: toNullableString(record.excerpt),
     startMs: startMs === null ? null : Math.max(0, Math.round(startMs)),
     endMs: endMs === null ? null : Math.max(0, Math.round(endMs)),

@@ -25,6 +25,7 @@ type BuildTrialDetailViewPropsArgs = {
   scenarioActions: ReturnType<typeof useTrialScenarioActions>;
   labels: ReturnType<typeof useTrialLabels>;
   aiConfig: TrialAiConfig | null;
+  canManageInternalAiControls: boolean;
   approveButtonLabel: string;
   planLoading: boolean;
   planStatusCode: number | null;
@@ -55,6 +56,7 @@ export function buildTrialDetailViewProps({
   scenarioActions,
   labels,
   aiConfig,
+  canManageInternalAiControls,
   approveButtonLabel,
   planLoading,
   planStatusCode,
@@ -98,6 +100,7 @@ export function buildTrialDetailViewProps({
     onTerminate,
     cleanupJobIds,
     aiConfig,
+    canManageInternalAiControls,
     activateButtonLabel,
     activateLoading,
     onActivate,

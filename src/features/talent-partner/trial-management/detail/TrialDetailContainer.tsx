@@ -74,6 +74,7 @@ export default function TrialDetailContainer() {
     scenarioActions: scenarioModel.scenarioActions,
     labels,
     aiConfig: detail?.aiConfig ?? null,
+    canManageInternalAiControls: detail?.canManageInternalAiControls === true,
     approveButtonLabel: scenarioModel.callbacks.approveButtonLabel,
     activateButtonLabel: scenarioModel.callbacks.activateButtonLabel,
     activateLoading: scenarioModel.callbacks.activateLoading,

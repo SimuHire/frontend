@@ -28,6 +28,7 @@ describe('TalentPartnerTrialDetailPage - scenario actions', () => {
         status: 'active_inviting',
         title: 'Trial trial-1',
         templateKey: 'python-fastapi',
+        viewerCapabilities: { canManageInternalAiControls: true },
         scenario: {
           id: 101,
           versionIndex: 2,
@@ -87,6 +88,121 @@ describe('TalentPartnerTrialDetailPage - scenario actions', () => {
       );
       expect(calls.length).toBe(1);
     });
+  });
+
+  it('hides internal AI controls for regular Talent Partner detail responses', async () => {
+    mockFetchHandlers({
+      '/api/trials': jsonResponse([]),
+      '/api/trials/trial-1': jsonResponse({
+        id: 'trial-1',
+        status: 'active_inviting',
+        title: 'Trial trial-1',
+        templateKey: 'python-fastapi',
+        viewerCapabilities: { canManageInternalAiControls: false },
+        ai: {
+          promptPackVersion: 'winoe-ai-pack-v4',
+          activeScenarioSnapshot: {
+            scenarioVersionId: 101,
+            promptPackVersion: 'winoe-ai-pack-v4',
+            agents: [
+              {
+                key: 'day1',
+                provider: 'openai',
+                model: 'gpt-5.1',
+                runtimeMode: 'real',
+              },
+            ],
+          },
+        },
+        scenario: {
+          id: 101,
+          versionIndex: 2,
+          status: 'ready',
+          lockedAt: '2026-03-01T12:00:00.000Z',
+        },
+        tasks: [
+          {
+            dayIndex: 1,
+            title: 'Discovery',
+            description: 'Define requirements.',
+          },
+        ],
+      }),
+      '/api/trials/trial-1/candidates': jsonResponse([]),
+    });
+
+    renderPage();
+
+    expect(await screen.findByText(/Trial trial-1/i)).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('regenerate-scenario-trigger'),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Trial AI overrides/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Frozen agent runtime/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Advanced — scenario workbench/i),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('button', { name: /Trial actions menu/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Edit details/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('regenerate-scenario-trigger'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows internal AI controls when the viewer has operator capability', async () => {
+    mockFetchHandlers({
+      '/api/trials': jsonResponse([]),
+      '/api/trials/trial-1': jsonResponse({
+        id: 'trial-1',
+        status: 'ready_for_review',
+        title: 'Trial trial-1',
+        templateKey: 'python-fastapi',
+        viewerCapabilities: { canManageInternalAiControls: true },
+        ai: {
+          promptPackVersion: 'winoe-ai-pack-v4',
+          activeScenarioSnapshot: {
+            scenarioVersionId: 101,
+            promptPackVersion: 'winoe-ai-pack-v4',
+            agents: [
+              {
+                key: 'day1',
+                provider: 'openai',
+                model: 'gpt-5.1',
+                runtimeMode: 'real',
+              },
+            ],
+          },
+        },
+        scenario: {
+          id: 101,
+          versionIndex: 2,
+          status: 'ready',
+          lockedAt: null,
+          storylineMd: 'Storyline for editor textarea',
+          taskPromptsJson: [],
+          rubricJson: {},
+        },
+        tasks: [
+          {
+            dayIndex: 1,
+            title: 'Discovery',
+            description: 'Define requirements.',
+          },
+        ],
+      }),
+      '/api/trials/trial-1/candidates': jsonResponse([]),
+    });
+
+    renderPage();
+
+    expect(
+      await screen.findByTestId('regenerate-scenario-trigger'),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Trial AI overrides/i)).toBeInTheDocument();
+    expect(screen.getByText(/Frozen agent runtime/i)).toBeInTheDocument();
   });
 
   it('calls approve endpoint when Approve is used', async () => {

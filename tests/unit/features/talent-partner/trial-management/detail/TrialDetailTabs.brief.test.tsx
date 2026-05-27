@@ -83,6 +83,7 @@ const minimalProps: TrialDetailViewProps = {
   companyContextLabel: 'C',
   notesLabel: null,
   aiConfig: null,
+  canManageInternalAiControls: false,
   scenarioLabel: 'WRONG_SCENARIO_LABEL',
   rubricSummary: null,
   scenarioContentUnavailableMessageForPlan: null,

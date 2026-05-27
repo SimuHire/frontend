@@ -31,6 +31,8 @@ type CandidateInviteLike = Pick<
   | 'completedAt'
   | 'reportReady'
   | 'hasReport'
+  | 'reportStatus'
+  | 'reportSharedWithTalentPartner'
   | 'terminatedAt'
   | 'isExpired'
   | 'isTerminated'
@@ -138,7 +140,11 @@ export function filterCandidateInvitesForViewer(
 }
 
 export function isReviewReadyInvite(invite: CandidateInviteLike): boolean {
-  return invite.reportReady === true || invite.hasReport === true;
+  return (
+    invite.reportReady === true ||
+    invite.reportStatus === 'finalized' ||
+    invite.reportSharedWithTalentPartner === true
+  );
 }
 
 export function isReviewRouteInvite(invite: CandidateInviteLike): boolean {

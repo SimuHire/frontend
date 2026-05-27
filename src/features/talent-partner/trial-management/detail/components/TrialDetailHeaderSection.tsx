@@ -30,6 +30,7 @@ export function TrialDetailHeaderSection({
       roleLabel={props.roleLabel}
       preferredLanguageFrameworkLabel={props.preferredLanguageFrameworkLabel}
       commandCenterActive={commandCenterActive}
+      canManageInternalAiControls={props.canManageInternalAiControls}
       onRevealScenarioWorkbench={onRevealScenarioWorkbench}
       inviteEnabled={props.inviteEnabled}
       inviteDisabledReason={props.inviteDisabledReason}

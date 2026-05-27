@@ -78,6 +78,70 @@ describe('CandidateDashboardPage content states', () => {
     expect(screen.getByText(/Progress: 2\/5/)).toBeInTheDocument();
   });
 
+  it('shows pending report copy when a completed Trial is not finalized', async () => {
+    listCandidateInvitesMock.mockResolvedValue([
+      {
+        candidateSessionId: 21,
+        title: 'Pending Report Trial',
+        role: 'Developer',
+        company: 'TestCo',
+        status: 'completed',
+        isExpired: false,
+        token: 'invite-token',
+        progress: { completed: 5, total: 5 },
+        completedAt: '2024-01-15T00:00:00Z',
+        hasReport: true,
+        reportReady: false,
+        reportStatus: 'pending',
+        reportSharedWithTalentPartner: false,
+        lastActivityAt: '2024-01-15T00:00:00Z',
+        expiresAt: '2024-02-15T00:00:00Z',
+        candidateEmail: 'test@example.com',
+      },
+    ]);
+    await renderDashboardPage({ signedInEmail: 'test@example.com' });
+
+    expect(
+      await screen.findByText(/Your report is being prepared/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/linked Evidence Trail/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows reviewed and shared copy when the Winoe Report is finalized', async () => {
+    listCandidateInvitesMock.mockResolvedValue([
+      {
+        candidateSessionId: 22,
+        title: 'Finalized Report Trial',
+        role: 'Developer',
+        company: 'TestCo',
+        status: 'completed',
+        isExpired: false,
+        token: 'invite-token',
+        progress: { completed: 5, total: 5 },
+        completedAt: '2024-01-15T00:00:00Z',
+        hasReport: true,
+        reportReady: true,
+        reportStatus: 'finalized',
+        reportSharedWithTalentPartner: true,
+        lastActivityAt: '2024-01-15T00:00:00Z',
+        expiresAt: '2024-02-15T00:00:00Z',
+        candidateEmail: 'test@example.com',
+      },
+    ]);
+    await renderDashboardPage({ signedInEmail: 'test@example.com' });
+
+    expect(
+      await screen.findByText(
+        /Your Winoe Trial submission has been reviewed\. The Winoe Report and linked Evidence Trail have been shared with the Talent Partner\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Your report is being prepared/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('filters out invites that do not belong to the signed-in email', async () => {
     listCandidateInvitesMock.mockResolvedValue([
       {

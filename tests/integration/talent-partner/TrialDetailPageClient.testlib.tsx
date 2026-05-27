@@ -18,6 +18,7 @@ const trialDetailResponse = () =>
     status: 'active_inviting',
     title: `Trial ${params.id}`,
     templateKey: 'python-fastapi',
+    viewerCapabilities: { canManageInternalAiControls: true },
     role: 'Backend Engineer',
     techStack: 'Node.js + Postgres',
     preferredLanguageFramework: 'Node.js + Postgres',

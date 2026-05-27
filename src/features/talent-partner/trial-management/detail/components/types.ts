@@ -67,6 +67,7 @@ export type TrialDetailViewProps = {
   companyContextLabel: string;
   notesLabel: string | null;
   aiConfig: TrialAiConfig | null;
+  canManageInternalAiControls: boolean;
   scenarioLabel: string | null;
   rubricSummary: string | null;
   scenarioContentUnavailableMessageForPlan: string | null;

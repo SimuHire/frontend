@@ -18,6 +18,7 @@ type Props = {
   roleLabel: string;
   preferredLanguageFrameworkLabel: string | null;
   commandCenterActive: boolean;
+  canManageInternalAiControls: boolean;
   onRevealScenarioWorkbench: () => void;
   inviteEnabled: boolean;
   inviteDisabledReason: string | null;
@@ -49,6 +50,7 @@ export function TrialDetailHeaderCore({
   roleLabel,
   preferredLanguageFrameworkLabel,
   commandCenterActive,
+  canManageInternalAiControls,
   onRevealScenarioWorkbench,
   inviteEnabled,
   inviteDisabledReason,
@@ -84,6 +86,7 @@ export function TrialDetailHeaderCore({
         <PageHeader title={title} subtitle={heroSubtitle} />
         <TrialDetailHeaderActions
           commandCenterActive={commandCenterActive}
+          canManageInternalAiControls={canManageInternalAiControls}
           onRevealScenarioWorkbench={onRevealScenarioWorkbench}
           canApprove={canApprove}
           approveButtonLabel={approveButtonLabel}

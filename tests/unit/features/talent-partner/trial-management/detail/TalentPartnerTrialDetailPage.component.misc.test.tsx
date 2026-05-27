@@ -16,6 +16,7 @@ describe('TalentPartnerTrialDetailPage miscellaneous states', () => {
   it('renders days without generated tasks', async () => {
     talentPartnerGetMock.mockResolvedValue({
       title: 'Test',
+      viewerCapabilities: { canManageInternalAiControls: true },
       days: [{ dayIndex: 1, title: 'Day 1' }],
     });
     await renderDetailPage();
