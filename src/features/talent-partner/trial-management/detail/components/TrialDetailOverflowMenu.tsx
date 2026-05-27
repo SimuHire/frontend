@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useId, useRef, useState } from 'react';
 
 type Props = {
-  onEditDetails: () => void;
+  onEditDetails: (() => void) | null;
   onTerminate: () => void;
   terminatePending: boolean;
   trialTerminated: boolean;
@@ -60,16 +60,18 @@ export function TrialDetailOverflowMenu({
           id={menuId}
           className="absolute right-0 z-20 mt-1 min-w-[200px] rounded-md border border-subtle bg-elevated py-1 shadow-lg"
         >
-          <button
-            type="button"
-            className="block w-full px-3 py-2 text-left text-sm text-primary hover:bg-muted/30"
-            onClick={() => {
-              onEditDetails();
-              close();
-            }}
-          >
-            Edit details
-          </button>
+          {onEditDetails ? (
+            <button
+              type="button"
+              className="block w-full px-3 py-2 text-left text-sm text-primary hover:bg-muted/30"
+              onClick={() => {
+                onEditDetails();
+                close();
+              }}
+            >
+              Edit details
+            </button>
+          ) : null}
           {midMenuSlot ? (
             <div className="border-t border-subtle">{midMenuSlot}</div>
           ) : null}

@@ -10,6 +10,7 @@ import { formatRelativePast } from '@/shared/time/relativePast';
 import {
   deriveCandidateInviteState,
   isCompletedInvite,
+  isReviewReadyInvite,
   isReviewRouteInvite,
   isTerminatedInvite,
   normalizeTrialProgress,
@@ -91,6 +92,7 @@ export function CandidatePortalTrialHero({
     [invite, nowMs],
   );
   const progress = normalizeTrialProgress(invite.progress);
+  const reportReady = isReviewReadyInvite(invite);
   const timezone =
     invite.candidateTimezone?.trim() ||
     Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -191,11 +193,13 @@ export function CandidatePortalTrialHero({
         <div className="mt-6 space-y-4">
           <p className="text-sm font-medium text-gray-900">Completed</p>
           <p className="text-sm leading-relaxed text-gray-600">
-            Trial submitted{' '}
-            {invite.completedAt
-              ? formatRelativePast(invite.completedAt, nowMs)
-              : 'recently'}
-            . Your report is being prepared.
+            {reportReady
+              ? 'Your Winoe Trial submission has been reviewed. The Winoe Report and linked Evidence Trail have been shared with the Talent Partner.'
+              : `Trial submitted ${
+                  invite.completedAt
+                    ? formatRelativePast(invite.completedAt, nowMs)
+                    : 'recently'
+                }. Your report is being prepared.`}
           </p>
           <Button
             variant="secondary"

@@ -45,6 +45,7 @@ describe('TalentPartnerTrialDetailPage helper preview normalization', () => {
         productArea: 'Payments',
         preferredLanguageFramework: 'Python + FastAPI',
       },
+      viewerCapabilities: { canManageInternalAiControls: true },
       ai: { evalEnabledByDay: { '4': false } },
       scenario: {
         id: 10,
@@ -81,6 +82,17 @@ describe('TalentPartnerTrialDetailPage helper preview normalization', () => {
     expect(__testables.scenarioVersionLabel(2)).toBe('v2');
     expect(__testables.isPreviewGenerating(detail)).toBe(true);
     expect(__testables.isPreviewEmpty(detail)).toBe(false);
+    expect(detail.canManageInternalAiControls).toBe(true);
+  });
+
+  it('defaults internal AI management capability off for Talent Partner detail payloads', () => {
+    const detail = __testables.normalizeTrialDetailPreview({
+      id: 9,
+      status: 'active_inviting',
+      tasks: [],
+    });
+
+    expect(detail.canManageInternalAiControls).toBe(false);
   });
 
   it('drops retired template and stack fields from preview normalization', () => {

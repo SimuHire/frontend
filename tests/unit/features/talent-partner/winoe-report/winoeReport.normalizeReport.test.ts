@@ -137,6 +137,11 @@ describe('normalizeReport', () => {
           ref: 'commit-1',
           dimensionKey: 'architecture_and_design',
         }),
+        expect.objectContaining({
+          kind: 'design_doc',
+          ref: 'day1-design-doc.md:L1-L20',
+          excerpt: 'Use a small FastAPI service with one core domain module.',
+        }),
       ]),
     );
     expect(report?.dimensionScores[6]?.evidence).toEqual(
@@ -147,6 +152,53 @@ describe('normalizeReport', () => {
         }),
       ]),
     );
+  });
+
+  it('merges backend report-level citation payloads into matching dimensions', () => {
+    const report = normalizeReport({
+      overallWinoeScore: 0.78,
+      recommendation: 'positive_signal',
+      confidence: 0.74,
+      dimensions: [
+        {
+          name: 'Architecture & Design',
+          score: 8.8,
+          justification: 'The Day 1 design doc keeps the scope small.',
+        },
+      ],
+      citations: [
+        {
+          dimension: 'Architecture & Design',
+          artifact_type: 'design_doc',
+          artifact_ref: 'day1-design-doc.md:L1-L20',
+          excerpt: 'Use a small FastAPI service with one core domain module.',
+        },
+      ],
+      dayScores: [],
+      reviewerReports: [],
+      disabledDayIndexes: [],
+    });
+
+    const architecture = report?.dimensionScores.find(
+      (item) => item.key === 'architecture_and_design',
+    );
+
+    expect(architecture).toMatchObject({
+      label: 'Architecture & Design',
+      summary: 'The Day 1 design doc keeps the scope small.',
+      evidenceCount: 1,
+      linkedArtifactCount: 1,
+    });
+    expect(architecture?.score).toBeCloseTo(0.88);
+    expect(architecture?.evidence).toEqual([
+      expect.objectContaining({
+        kind: 'design_doc',
+        ref: 'day1-design-doc.md:L1-L20',
+        excerpt: 'Use a small FastAPI service with one core domain module.',
+        dimensionKey: 'architecture_and_design',
+        dimensionLabel: 'Architecture & Design',
+      }),
+    ]);
   });
 
   it('merges explicit backend dimensions, derived day-level dimensions, and canonical from-scratch dimensions', () => {

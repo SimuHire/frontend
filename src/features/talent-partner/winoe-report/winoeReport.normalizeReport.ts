@@ -46,6 +46,17 @@ const REVIEWER_ARRAY_KEYS = [
   'reviewer_reports',
 ];
 
+const REPORT_EVIDENCE_ARRAY_KEYS = [
+  'citations',
+  'evidenceTrail',
+  'evidence_trail',
+  'evidence',
+  'evidenceItems',
+  'evidence_items',
+  'linkedArtifacts',
+  'linked_artifacts',
+];
+
 function getRecordArray(
   record: Record<string, unknown>,
   keys: string[],
@@ -71,10 +82,25 @@ function getEvidenceArray(
     (Array.isArray(record.artifacts) ? record.artifacts : null) ??
     (Array.isArray(record.linkedArtifacts) ? record.linkedArtifacts : null) ??
     (Array.isArray(record.linked_artifacts) ? record.linked_artifacts : null) ??
+    (Array.isArray(record.citations) ? record.citations : null) ??
+    (Array.isArray(record.evidenceTrail) ? record.evidenceTrail : null) ??
+    (Array.isArray(record.evidence_trail) ? record.evidence_trail : null) ??
     [];
   return raw
     .map(normalizeEvidence)
     .filter((item): item is WinoeReportEvidence => Boolean(item));
+}
+
+function getReportEvidenceArray(
+  record: Record<string, unknown>,
+): WinoeReportEvidence[] {
+  return REPORT_EVIDENCE_ARRAY_KEYS.flatMap((key) => {
+    const raw = record[key];
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map(normalizeEvidence)
+      .filter((item): item is WinoeReportEvidence => Boolean(item));
+  });
 }
 
 function uniqueEvidenceCount(evidence: WinoeReportEvidence[]): number {
@@ -141,21 +167,24 @@ function collectDimensionEvidence(
   key: string,
   label: string,
   dayScores: WinoeReportDayScore[],
+  reportEvidence: WinoeReportEvidence[],
 ): WinoeReportEvidence[] {
-  return dayScores.flatMap((day) =>
-    day.evidence.filter((item) => {
-      const dimensionKey =
-        item.dimensionKey ?? item.dimensionLabel ?? item.sourceLabel;
-      if (!dimensionKey) return false;
-      const definition = getDimensionDefinition(dimensionKey);
-      return Boolean(
-        definition?.key === key ||
-        definition?.label === label ||
-        dimensionKey === key ||
-        dimensionKey === label,
-      );
-    }),
-  );
+  const evidence = [
+    ...dayScores.flatMap((day) => day.evidence),
+    ...reportEvidence,
+  ];
+  return evidence.filter((item) => {
+    const dimensionKey =
+      item.dimensionKey ?? item.dimensionLabel ?? item.sourceLabel;
+    if (!dimensionKey) return false;
+    const definition = getDimensionDefinition(dimensionKey);
+    return Boolean(
+      definition?.key === key ||
+      definition?.label === label ||
+      dimensionKey === key ||
+      dimensionKey === label,
+    );
+  });
 }
 
 function collectDimensionScoreSamples(
@@ -236,6 +265,7 @@ function buildDimensionFromParts({
 function buildExplicitDimension(
   record: Record<string, unknown>,
   dayScores: WinoeReportDayScore[],
+  reportEvidence: WinoeReportEvidence[],
 ): WinoeReportDimension | null {
   const rawLabel = chooseString(
     record.label,
@@ -268,13 +298,19 @@ function buildExplicitDimension(
   );
   const explanation = chooseString(
     record.summary,
+    record.justification,
     record.explanation,
     record.description,
     record.notes,
     record.detail,
   );
   const evidence = getEvidenceArray(record);
-  const matchingDayEvidence = collectDimensionEvidence(key, label, dayScores);
+  const matchingDayEvidence = collectDimensionEvidence(
+    key,
+    label,
+    dayScores,
+    reportEvidence,
+  );
   const mergedEvidence = mergeEvidenceItems(evidence, matchingDayEvidence);
   const scoreSamples = collectDimensionScoreSamples(key, label, dayScores);
 
@@ -302,6 +338,7 @@ function buildCanonicalDimension(
   definition: DimensionDefinition,
   dayScores: WinoeReportDayScore[],
   explicitDimension: WinoeReportDimension | null,
+  reportEvidence: WinoeReportEvidence[],
 ): WinoeReportDimension {
   if (explicitDimension) return explicitDimension;
 
@@ -309,6 +346,7 @@ function buildCanonicalDimension(
     definition.key,
     definition.label,
     dayScores,
+    reportEvidence,
   );
   const scoreSamples = collectDimensionScoreSamples(
     definition.key,
@@ -338,10 +376,11 @@ function buildCanonicalDimension(
 function buildDimensions(
   record: Record<string, unknown>,
   dayScores: WinoeReportDayScore[],
+  reportEvidence: WinoeReportEvidence[],
 ): WinoeReportDimension[] {
   const dimensionRecords = getRecordArray(record, DIMENSION_ARRAY_KEYS);
   const explicitDimensions = dimensionRecords
-    .map((item) => buildExplicitDimension(item, dayScores))
+    .map((item) => buildExplicitDimension(item, dayScores, reportEvidence))
     .filter((item): item is WinoeReportDimension => Boolean(item));
 
   if (explicitDimensions.length >= 8) {
@@ -363,6 +402,7 @@ function buildDimensions(
       definition,
       dayScores,
       explicitByKey.get(definition.key) ?? null,
+      reportEvidence,
     ),
   );
 
@@ -513,7 +553,8 @@ export function normalizeReport(value: unknown): WinoeReportReport | null {
     });
   });
   dayScores.sort((a, b) => a.dayIndex - b.dayIndex);
-  const dimensionScores = buildDimensions(record, dayScores);
+  const reportEvidence = getReportEvidenceArray(record);
+  const dimensionScores = buildDimensions(record, dayScores, reportEvidence);
   const reviewerSummaries = buildReviewerSummaries(record, dayScores);
   const narrativeAssessment = chooseString(
     record.narrativeAssessment,

@@ -1,140 +1,84 @@
-# Task 9: Complete Candidate Days 2–5 Trial Experience
+# Task 11: Surface verified report evidence and finalized candidate states
 
-## Status
+## Summary
 
-PASS — Task 9 is fully addressed, manually end-to-end QA verified, and ready for PR.
+- Surfaces backend-validated Winoe Report evidence in the Talent Partner report experience.
+- Updates candidate portal report states so pending, finalized/reviewed, and Talent Partner-shared reports are distinct.
+- Gates internal AI/runtime controls behind backend-provided viewer capabilities.
+- Aligns frontend normalization with backend citation payload fields used by the Task 11 Evidence Trail.
+- Task 11 is code ready and approved for QA signoff / PR prep based on Iteration 5 verification.
 
-## Frontend Summary
+## Frontend Implementation Details
 
-- Implements and hardens the candidate-facing Day 2/3 implementation workspace experience.
-- Adds GitHub username gating before Codespace access.
-- Updates Day 2 and Day 3 workspace copy to reflect from-scratch Codespace work.
-- Aligns run-tests UI state with the `succeeded` terminal state.
-- Protects Day 1/2/3 submit-label behavior.
-- Verifies Day 4 handoff/demo and Day 5 reflection surfaces through targeted tests and manual QA.
-- Removes retired Day 1 `template` wording from candidate-facing help copy.
-- Adds regression coverage for terminology and candidate-state behavior.
+- Winoe Report Evidence Trail now renders backend report-level citation payloads.
+- Evidence empty-state only appears when citations are truly absent.
+- Frontend normalizers now support backend citation fields:
+  - `citations`
+  - `evidenceTrail`
+  - `artifact_type`
+  - `artifact_ref`
+  - `dimension`
+  - `excerpt`
+- Frontend state handling supports candidate finalized report fields returned by the backend.
+- UI visibility for internal AI/runtime controls is derived from `viewerCapabilities.canManageInternalAiControls`.
 
-## Frontend Files
+## Talent Partner Report UX Changes
 
-### Candidate workspace / Day 2-3
+- The Talent Partner report view renders persisted report-level citations in the Winoe Report Evidence Trail.
+- Citation rendering supports backend Evidence Trail payload shapes instead of relying only on older normalized frontend-only fields.
+- The Evidence Trail empty-state is reserved for reports where citations are truly absent.
+- Manual QA covered the Report Evidence Trail UX against deterministic backend data.
 
-- `src/features/candidate/session/views/WorkspaceAndTests.tsx`
-- `src/features/candidate/tasks/components/GithubUsernamePromptModal.tsx`
-- `src/features/candidate/tasks/components/WorkspacePanel.tsx`
-- `src/features/candidate/tasks/components/WorkspacePanelHeader.tsx`
-- `src/features/candidate/tasks/components/WorkspacePanelBody.tsx`
-- `src/features/candidate/tasks/components/TaskHeader.tsx`
-- `src/features/candidate/tasks/CandidateTaskViewInner.tsx`
+## Candidate Portal Changes
 
-### Run-tests UI
+- Candidate portal distinguishes:
+  - Pending report.
+  - Finalized/reviewed report.
+  - Report shared with Talent Partner.
+- Candidate copy does not imply Winoe makes hiring decisions.
+- Candidate copy says the Winoe Report and Evidence Trail were shared with the Talent Partner.
+- Manual QA covered candidate finalized state and invite persistence.
 
-- `src/features/candidate/tasks/components/RunTestsPanelHeader.tsx`
-- `src/features/candidate/tasks/hooks/useRunTestsCopy.ts`
-- `src/features/candidate/tasks/hooks/useRunTestsMessages.ts`
-- `src/features/candidate/tasks/hooks/useRunTestsTypes.ts`
+## Trial Detail / Internal Controls Gating
 
-### Terminology fix
+- Talent Partner Trial detail gates internal AI/runtime controls behind `viewerCapabilities.canManageInternalAiControls`.
+- Regular Talent Partner users no longer see internal AI override/runtime controls.
+- Internal controls remain available only when the backend capability payload permits them.
 
-- `src/features/candidate/tasks/components/Day1DesignDocWorkspace.tsx`
+## Tests Run
 
-### Tests
+- Frontend precommit passed.
+- Backend precommit passed as part of the completed Task 11 verification.
+- Frontend tests were added or updated for:
+  - Winoe Report citation rendering.
+  - Evidence empty-state behavior.
+  - Candidate finalized/pending portal states.
+  - Internal AI controls visibility.
 
-- `tests/unit/features/candidate/session/views/WorkspaceAndTests.test.tsx`
-- `tests/unit/features/candidate/tasks/components/WorkspacePanelCopy.test.tsx`
-- `tests/unit/features/candidate/tasks/hooks/useRunTestsCopy.test.ts`
-- `tests/unit/features/candidate/tasks/hooks/runTestsMeta.test.ts`
-- `tests/unit/features/candidate/tasks/hooks/runTestsMessages.test.ts`
-- `tests/unit/features/candidate/tasks/CandidateTaskView.submitFeedback.test.tsx`
-- `tests/unit/features/candidate/tasks/CandidateTaskView.closedReadOnly.test.tsx`
-- `tests/unit/features/candidate/tasks/CandidateTaskView.day3ImplementationWrapUp.test.tsx`
-- `tests/unit/features/candidate/tasks/components/Day5ReflectionPanel.validation.test.tsx`
-- `tests/unit/features/candidate/tasks/handoff/HandoffUploadPanel.day4Requirements.test.tsx`
-- `tests/unit/features/candidate/tasks/CandidateTaskView.day1DesignDoc.test.tsx`
-- updated `RunTestsPanel.*` tests as relevant
+## Manual QA Evidence
 
-## Frontend Behavior
+Iteration 5 QA reported full local manual QA passed with:
 
-### Day 2
+- Backend API.
+- Backend worker.
+- Frontend.
+- Database.
+- Admin endpoints.
+- Notification audit.
+- Report Evidence Trail UX.
+- Candidate finalized state.
+- Invite persistence.
+- DLQ/retry.
+- Health/readiness.
 
-- Candidate is blocked by GitHub username modal when missing.
-- Valid GitHub username unlocks the Codespace workspace.
-- Day 2 copy says `Day 2 — Implementation Kickoff`.
-- Day 2 copy says `Build from scratch in your Codespace. AI tools welcome.`
-- Codespace card explains the from-scratch repo contents:
-  - `.devcontainer/`
-  - `README.md` Project Brief
-  - Evidence Trail workflow
-  - no starter code
-- Run-tests state machine uses:
-  - `idle`
-  - `starting`
-  - `running`
-  - `succeeded`
-  - `failed`
-- Day 2 submit label:
-  - `Submit Day 2 & continue tomorrow at 9 AM`
+## Known Limitations / Accepted Tradeoffs
 
-### Day 3
+- Local QA used deterministic demo backend data.
+- Live email/provider rendering was not exercised from frontend.
+- Operator-only admin UI was not added; Task 11 operator tooling is API-first.
 
-- Uses the same Codespace/workspace lineage.
-- Day 3 copy says `Day 3 — Implementation Wrap-Up`.
-- Day 3 copy says `Continue in the same Codespace. Polish and finalize.`
-- Day 3 submit label:
-  - `Submit Day 3 & continue to Day 4 — Demo handoff`
+## Risk Notes
 
-### Day 4
-
-- Existing handoff/demo upload and transcript UX was verified.
-- Transcript gating tests remain green.
-- Candidate review surface shows submitted recording/transcript evidence.
-
-### Day 5
-
-- Existing reflection essay surface was verified.
-- 9 PM local deadline copy is covered.
-- Completion/read-only state is verified.
-
-### Terminology
-
-- Removed visible Day 1 `template` copy.
-- Added regression test to prevent candidate-visible `template` wording from returning.
-
-## Frontend Checks
-
-- `npm ci` — pass
-- `npm run typecheck` — pass
-- Focused Task 9 frontend Jest suite — pass
-- `./precommit.sh` — pass
-- Next build via precommit — pass
-- Frontend precommit included lint, prettier, tests, coverage, typecheck, and build
-
-## Frontend Manual QA
-
-- Local frontend ran at `http://localhost:3000`.
-- Candidate Days 2–5 were manually exercised.
-- Day 2 GitHub username / Codespace flow passed.
-- Day 3 same-workspace flow passed.
-- Day 4 handoff/demo evidence and transcript flow passed.
-- Day 5 reflection, 9 PM deadline, completion, and read-only review passed.
-- Post-Trial read-only review passed.
-- Terminology audit passed after Day 1 copy fix.
-
-## Risks / Follow-up
-
-- Talent Partner onboarding BFF 500 was observed during QA setup but is out of scope for this Task 9 candidate Days 2–5 PR.
-- Recommendation: track as a separate follow-up issue.
-
-## Checklist
-
-- [x] Uses current Winoe AI terminology.
-- [x] Avoids retired terminology in candidate-visible copy.
-- [x] Preserves Evidence Trail integrity.
-- [x] Handles locked/read-only candidate states.
-- [x] Covers Day 2/3 implementation workspace behavior.
-- [x] Covers Day 4 handoff/demo evidence behavior.
-- [x] Covers Day 5 reflection/completion behavior.
-- [x] Includes targeted automated tests.
-- [x] Passed local typecheck/build where applicable.
-- [x] Passed precommit.
-- [x] Manually QA verified locally.
+- Report Evidence Trail rendering depends on backend citation payloads remaining present and normalized across supported field names.
+- Candidate report state copy depends on finalized/shared state fields from the backend.
+- Internal AI/runtime controls must remain gated by `viewerCapabilities.canManageInternalAiControls` to avoid exposing operator-only controls to regular Talent Partner users.

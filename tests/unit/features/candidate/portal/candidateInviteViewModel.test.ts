@@ -5,6 +5,7 @@ import {
   inviteMatchesSignedInEmail,
   normalizeCandidateInviteEmail,
   normalizeTrialProgress,
+  isReviewReadyInvite,
   isReviewRouteInvite,
 } from '@/features/candidate/portal/utils/candidateInviteViewModel';
 
@@ -31,6 +32,8 @@ const makeInvite = (
     completedAt: null,
     reportReady: null,
     hasReport: null,
+    reportStatus: null,
+    reportSharedWithTalentPartner: null,
     terminatedAt: null,
     isTerminated: false,
     expiresAt: null,
@@ -251,10 +254,29 @@ describe('candidateInviteViewModel', () => {
         progress: { completed: 5, total: 5 },
         reportReady: true,
         hasReport: true,
+        reportStatus: 'finalized',
+        reportSharedWithTalentPartner: true,
       }),
       expected: {
         state: 'report_ready',
         statusLabel: 'Report ready',
+        currentDayLabel: 'Day 5 of 5',
+        actionLabel: 'Review submissions',
+        actionDisabled: false,
+      },
+    },
+    {
+      name: 'completed with unfinalized report',
+      invite: makeInvite({
+        status: 'completed',
+        progress: { completed: 5, total: 5 },
+        completedAt: '2025-01-15T10:00:00Z',
+        hasReport: true,
+        reportStatus: 'pending',
+      }),
+      expected: {
+        state: 'complete',
+        statusLabel: 'Complete',
         currentDayLabel: 'Day 5 of 5',
         actionLabel: 'Review submissions',
         actionDisabled: false,
@@ -310,9 +332,29 @@ describe('candidateInviteViewModel', () => {
           status: 'completed',
           reportReady: true,
           hasReport: true,
+          reportStatus: 'finalized',
+          reportSharedWithTalentPartner: true,
         }),
       ),
     ).toBe(true);
+    expect(
+      isReviewRouteInvite(
+        makeInvite({
+          status: 'completed',
+          hasReport: true,
+          reportStatus: 'pending',
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isReviewReadyInvite(
+        makeInvite({
+          status: 'in_progress',
+          hasReport: true,
+          reportStatus: 'pending',
+        }),
+      ),
+    ).toBe(false);
     expect(
       isReviewRouteInvite(
         makeInvite({

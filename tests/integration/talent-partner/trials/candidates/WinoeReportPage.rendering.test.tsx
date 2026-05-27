@@ -17,6 +17,7 @@ describe('WinoeReportPage rendering', () => {
   });
 
   it('renders exactly eight top-level dimensions for the seeded Sarah Chen report shape', async () => {
+    const user = userEvent.setup();
     setFetchForWinoeReport(async (url) =>
       url === '/api/candidate_sessions/2/winoe_report'
         ? jsonResponse({
@@ -173,6 +174,22 @@ describe('WinoeReportPage rendering', () => {
     expect(
       screen.getAllByText(/Reflection & Ownership/i).length,
     ).toBeGreaterThan(0);
+
+    await user.click(screen.getAllByTestId('view-evidence-button')[0]);
+    const drawer = await screen.findByRole('dialog', {
+      name: /Evidence Trail · Architecture & Design/i,
+    });
+    expect(
+      within(drawer).queryByText(/Evidence is unavailable/i),
+    ).not.toBeInTheDocument();
+    expect(
+      within(drawer).getByText(/day1-design-doc\.md:L1-L20/i),
+    ).toBeInTheDocument();
+    expect(
+      within(drawer).getByText(
+        /Use a small FastAPI service with one core domain module/i,
+      ),
+    ).toBeInTheDocument();
   });
 
   it('toggles print-mode class while mounted', () => {

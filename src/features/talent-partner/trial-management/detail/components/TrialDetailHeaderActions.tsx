@@ -7,6 +7,7 @@ import { TrialDetailOverflowMenu } from './TrialDetailOverflowMenu';
 
 type Props = {
   commandCenterActive: boolean;
+  canManageInternalAiControls: boolean;
   onRevealScenarioWorkbench: () => void;
   canApprove: boolean;
   approveButtonLabel: string;
@@ -30,6 +31,7 @@ type Props = {
 
 export function TrialDetailHeaderActions({
   commandCenterActive,
+  canManageInternalAiControls,
   onRevealScenarioWorkbench,
   canApprove,
   approveButtonLabel,
@@ -65,18 +67,22 @@ export function TrialDetailHeaderActions({
           Invite candidates
         </Button>
         <TrialDetailOverflowMenu
-          onEditDetails={onRevealScenarioWorkbench}
+          onEditDetails={
+            canManageInternalAiControls ? onRevealScenarioWorkbench : null
+          }
           onTerminate={onOpenTerminateModal}
           terminatePending={terminatePending}
           trialTerminated={trialStatus === 'terminated'}
           midMenuSlot={
-            <RegenerateScenarioButton
-              appearance="menu"
-              loading={regenerateLoading}
-              disabled={regenerateDisabled}
-              currentVersionLabel={scenarioVersionLabel}
-              onConfirm={onRegenerate}
-            />
+            canManageInternalAiControls ? (
+              <RegenerateScenarioButton
+                appearance="menu"
+                loading={regenerateLoading}
+                disabled={regenerateDisabled}
+                currentVersionLabel={scenarioVersionLabel}
+                onConfirm={onRegenerate}
+              />
+            ) : null
           }
         />
         <Link
@@ -111,12 +117,14 @@ export function TrialDetailHeaderActions({
           {activateButtonLabel}
         </Button>
       ) : null}
-      <RegenerateScenarioButton
-        loading={regenerateLoading}
-        disabled={regenerateDisabled}
-        currentVersionLabel={scenarioVersionLabel}
-        onConfirm={onRegenerate}
-      />
+      {canManageInternalAiControls ? (
+        <RegenerateScenarioButton
+          loading={regenerateLoading}
+          disabled={regenerateDisabled}
+          currentVersionLabel={scenarioVersionLabel}
+          onConfirm={onRegenerate}
+        />
+      ) : null}
       <Button
         onClick={onInvite}
         size="sm"

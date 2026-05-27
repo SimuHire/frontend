@@ -28,6 +28,7 @@ export function buildDetail(overrides: Record<string, unknown> = {}) {
     status: 'ready_for_review',
     title: 'Trial trial-1',
     templateKey: 'python-fastapi',
+    viewerCapabilities: { canManageInternalAiControls: true },
     activeScenarioVersionId: 10,
     pendingScenarioVersionId: null,
     scenarioVersions: [

@@ -155,20 +155,27 @@ export function normalizeCandidateInvite(raw: unknown): CandidateInvite {
     toDateString(rec.scheduleLockedAt) ?? toDateString(rec.schedule_locked_at);
   const completedAt =
     toDateString(rec.completedAt) ?? toDateString(rec.completed_at);
+  const rawReportStatus = toStringOrNull(rec.reportStatus ?? rec.report_status);
+  const reportStatus =
+    rawReportStatus === 'not_started' ||
+    rawReportStatus === 'pending' ||
+    rawReportStatus === 'finalized' ||
+    rawReportStatus === 'failed'
+      ? rawReportStatus
+      : null;
+  const reportSharedWithTalentPartner =
+    rec.reportSharedWithTalentPartner === true ||
+    rec.report_shared_with_talent_partner === true
+      ? true
+      : null;
   const reportReady =
     rec.reportReady === true ||
     rec.report_ready === true ||
-    rec.hasReport === true ||
-    rec.has_report === true
+    reportStatus === 'finalized' ||
+    reportSharedWithTalentPartner === true
       ? true
       : null;
-  const hasReport =
-    rec.hasReport === true ||
-    rec.has_report === true ||
-    rec.reportReady === true ||
-    rec.report_ready === true
-      ? true
-      : null;
+  const hasReport = rec.hasReport === true || rec.has_report === true;
   const terminatedAt =
     toDateString(rec.terminatedAt) ?? toDateString(rec.terminated_at);
   const isTerminated =
@@ -218,7 +225,9 @@ export function normalizeCandidateInvite(raw: unknown): CandidateInvite {
     scheduleLockedAt,
     completedAt,
     reportReady,
-    hasReport,
+    hasReport: hasReport ? true : null,
+    reportStatus,
+    reportSharedWithTalentPartner,
     terminatedAt,
     isTerminated,
     expiresAt,

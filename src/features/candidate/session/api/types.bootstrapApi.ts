@@ -51,6 +51,8 @@ export type CandidateInvite = {
   completedAt?: string | null;
   reportReady?: boolean | null;
   hasReport?: boolean | null;
+  reportStatus?: 'not_started' | 'pending' | 'finalized' | 'failed' | null;
+  reportSharedWithTalentPartner?: boolean | null;
   terminatedAt?: string | null;
   isTerminated?: boolean;
   expiresAt: string | null;

@@ -49,6 +49,7 @@ export type TrialDetailPreview = {
   level: string | null;
   companyContext: string | null;
   aiConfig: TrialAiConfig;
+  canManageInternalAiControls: boolean;
   aiEvaluationEnabledByDay: TrialEvalEnabledByDay;
   generationJob: TrialGenerationJob | null;
   hasJobFailure: boolean;

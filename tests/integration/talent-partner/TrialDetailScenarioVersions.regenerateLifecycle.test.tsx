@@ -66,6 +66,9 @@ describe('TrialDetail scenario versions - regenerate lifecycle', () => {
       }),
     });
     renderPage();
+    fireEvent.click(
+      await screen.findByRole('button', { name: /Trial actions menu/i }),
+    );
     fireEvent.click(await screen.findByTestId('regenerate-scenario-trigger'));
     const dialog = await screen.findByRole('dialog', {
       name: /Confirm scenario regenerate/i,

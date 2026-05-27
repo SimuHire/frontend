@@ -15,6 +15,7 @@ type Props = Pick<
   | 'titleLabel'
   | 'roleLabel'
   | 'preferredLanguageFrameworkLabel'
+  | 'canManageInternalAiControls'
   | 'inviteEnabled'
   | 'inviteDisabledReason'
   | 'canApprove'
@@ -48,6 +49,7 @@ export function TrialDetailHeader({
   roleLabel,
   preferredLanguageFrameworkLabel,
   commandCenterActive,
+  canManageInternalAiControls,
   onRevealScenarioWorkbench,
   inviteEnabled,
   inviteDisabledReason,
@@ -79,6 +81,7 @@ export function TrialDetailHeader({
       roleLabel={roleLabel}
       preferredLanguageFrameworkLabel={preferredLanguageFrameworkLabel}
       commandCenterActive={commandCenterActive}
+      canManageInternalAiControls={canManageInternalAiControls}
       onRevealScenarioWorkbench={onRevealScenarioWorkbench}
       inviteEnabled={inviteEnabled}
       inviteDisabledReason={inviteDisabledReason}

@@ -17,6 +17,7 @@ export function TrialDetailView(props: TrialDetailViewProps) {
     setInviteModalOpen: props.setInviteModalOpen,
   });
   const showScenarioControls = useDeferredScenarioControls();
+  const canManageInternalAiControls = props.canManageInternalAiControls;
 
   const commandSurfaceFirst =
     props.trialStatus === 'active_inviting' &&
@@ -82,15 +83,15 @@ export function TrialDetailView(props: TrialDetailViewProps) {
       ) : commandSurfaceFirst ? (
         <>
           {tabsBlock}
-          {scenarioBlock}
+          {canManageInternalAiControls ? scenarioBlock : null}
         </>
       ) : (
         <>
-          {scenarioBlock}
+          {canManageInternalAiControls ? scenarioBlock : null}
           {tabsBlock}
         </>
       )}
-      {props.aiConfig ? (
+      {props.aiConfig && canManageInternalAiControls ? (
         <TrialAiOverridesPanel
           trialId={props.trialId}
           aiConfig={props.aiConfig}

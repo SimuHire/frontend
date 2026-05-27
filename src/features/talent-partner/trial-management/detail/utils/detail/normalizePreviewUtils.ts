@@ -30,6 +30,9 @@ export function normalizeTrialDetailPreview(raw: unknown): TrialDetailPreview {
   const record = asRecord(raw) ?? {};
   const scenario = asRecord(record.scenario);
   const ai = asRecord(record.ai);
+  const viewerCapabilities = asRecord(
+    record.viewerCapabilities ?? record.viewer_capabilities,
+  );
   const aiConfig = normalizeTrialAiConfig(ai);
   const statusRaw = toStringOrNull(record.status)?.toLowerCase() ?? null;
   const status = parseLifecycleStatus(statusRaw);
@@ -99,6 +102,9 @@ export function normalizeTrialDetailPreview(raw: unknown): TrialDetailPreview {
       record.companyContext ?? record.company_context,
     ),
     aiConfig,
+    canManageInternalAiControls:
+      viewerCapabilities?.canManageInternalAiControls === true ||
+      viewerCapabilities?.can_manage_internal_ai_controls === true,
     aiEvaluationEnabledByDay: normalizeTrialEvalEnabledByDay(
       aiConfig.evalEnabledByDay ??
         record.evalEnabledByDay ??
