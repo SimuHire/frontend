@@ -54,4 +54,59 @@ describe('resolveCandidateSessionView', () => {
 
     expect(view).toBe('locked');
   });
+
+  it('keeps a scheduled pre-day session locked even after bootstrap marks it in progress', () => {
+    const view = resolveCandidateSessionView({
+      view: 'locked',
+      hasTaskData: false,
+      started: true,
+      bootstrap: {
+        ...bootstrap,
+        currentDayWindow: {
+          dayIndex: 1,
+          windowStartAt: '2026-04-23T13:00:00Z',
+          windowEndAt: '2026-04-23T21:00:00Z',
+          state: 'upcoming' as const,
+        },
+      },
+      scheduleResponseWindowCount: 3,
+      clockNowMs: Date.parse('2026-04-23T12:30:00Z'),
+    });
+
+    expect(view).toBe('locked');
+  });
+
+  it('keeps a scheduled pre-day session locked even when stale task data exists', () => {
+    const view = resolveCandidateSessionView({
+      view: 'running',
+      hasTaskData: true,
+      started: true,
+      bootstrap: {
+        ...bootstrap,
+        currentDayWindow: {
+          dayIndex: 1,
+          windowStartAt: '2026-04-23T13:00:00Z',
+          windowEndAt: '2026-04-23T21:00:00Z',
+          state: 'upcoming' as const,
+        },
+      },
+      scheduleResponseWindowCount: 3,
+      clockNowMs: Date.parse('2026-04-23T12:30:00Z'),
+    });
+
+    expect(view).toBe('locked');
+  });
+
+  it('does not promote persisted task data before fresh bootstrap loads', () => {
+    const view = resolveCandidateSessionView({
+      view: 'loading',
+      hasTaskData: true,
+      started: true,
+      bootstrap: null,
+      scheduleResponseWindowCount: 0,
+      clockNowMs: Date.parse('2026-04-23T12:30:00Z'),
+    });
+
+    expect(view).toBe('loading');
+  });
 });

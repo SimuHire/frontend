@@ -22,7 +22,7 @@ export function CandidateSessionPreflightRoute({
     return <AuthView loginHref={props.loginHref} message={authMessage} />;
   }
   if (view === 'starting') {
-    return <LoadingView message="Loading your tasks and workspace." />;
+    return <LoadingView message="Preparing your tasks and workspace." />;
   }
 
   const accessRoute = CandidateSessionAccessRoute({

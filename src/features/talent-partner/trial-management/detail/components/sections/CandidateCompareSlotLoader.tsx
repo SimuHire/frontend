@@ -4,16 +4,26 @@ import type { CandidateCompareSlotProps } from './CandidateCompareSlot';
 
 function CompareLoadingState() {
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-sm text-gray-600">Loading Benchmarks...</p>
+    <section
+      className="rounded-lg border border-strong bg-elevated p-4 shadow-sm"
+      role="status"
+      aria-label="Preparing Benchmarks"
+    >
+      <div className="h-4 w-36 animate-pulse rounded bg-secondary" />
+      <div className="mt-2 h-3 w-full animate-pulse rounded bg-secondary/80" />
     </section>
   );
 }
 
 export function ComparePreparingState() {
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-sm text-gray-600">Preparing Benchmarks...</p>
+    <section
+      className="rounded-lg border border-strong bg-elevated p-4 shadow-sm"
+      role="status"
+      aria-label="Preparing Benchmarks"
+    >
+      <div className="h-4 w-40 animate-pulse rounded bg-secondary" />
+      <div className="mt-2 h-3 w-full animate-pulse rounded bg-secondary/80" />
     </section>
   );
 }

@@ -1,7 +1,6 @@
 import {
   NextRequest,
   getSessionNormalizedMock,
-  modeForPathMock,
   proxy,
   resetProxyTestMocks,
 } from './proxy.testlib';
@@ -9,14 +8,26 @@ import {
 describe('proxy - mode fallback', () => {
   beforeEach(resetProxyTestMocks);
 
-  it('uses modeForPath fallback when login mode is undefined', async () => {
-    modeForPathMock.mockReturnValueOnce(undefined);
+  it('lets unknown unauthenticated routes reach branded 404 rendering', async () => {
     getSessionNormalizedMock.mockResolvedValue(null);
 
     const res = await proxy(
       new NextRequest(new URL('http://localhost/unknown')),
     );
-    expect(res?.headers.get('location')).toContain('/auth/login');
-    expect(modeForPathMock).toHaveBeenCalled();
+    expect(res?.status).toBe(200);
+    expect(res?.headers.get('location')).toBeNull();
+    expect(getSessionNormalizedMock).toHaveBeenCalled();
+  });
+
+  it('lets unknown authenticated routes reach branded 404 rendering', async () => {
+    getSessionNormalizedMock.mockResolvedValue({
+      user: { permissions: ['talent_partner:access'] },
+    });
+
+    const res = await proxy(
+      new NextRequest(new URL('http://localhost/no-such-route-for-qa')),
+    );
+    expect(res?.status).toBe(200);
+    expect(res?.headers.get('location')).toBeNull();
   });
 });

@@ -114,4 +114,34 @@ describe('api/backend proxy route - timeout and path handling', () => {
       }),
     );
   });
+
+  it('forwards local QA candidate bearer identity through candidate backend proxy requests', async () => {
+    upstreamRequestMock.mockResolvedValue(
+      makeResponse(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+    const { GET } = await importBackendProxyRoute();
+    const req = new MockNextRequest(
+      'http://localhost/api/backend/candidate/session/qa-token',
+      {
+        headers: {
+          authorization: 'Bearer candidate:winoecandidate@gmail.com',
+        },
+      },
+    );
+    await GET(req, {
+      params: Promise.resolve({ path: ['candidate', 'session', 'qa-token'] }),
+    });
+    expect(upstreamRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer candidate:winoecandidate@gmail.com',
+          'x-dev-user-email': 'winoecandidate@gmail.com',
+          'x-winoe-dev-qa-auth': '1',
+        }),
+      }),
+    );
+  });
 });

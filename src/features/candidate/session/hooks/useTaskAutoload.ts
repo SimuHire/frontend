@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type React from 'react';
 import { friendlyTaskError } from '../utils/errorMessagesUtils';
+import { isScheduleLocked } from '../utils/scheduleUtils';
 import type { ViewState } from '../CandidateSessionView';
 import type { CandidateSessionState } from '../CandidateSessionProvider';
 
@@ -34,6 +35,7 @@ export function useTaskAutoload({
     typeof bootstrapDayIndex === 'number' &&
     typeof currentTaskDayIndex === 'number' &&
     bootstrapDayIndex > currentTaskDayIndex;
+  const scheduleLocked = isScheduleLocked(state.bootstrap);
 
   useEffect(() => {
     if (
@@ -43,10 +45,12 @@ export function useTaskAutoload({
       view === 'expired' ||
       view === 'scheduling' ||
       view === 'scheduleConfirm' ||
-      view === 'scheduleSubmitting'
+      view === 'scheduleSubmitting' ||
+      view === 'locked'
     )
       return;
     if (!state.candidateSessionId) return;
+    if (scheduleLocked) return;
     if (!started && !shouldAutoloadCompletedSession) return;
     if (state.taskState.loading) return;
     if (state.taskState.isComplete) {
@@ -67,6 +71,7 @@ export function useTaskAutoload({
     hasCompletionTimestamp,
     shouldAutoloadCompletedSession,
     started,
+    scheduleLocked,
     state,
     view,
   ]);

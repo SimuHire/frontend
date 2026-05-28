@@ -6,6 +6,7 @@ export type InvitePublicSummary = {
   role: string;
   company: string | null;
   talentPartnerName: string | null;
+  expiresAt?: string | null;
 };
 
 export async function fetchInvitePublicSummary(

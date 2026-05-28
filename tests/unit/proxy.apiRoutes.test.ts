@@ -75,12 +75,12 @@ describe('proxy - public and api routes', () => {
     expect(faviconRes?.headers.get('location')).toBeNull();
   });
 
-  it('treats /apiary as non-api and applies auth gating', async () => {
+  it('treats /apiary as non-api and lets unknown routes render branded 404', async () => {
     getSessionNormalizedMock.mockResolvedValue(null);
     const res = await proxy(
       new NextRequest(new URL('http://localhost/apiary')),
     );
-    expect(res?.status).toBe(307);
-    expect(res?.headers.get('location')).toContain('/auth/login');
+    expect(res?.status).toBe(200);
+    expect(res?.headers.get('location')).toBeNull();
   });
 });

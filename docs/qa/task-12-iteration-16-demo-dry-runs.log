@@ -1,0 +1,109 @@
+## Talent Partner timed dry run
+start=2026-05-28T02:22:57.565Z
+end=2026-05-28T02:23:09.547Z
+durationSeconds=12
+consoleErrors=0
+failedResources=0
+httpFailures=0
+ignoredAbortedRequests=0
+verdict=PASS
+routes:
+- Dev QA login -> dashboard: http://localhost:3000/talent-partner/trials (1297ms)
+- Talent Partner dashboard: http://localhost:3000/talent-partner/trials (1111ms)
+- Create Trial route: http://localhost:3000/talent-partner/trials/new (983ms)
+- Trial Preview: http://localhost:3000/talent-partner/trials/3/preview (1061ms)
+- Trial Detail: http://localhost:3000/talent-partner/trials/3 (1135ms)
+- Submission Review: http://localhost:3000/talent-partner/trials/2/candidates/3/submission (1068ms)
+- Winoe Report: http://localhost:3000/talent-partner/trials/2/candidates/3/winoe-report (1079ms)
+- Benchmarks: http://localhost:3000/talent-partner/benchmarks (1003ms)
+- Settings: http://localhost:3000/dashboard/settings/ai (1007ms)
+- Return to dashboard: http://localhost:3000/talent-partner/trials (989ms)
+observations:
+- Create/open Trial: create route rendered; seeded Trials used for preview/detail review.
+- Invite candidate modal opened: clicked
+- Evidence Trail drawer: clicked
+
+## Candidate timed dry run
+start=2026-05-28T02:23:09.637Z
+end=2026-05-28T02:23:43.921Z
+durationSeconds=34
+consoleErrors=0
+failedResources=0
+httpFailures=0
+ignoredAbortedRequests=1
+verdict=PASS
+routes:
+- Dev QA login -> candidate portal: http://localhost:3000/candidate/portal (1110ms)
+- Candidate portal / schedule-start state: http://localhost:3000/candidate/portal (1008ms)
+- Candidate pre-day countdown: http://localhost:3000/candidate/portal (998ms)
+- Day 1 workspace: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1402ms)
+- Day 1 submitted/closed transition via supported candidate API: about:blank (n/ams)
+- Day 2 Codespace card: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1518ms)
+- Day 3 wrap-up: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1627ms)
+- Day 3 submitted transition via supported candidate API: about:blank (n/ams)
+- Day 4 Handoff + Demo upload/record: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1544ms)
+- Day 4 video preview: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1410ms)
+- Day 5 Reflection workspace and distinct countdown: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1462ms)
+- Completion / post-Trial congratulations: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1046ms)
+- Read-only submission review: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d/review (1182ms)
+controls:
+- /api/candidate/trials/2b8a38ad70c4cfc9464010c38743939d/claim status=200 payload={"fullName":"Nina Alvarez","candidateTimezone":"America/New_York"}
+- /api/candidate/trials/2b8a38ad70c4cfc9464010c38743939d/schedule status=200 payload={"scheduledStartAt":"2026-05-29T13:00:00.000Z","candidateTimezone":"America/New_York","githubUsername":"ninaalvarez"}
+- /api/admin/candidate_trials/4/day_windows/control status=200 payload={"targetDayIndex":1,"reason":"iteration 16 formal candidate dry run day 1","candidateTimezone":"America/New_York","minutesAlreadyOpen":15,"minutesUntilCutoff":60,"dryRun":false}
+- /api/tasks/11/submit status=201 payload={"contentText":"# Day 1 Design Document\n\nIteration 16 formal dry run planning artifact."}
+- /api/admin/candidate_trials/4/day_windows/control status=200 payload={"targetDayIndex":2,"reason":"iteration 16 formal candidate dry run day 2","candidateTimezone":"America/New_York","minutesAlreadyOpen":15,"minutesUntilCutoff":60,"dryRun":false}
+- /api/tasks/12/codespace/init status=200 payload={"githubUsername":"ninaalvarez"}
+- /api/tasks/12/run status=200 payload={}
+- /api/tasks/12/run status=200 payload={}
+- /api/tasks/12/submit status=201 payload={"contentText":"Day 2 implementation submitted for formal dry run."}
+- /api/admin/candidate_trials/4/day_windows/control status=200 payload={"targetDayIndex":3,"reason":"iteration 16 formal candidate dry run day 3","candidateTimezone":"America/New_York","minutesAlreadyOpen":15,"minutesUntilCutoff":60,"dryRun":false}
+- /api/tasks/13/codespace/init status=200 payload={"githubUsername":"ninaalvarez"}
+- /api/tasks/13/submit status=201 payload={"contentText":"Day 3 implementation wrap-up submitted for formal dry run."}
+- /api/admin/candidate_trials/4/day_windows/control status=200 payload={"targetDayIndex":4,"reason":"iteration 16 formal candidate dry run day 4","candidateTimezone":"America/New_York","minutesAlreadyOpen":15,"minutesUntilCutoff":60,"dryRun":false}
+- /api/tasks/14/handoff/upload/init status=200 payload={"contentType":"video/mp4","sizeBytes":23,"filename":"iteration-16-handoff-demo.mp4","assetType":"recording","durationSeconds":30}
+- /api/recordings/storage/fake/upload?key=candidate-trials%2F4%2Ftasks%2F14%2Frecordings%2F96734afd55f2497ca4245dab634dfb8c.mp4&contentType=video%2Fmp4&sizeBytes=23&expiresIn=900&expiresAt=1779935917&sig=ebf189aaba5f0847ebd9748ef8b2d28654140dab39d03b33bcb46494960b8ad4&durationSeconds=30 status=204 payload={"contentType":"video/mp4","sizeBytes":23,"durationSeconds":30}
+- /api/candidate/trials/4/privacy/consent status=200 payload={"noticeVersion":"yc-demo-v1","aiNoticeVersion":"yc-demo-v1"}
+- /api/tasks/14/handoff/upload/complete status=200 payload={"recordingId":"rec_2"}
+- /api/admin/candidate_trials/4/day_windows/control status=200 payload={"targetDayIndex":5,"reason":"iteration 16 formal candidate dry run day 5","candidateTimezone":"America/New_York","minutesAlreadyOpen":15,"minutesUntilCutoff":75,"dryRun":false}
+- /api/tasks/15/submit status=201 payload={"contentText":"## Day 5 Reflection\n\nIteration 16 formal dry run reflection artifact.","reflection":{"challenges":"Coordinating a complete five-day Trial path under formal QA timing.","decisions":"Used supported local QA controls and canonical candidate APIs only.","tradeoffs":"Balanced browser-visible state coverage with deterministic backend transitions.","communication":"Kept evidence notes concise and tied each state to a route.","next":"Package the final review artifacts and prepare release-tag handoff."}}
+observations:
+- Day 2 Codespace card: no additional 200 status wait (page.waitForResponse: Timeout 5000ms exceeded while waiting for event "response").
+- Day 2 run-tests running request: clicked
+- Day 2 run-tests: no additional 200 status wait (page.waitForResponse: Timeout 5000ms exceeded while waiting for event "response").
+- Day 2 run-tests succeeded: fake provider returned/settled without browser errors.
+- Day 2 run-tests failed-state support: third fake run status=failed, conclusion=failure.
+- Day 3 wrap-up: no additional 200 status wait (page.waitForResponse: Timeout 5000ms exceeded while waiting for event "response").
+ignored aborted requests:
+- GET http://localhost:3000/api/backend/candidate/session/2b8a38ad70c4cfc9464010c38743939d/review: net::ERR_ABORTED; Navigation-induced browser abort while moving between deliberate route states.
+
+## Final release-clean route-family acceptance
+start=2026-05-28T02:23:44.005Z
+end=2026-05-28T02:24:04.318Z
+durationSeconds=20
+consoleErrors=0
+failedResources=0
+httpFailures=0
+ignoredAbortedRequests=1
+verdict=PASS
+routes:
+- Release clean login Talent Partner: http://localhost:3000/talent-partner/trials (1149ms)
+- Talent Partner dashboard: http://localhost:3000/talent-partner/trials (999ms)
+- Trial creation: http://localhost:3000/talent-partner/trials/new (974ms)
+- Trial preview: http://localhost:3000/talent-partner/trials/3/preview (1042ms)
+- Trial detail: http://localhost:3000/talent-partner/trials/3 (1112ms)
+- Submission Review: http://localhost:3000/talent-partner/trials/2/candidates/3/submission (1059ms)
+- Winoe Report: http://localhost:3000/talent-partner/trials/2/candidates/3/winoe-report (1074ms)
+- Benchmarks: http://localhost:3000/talent-partner/benchmarks (1011ms)
+- Settings: http://localhost:3000/talent-partner/settings (961ms)
+- Release clean login Candidate: http://localhost:3000/candidate/portal (1000ms)
+- Candidate portal: http://localhost:3000/candidate/portal (1009ms)
+- Candidate schedule/start: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1050ms)
+- Candidate completion: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1019ms)
+- Read-only review: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d/review (1181ms)
+- Candidate Day 1: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1108ms)
+- Candidate Day 2: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1115ms)
+- Candidate Day 3: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1101ms)
+- Candidate Day 4: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1234ms)
+- Candidate Day 5: http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d (1111ms)
+ignored aborted requests:
+- GET http://localhost:3000/api/backend/candidate/session/2b8a38ad70c4cfc9464010c38743939d/review: net::ERR_ABORTED; Navigation-induced browser abort while moving between deliberate route states.

@@ -17,6 +17,7 @@ import { mapRubricJsonToRows } from '@/features/talent-partner/trial-management/
 import { EvaluationRubricTable } from '@/features/talent-partner/trial-management/preview/EvaluationRubricTable';
 import { useNotifications } from '@/shared/notifications';
 import Button from '@/shared/ui/Button';
+import { LoadingSkeletonBlock } from '@/shared/ui/LoadingSkeletonBlock';
 import { MarkdownRenderer } from '@/shared/ui/MarkdownRenderer';
 
 const DEFAULT_CADENCE: { day: number; title: string; fallback: string }[] = [
@@ -196,8 +197,12 @@ export function TrialPreviewContent({ trialId }: Props) {
 
   if (loading && !detail) {
     return (
-      <div className="py-16 text-center text-sm text-secondary">
-        Loading Trial…
+      <div className="py-16">
+        <LoadingSkeletonBlock
+          label="Preparing Trial preview"
+          className="mx-auto max-w-2xl rounded-lg border border-subtle bg-elevated p-6 shadow-sm"
+          lines={4}
+        />
       </div>
     );
   }

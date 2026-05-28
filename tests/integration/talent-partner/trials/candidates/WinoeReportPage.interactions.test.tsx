@@ -19,7 +19,7 @@ describe('WinoeReportPage interactions', () => {
   it('wires print button to window.print', async () => {
     const printSpy = jest.spyOn(window, 'print').mockImplementation(() => {});
     setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? jsonResponse(READY_PAYLOAD)
         : textResponse('Not found', 404),
     );
@@ -34,7 +34,7 @@ describe('WinoeReportPage interactions', () => {
 
   it('keeps the share modal open when clicking inside and closes from the close button', async () => {
     setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? jsonResponse(READY_PAYLOAD)
         : textResponse('Not found', 404),
     );

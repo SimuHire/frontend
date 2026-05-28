@@ -22,7 +22,14 @@ function BenchmarksCompareFallback() {
           </p>
         </header>
         <div className="rounded border border-subtle bg-elevated p-4">
-          <p className="text-sm text-secondary">Loading comparison...</p>
+          <div
+            className="space-y-2"
+            role="status"
+            aria-label="Preparing benchmark comparison"
+          >
+            <div className="h-4 w-48 animate-pulse rounded bg-secondary" />
+            <div className="h-3 w-full animate-pulse rounded bg-secondary/80" />
+          </div>
         </div>
       </div>
     </div>

@@ -62,7 +62,9 @@ describe('MarkdownPreview extras', () => {
 describe('LazyMarkdownPreview loading fallback', () => {
   it('shows loading placeholder while dynamic import resolves', () => {
     render(<LazyMarkdownPreview content="preview me" />);
-    expect(screen.getByText(/Loading preview/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('status', { name: /Preparing markdown preview/i }),
+    ).toBeInTheDocument();
   });
 });
 

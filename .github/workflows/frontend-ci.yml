@@ -32,6 +32,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Check active-code legacy terminology
+        run: npm run check:legacy
+
   test:
     name: Tests
     runs-on: ubuntu-latest
@@ -49,6 +52,9 @@ jobs:
 
       - name: Run tests
         run: npm run test:ci
+
+      - name: Check active-code legacy terminology
+        run: npm run check:legacy
 
       - name: Check coverage thresholds
         run: node scripts/checkCoverage.js

@@ -16,11 +16,11 @@ function baseState(
 
 export const INITIAL_WINOE_REPORT_STATE: WinoeReportState = baseState(
   'not_generated',
-  'Loading Winoe Report...',
+  'Preparing Winoe Report.',
 );
 
 export function generatingState(
-  message = 'Generating Winoe Report...',
+  message = 'Generating Winoe Report.',
 ): WinoeReportState {
   return baseState('generating', message);
 }

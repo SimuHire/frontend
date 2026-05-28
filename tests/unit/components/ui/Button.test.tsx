@@ -28,15 +28,15 @@ describe('Button', () => {
     expect(spans[spans.length - 1]).toHaveTextContent('r');
   });
 
-  it('disables while loading and shows loading text', () => {
+  it('disables while loading and exposes status dots', () => {
     render(
       <Button loading disabled>
         Submit
       </Button>,
     );
 
-    const btn = screen.getByRole('button', { name: /loading/i });
+    const btn = screen.getByRole('button', { name: /working/i });
     expect(btn).toBeDisabled();
-    expect(btn).toHaveTextContent('Loading…');
+    expect(btn).not.toHaveTextContent('Loading…');
   });
 });

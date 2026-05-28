@@ -1,0 +1,225 @@
+{
+  "summary": {
+    "run": "Final release-clean route-family acceptance",
+    "startIso": "2026-05-28T02:23:44.005Z",
+    "endIso": "2026-05-28T02:24:04.318Z",
+    "durationMs": 20313,
+    "durationSeconds": 20,
+    "routes": [
+      {
+        "label": "Release clean login Talent Partner",
+        "url": "http://localhost:3000/talent-partner/trials",
+        "ms": 1149
+      },
+      {
+        "label": "Talent Partner dashboard",
+        "url": "http://localhost:3000/talent-partner/trials",
+        "ms": 999
+      },
+      {
+        "label": "Trial creation",
+        "url": "http://localhost:3000/talent-partner/trials/new",
+        "ms": 974
+      },
+      {
+        "label": "Trial preview",
+        "url": "http://localhost:3000/talent-partner/trials/3/preview",
+        "ms": 1042
+      },
+      {
+        "label": "Trial detail",
+        "url": "http://localhost:3000/talent-partner/trials/3",
+        "ms": 1112
+      },
+      {
+        "label": "Submission Review",
+        "url": "http://localhost:3000/talent-partner/trials/2/candidates/3/submission",
+        "ms": 1059
+      },
+      {
+        "label": "Winoe Report",
+        "url": "http://localhost:3000/talent-partner/trials/2/candidates/3/winoe-report",
+        "ms": 1074
+      },
+      {
+        "label": "Benchmarks",
+        "url": "http://localhost:3000/talent-partner/benchmarks",
+        "ms": 1011
+      },
+      {
+        "label": "Settings",
+        "url": "http://localhost:3000/talent-partner/settings",
+        "ms": 961
+      },
+      {
+        "label": "Release clean login Candidate",
+        "url": "http://localhost:3000/candidate/portal",
+        "ms": 1000
+      },
+      {
+        "label": "Candidate portal",
+        "url": "http://localhost:3000/candidate/portal",
+        "ms": 1009
+      },
+      {
+        "label": "Candidate schedule/start",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1050
+      },
+      {
+        "label": "Candidate completion",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1019
+      },
+      {
+        "label": "Read-only review",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d/review",
+        "ms": 1181
+      },
+      {
+        "label": "Candidate Day 1",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1108
+      },
+      {
+        "label": "Candidate Day 2",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1115
+      },
+      {
+        "label": "Candidate Day 3",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1101
+      },
+      {
+        "label": "Candidate Day 4",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1234
+      },
+      {
+        "label": "Candidate Day 5",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1111
+      }
+    ],
+    "consoleErrors": 0,
+    "requestFailures": 0,
+    "ignoredAbortedRequests": 1,
+    "httpFailures": 0,
+    "verdict": "PASS"
+  },
+  "log": {
+    "name": "Final release-clean route-family acceptance",
+    "consoleEntries": [],
+    "requestFailures": [],
+    "ignoredAbortedRequests": [
+      {
+        "method": "GET",
+        "url": "http://localhost:3000/api/backend/candidate/session/2b8a38ad70c4cfc9464010c38743939d/review",
+        "resourceType": "fetch",
+        "failureText": "net::ERR_ABORTED",
+        "explanation": "Navigation-induced browser abort while moving between deliberate route states."
+      }
+    ],
+    "httpFailures": [],
+    "routes": [
+      {
+        "label": "Release clean login Talent Partner",
+        "url": "http://localhost:3000/talent-partner/trials",
+        "ms": 1149
+      },
+      {
+        "label": "Talent Partner dashboard",
+        "url": "http://localhost:3000/talent-partner/trials",
+        "ms": 999
+      },
+      {
+        "label": "Trial creation",
+        "url": "http://localhost:3000/talent-partner/trials/new",
+        "ms": 974
+      },
+      {
+        "label": "Trial preview",
+        "url": "http://localhost:3000/talent-partner/trials/3/preview",
+        "ms": 1042
+      },
+      {
+        "label": "Trial detail",
+        "url": "http://localhost:3000/talent-partner/trials/3",
+        "ms": 1112
+      },
+      {
+        "label": "Submission Review",
+        "url": "http://localhost:3000/talent-partner/trials/2/candidates/3/submission",
+        "ms": 1059
+      },
+      {
+        "label": "Winoe Report",
+        "url": "http://localhost:3000/talent-partner/trials/2/candidates/3/winoe-report",
+        "ms": 1074
+      },
+      {
+        "label": "Benchmarks",
+        "url": "http://localhost:3000/talent-partner/benchmarks",
+        "ms": 1011
+      },
+      {
+        "label": "Settings",
+        "url": "http://localhost:3000/talent-partner/settings",
+        "ms": 961
+      },
+      {
+        "label": "Release clean login Candidate",
+        "url": "http://localhost:3000/candidate/portal",
+        "ms": 1000
+      },
+      {
+        "label": "Candidate portal",
+        "url": "http://localhost:3000/candidate/portal",
+        "ms": 1009
+      },
+      {
+        "label": "Candidate schedule/start",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1050
+      },
+      {
+        "label": "Candidate completion",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1019
+      },
+      {
+        "label": "Read-only review",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d/review",
+        "ms": 1181
+      },
+      {
+        "label": "Candidate Day 1",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1108
+      },
+      {
+        "label": "Candidate Day 2",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1115
+      },
+      {
+        "label": "Candidate Day 3",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1101
+      },
+      {
+        "label": "Candidate Day 4",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1234
+      },
+      {
+        "label": "Candidate Day 5",
+        "url": "http://localhost:3000/candidate/session/2b8a38ad70c4cfc9464010c38743939d",
+        "ms": 1111
+      }
+    ],
+    "controls": [],
+    "observations": []
+  }
+}

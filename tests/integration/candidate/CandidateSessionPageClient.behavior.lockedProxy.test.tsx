@@ -8,6 +8,7 @@ import {
   restoreFetch,
   sampleWindows,
 } from './CandidateSessionPageClient.behavior.testlib';
+import { STORAGE_KEY } from '@/features/candidate/session/state/state';
 import { jsonResponse } from '../../setup/responseHelpers';
 
 describe('CandidateSessionPage auth flow locked bootstrap and backend proxy', () => {
@@ -46,6 +47,83 @@ describe('CandidateSessionPage auth flow locked bootstrap and backend proxy', ()
     expect(screen.queryByText(/Codespace/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Day 1 editor/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Start trial/i })).toBeNull();
+    expect(
+      fetchMock.mock.calls.find(([url]) =>
+        String(url).includes('/current_task'),
+      ),
+    ).toBeUndefined();
+  });
+
+  it('renders scheduled pre-day state for in-progress bootstrap without surfacing current-task 409', async () => {
+    sessionStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        inviteToken: 'pre-day-token',
+        candidateSessionId: 655,
+        bootstrap: null,
+        started: true,
+        taskState: {
+          isComplete: false,
+          completedAt: null,
+          completedTaskIds: [],
+          currentTask: {
+            id: 10,
+            dayIndex: 1,
+            type: 'design',
+            title: 'Stale Day 1 task',
+            description: 'Persisted from an earlier local run',
+            recordedSubmission: null,
+            cutoffCommitSha: null,
+            cutoffAt: null,
+          },
+        },
+      }),
+    );
+    fetchMock.mockImplementation(async (url: RequestInfo | URL) => {
+      const path = String(url);
+      if (path.endsWith('/candidate/session/pre-day-token')) {
+        return jsonResponse(
+          baseSession({
+            candidateSessionId: 655,
+            status: 'in_progress',
+            scheduledStartAt: '2099-01-01T14:00:00Z',
+            candidateTimezone: 'America/New_York',
+            dayWindows: sampleWindows,
+            scheduleLockedAt: '2098-12-01T14:00:00Z',
+            currentDayWindow: {
+              ...sampleWindows[0],
+              state: 'upcoming',
+            },
+          }),
+        );
+      }
+      if (path.includes('/current_task')) {
+        return jsonResponse(
+          {
+            detail: 'Trial has not started yet.',
+            errorCode: 'SCHEDULE_NOT_STARTED',
+            retryable: true,
+            details: {
+              startAt: '2099-01-01T14:00:00Z',
+              windowStartAt: '2099-01-01T14:00:00Z',
+              windowEndAt: '2099-01-01T22:00:00Z',
+            },
+          },
+          409,
+        );
+      }
+      throw new Error(`Unexpected fetch ${path}`);
+    });
+    renderSessionPage('pre-day-token');
+    expect(
+      await screen.findByText(/Almost there — your Trial is scheduled/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Staff Engineer Trial|Infra Trial/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/5-day schedule preview/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Unable to load trial/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Project Brief/i)).not.toBeInTheDocument();
     expect(
       fetchMock.mock.calls.find(([url]) =>
         String(url).includes('/current_task'),

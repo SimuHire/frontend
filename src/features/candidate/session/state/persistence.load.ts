@@ -1,6 +1,7 @@
 import { STORAGE_KEY } from './state';
 import type { PersistedState, ReducerPair } from './types';
 import { activeRouteToken } from './persistence.routeToken';
+import { isScheduleLocked } from '../utils/scheduleUtils';
 
 function normalizePersistedTaskState(
   value: unknown,
@@ -63,15 +64,20 @@ export function loadPersistedState(dispatch: ReducerPair['dispatch']) {
 
     if (routeToken === null) return;
 
-    if (parsed?.bootstrap) {
+    const persistedBootstrap = parsed?.bootstrap;
+    if (persistedBootstrap) {
       dispatch({
         type: 'SET_BOOTSTRAP',
-        bootstrap: parsed.bootstrap as NonNullable<PersistedState['bootstrap']>,
+        bootstrap: persistedBootstrap as NonNullable<
+          PersistedState['bootstrap']
+        >,
       });
     }
     if (typeof parsed?.started === 'boolean') {
       dispatch({ type: 'SET_STARTED', started: parsed.started });
     }
+    if (isScheduleLocked(persistedBootstrap)) return;
+
     const persistedTaskState = normalizePersistedTaskState(parsed?.taskState);
     if (persistedTaskState) {
       dispatch({

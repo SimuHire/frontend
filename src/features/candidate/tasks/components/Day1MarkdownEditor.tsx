@@ -8,6 +8,7 @@ import { Link } from '@tiptap/extension-link';
 import { Placeholder } from '@tiptap/extension-placeholder';
 import { Markdown } from '@tiptap/markdown';
 import { StarterKit } from '@tiptap/starter-kit';
+import { LoadingSkeletonBlock } from '@/shared/ui/LoadingSkeletonBlock';
 import { runDay1BubbleMenuAction } from './day1MarkdownEditorActions';
 import {
   applySlashCommand,
@@ -157,9 +158,11 @@ export function Day1MarkdownEditor({
 
   if (!editor) {
     return (
-      <div className="min-h-[480px] rounded-md border border-gray-200 bg-white p-4 text-sm text-gray-600">
-        Preparing editor…
-      </div>
+      <LoadingSkeletonBlock
+        label="Preparing editor"
+        className="min-h-[480px] rounded-md border border-gray-200 bg-white p-4"
+        lines={5}
+      />
     );
   }
 

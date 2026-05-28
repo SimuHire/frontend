@@ -48,13 +48,18 @@ export default function CandidateDashboardPage({
       </div>
 
       {loading ? (
-        <div className="mx-6 rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 p-10 text-center text-sm text-gray-600">
-          Loading your Trial…
+        <div
+          className="mx-6 rounded-2xl border border-dashed border-strong bg-elevated p-10"
+          role="status"
+          aria-label="Preparing your Trial"
+        >
+          <div className="mx-auto h-4 w-40 animate-pulse rounded bg-secondary" />
+          <div className="mx-auto mt-2 h-3 w-64 animate-pulse rounded bg-secondary/80" />
         </div>
       ) : null}
 
       {scheduleUnavailable ? (
-        <div className="mx-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="mx-6 rounded-md border border-wheat-200 bg-wheat-50 p-4 text-sm text-wheat-900">
           Scheduling isn&apos;t available from this link right now. If you
           already claimed your invite, open it from your email or contact your
           Talent Partner.

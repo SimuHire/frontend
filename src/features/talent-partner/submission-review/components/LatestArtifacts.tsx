@@ -29,8 +29,13 @@ export function LatestArtifacts({ day2, day3, loading = false }: Props) {
         </div>
       ) : null}
       {!hasLatest && loading ? (
-        <div className="mt-2 text-xs text-gray-600">
-          Loading latest Day 2 / Day 3 artifacts...
+        <div
+          className="mt-2 space-y-2"
+          role="status"
+          aria-label="Preparing latest Day 2 and Day 3 artifacts"
+        >
+          <div className="h-3 w-56 animate-pulse rounded bg-secondary" />
+          <div className="h-3 w-full animate-pulse rounded bg-secondary/80" />
         </div>
       ) : null}
     </div>
@@ -58,7 +63,11 @@ const Placeholder = ({ label }: { label: string }) => (
 );
 
 const LoadingPlaceholder = ({ label }: { label: string }) => (
-  <div className="rounded border border-dashed border-wheat-300 bg-wheat-50 p-3 text-sm text-wheat-900">
-    Loading {label} artifact...
+  <div
+    className="rounded border border-strong bg-secondary/40 p-3"
+    role="status"
+    aria-label={`Preparing ${label} artifact`}
+  >
+    <div className="h-4 w-32 animate-pulse rounded bg-secondary" />
   </div>
 );

@@ -98,7 +98,7 @@ test.describe('Candidate Critical Journey (flow-qa mocked)', () => {
       taskId: 4,
     });
 
-    await page.goto(`/candidate-sessions/${QA_INVITE_TOKEN}`);
+    await page.goto(`/candidate/session/${QA_INVITE_TOKEN}`);
     const startButton = page.getByRole('button', { name: /start trial/i });
     const day4Heading = page.getByText(/^day 4 • handoff$/i);
     const startVisible = await startButton

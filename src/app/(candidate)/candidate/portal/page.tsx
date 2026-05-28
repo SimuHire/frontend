@@ -18,8 +18,14 @@ export default async function CandidatePortalRoute() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 text-center text-gray-600">
-          Loading your portal…
+        <div
+          className="mx-auto max-w-3xl space-y-3 p-8"
+          role="status"
+          aria-label="Preparing candidate portal"
+        >
+          <div className="h-6 w-48 animate-pulse rounded bg-secondary" />
+          <div className="h-4 w-full animate-pulse rounded bg-secondary/80" />
+          <div className="h-4 w-3/4 animate-pulse rounded bg-secondary/80" />
         </div>
       }
     >

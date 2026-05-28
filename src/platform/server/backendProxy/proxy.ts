@@ -54,6 +54,7 @@ export async function proxyToBackend(
         .toLowerCase();
       if (devUserEmail) {
         headers['x-dev-user-email'] = devUserEmail;
+        headers['x-winoe-dev-qa-auth'] = '1';
       }
     }
   }

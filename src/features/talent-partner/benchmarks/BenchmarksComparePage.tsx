@@ -8,6 +8,7 @@ import {
   type BenchmarkCompareCandidate,
 } from '../api/benchmarksApi';
 import { Card } from '@/shared/ui/Card';
+import { LoadingSkeletonBlock } from '@/shared/ui/LoadingSkeletonBlock';
 import { InlineBadge } from '@/shared/ui/InlineBadge';
 import { StatusPill } from '@/shared/ui/StatusPill';
 import type { StatusPillTone } from '@/shared/status/types';
@@ -433,7 +434,7 @@ export default function BenchmarksComparePage() {
           />
         ) : loadState.status === 'loading' ? (
           <Card>
-            <p className="text-sm text-secondary">Loading comparison…</p>
+            <LoadingSkeletonBlock label="Preparing benchmark comparison" />
           </Card>
         ) : loadState.status === 'error' ? (
           <BenchmarksCompareError

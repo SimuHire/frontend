@@ -69,6 +69,14 @@ export const METHOD_RULES: MethodRule[] = [
     methods: ['POST'],
   },
   {
+    pattern: /^candidate_trials\/[^/]+\/winoe_report$/,
+    methods: ['GET', 'HEAD'],
+  },
+  {
+    pattern: /^candidate_trials\/[^/]+\/winoe_report\/generate$/,
+    methods: ['POST'],
+  },
+  {
     pattern: /^candidate_sessions\/[^/]+\/winoe_report$/,
     methods: ['GET', 'HEAD'],
   },

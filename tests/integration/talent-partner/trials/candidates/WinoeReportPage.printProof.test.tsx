@@ -21,7 +21,7 @@ describe('WinoeReportPage print-proof artifact', () => {
 
   it('writes a print-proof HTML artifact with talent_partner shell + winoe report tree', async () => {
     setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? jsonResponse({
             ...READY_PAYLOAD,
             report: {

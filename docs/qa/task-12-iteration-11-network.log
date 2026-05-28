@@ -1,0 +1,24 @@
+Task 12 Iteration 11 targeted network verification
+Date: 2026-05-27
+
+Candidate dev QA login:
+0. [GET] http://localhost:3000/api/dev/qa-login?role=candidate&email=winoecandidate@gmail.com&returnTo=%2Fcandidate%2Fsession%2F2b8a38ad70c4cfc9464010c38743939d => [307] Temporary Redirect
+
+Pre-day route:
+35. [GET] http://localhost:3000/api/backend/candidate/session/2b8a38ad70c4cfc9464010c38743939d => [200] OK
+- No browser request to /api/backend/candidate/session/91/current_task occurred before the scheduled start.
+- No expected-lifecycle failed resource was recorded.
+
+Day 1 route after admin day-window control:
+45. [GET] http://localhost:3000/api/backend/candidate/session/91/current_task => [200] OK
+46. [GET] http://localhost:3000/api/backend/tasks/326/draft => [200] OK
+- Draft response header: x-winoe-upstream-status: 404
+- Draft response body: null
+- No expected-lifecycle failed resource was recorded.
+
+Direct backend strict checks:
+- [GET] http://localhost:8000/api/candidate/session/95/current_task => [409] Conflict, errorCode=SCHEDULE_NOT_STARTED
+- [GET] http://localhost:8000/api/tasks/326/draft => [404] Not Found, errorCode=DRAFT_NOT_FOUND
+- [GET] http://localhost:8000/api/candidate/session/91/current_task as other@example.com => [403] Forbidden, errorCode=CANDIDATE_INVITE_EMAIL_MISMATCH
+
+Note: 44 static requests not shown, run with "static" option to see them.

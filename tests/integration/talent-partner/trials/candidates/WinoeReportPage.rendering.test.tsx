@@ -19,7 +19,7 @@ describe('WinoeReportPage rendering', () => {
   it('renders exactly eight top-level dimensions for the seeded Sarah Chen report shape', async () => {
     const user = userEvent.setup();
     setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? jsonResponse({
             status: 'ready',
             generatedAt: '2026-03-11T18:00:00.000Z',
@@ -194,7 +194,7 @@ describe('WinoeReportPage rendering', () => {
 
   it('toggles print-mode class while mounted', () => {
     setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? jsonResponse({ status: 'not_started' })
         : textResponse('Not found', 404),
     );
@@ -231,7 +231,7 @@ describe('WinoeReportPage rendering', () => {
       },
     };
     setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? jsonResponse(readyPayload)
         : textResponse('Not found', 404),
     );
@@ -311,7 +311,7 @@ describe('WinoeReportPage rendering', () => {
 
   it('renders AI-disabled day cards as human-review-required placeholders', async () => {
     setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? jsonResponse({
             status: 'ready',
             generatedAt: '2026-03-11T18:00:00.000Z',
@@ -357,7 +357,7 @@ describe('WinoeReportPage rendering', () => {
 
   it('renders warning banner when payload includes warnings', async () => {
     setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? jsonResponse({
             ...READY_PAYLOAD,
             warnings: ['Some artifacts were unavailable during evaluation.'],

@@ -36,9 +36,11 @@ describe('GlobalError component', () => {
     const resetMock = jest.fn();
     const error = new Error('Test error message');
     render(<GlobalErrorContent error={error} reset={resetMock} />);
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     expect(
-      screen.getByText(/We hit an unexpected error while loading this page/i),
+      screen.getByText('Something went wrong on our end.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/We've been notified. Try again in a moment./i),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Retry/i })).toBeInTheDocument();
     expect(

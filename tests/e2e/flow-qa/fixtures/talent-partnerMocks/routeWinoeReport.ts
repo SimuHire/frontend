@@ -7,7 +7,7 @@ export async function handleWinoeReportRoutes(
   const { route, method, pathname, data } = ctx;
 
   if (
-    /^\/api\/candidate_sessions\/([^/]+)\/winoe_report$/.test(pathname) &&
+    /^\/api\/candidate_trials\/([^/]+)\/winoe_report$/.test(pathname) &&
     method === 'GET'
   ) {
     await fulfillJson(route, data.winoeReportPayload);
@@ -15,12 +15,16 @@ export async function handleWinoeReportRoutes(
   }
 
   if (
-    /^\/api\/candidate_sessions\/([^/]+)\/winoe_report\/generate$/.test(
+    /^\/api\/candidate_trials\/([^/]+)\/winoe_report\/generate$/.test(
       pathname,
     ) &&
     method === 'POST'
   ) {
-    await fulfillJson(route, { jobId: 'fit-job-1', status: 'queued' }, 202);
+    await fulfillJson(
+      route,
+      { jobId: 'winoe-report-job-1', status: 'queued' },
+      202,
+    );
     return true;
   }
 

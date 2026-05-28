@@ -17,19 +17,15 @@ type Params = {
 export function resolveCandidateSessionView({
   view,
   hasTaskData,
-  started,
   bootstrap,
   scheduleResponseWindowCount,
   clockNowMs,
 }: Params): ViewState {
+  const canUsePersistedTaskData = hasTaskData && bootstrap !== null;
   const resolvedView: ViewState =
-    (view === 'loading' || view === 'starting') && hasTaskData
+    (view === 'loading' || view === 'starting') && canUsePersistedTaskData
       ? 'running'
       : view;
-
-  if (resolvedView === 'locked' && (hasTaskData || started)) {
-    return 'running';
-  }
 
   const hasSchedule =
     hasScheduleConfigured(bootstrap) ||
@@ -46,10 +42,7 @@ export function resolveCandidateSessionView({
     'scheduleSubmitting',
   ];
 
-  const shouldKeepLocked =
-    !started &&
-    resolvedView !== 'locked' &&
-    lockEligibleViews.includes(resolvedView) &&
+  const scheduleLocked =
     hasSchedule &&
     isScheduleLocked(
       {
@@ -61,5 +54,13 @@ export function resolveCandidateSessionView({
       clockNowMs,
     );
 
-  return shouldKeepLocked ? 'locked' : resolvedView;
+  if (scheduleLocked && lockEligibleViews.includes(resolvedView)) {
+    return 'locked';
+  }
+
+  if (resolvedView === 'locked' && hasTaskData) {
+    return 'running';
+  }
+
+  return resolvedView;
 }

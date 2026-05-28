@@ -19,7 +19,9 @@ describe('CandidateDashboardPage content states', () => {
   it('shows loading state initially', async () => {
     listCandidateInvitesMock.mockImplementation(() => new Promise(() => {}));
     await renderDashboardPage();
-    expect(screen.getByText(/Loading your Trial/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('status', { name: /Preparing your Trial/i }),
+    ).toBeInTheDocument();
   });
 
   it('displays signed-in email when provided', async () => {

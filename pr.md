@@ -1,84 +1,101 @@
-# Task 11: Surface verified report evidence and finalized candidate states
+# Task 12: Final YC Demo Polish, Winoe Brand Sweep, QA Evidence, and Production-Safe Edge States
 
 ## Summary
 
-- Surfaces backend-validated Winoe Report evidence in the Talent Partner report experience.
-- Updates candidate portal report states so pending, finalized/reviewed, and Talent Partner-shared reports are distinct.
-- Gates internal AI/runtime controls behind backend-provided viewer capabilities.
-- Aligns frontend normalization with backend citation payload fields used by the Task 11 Evidence Trail.
-- Task 11 is code ready and approved for QA signoff / PR prep based on Iteration 5 verification.
+This frontend PR finalizes Task 12 from the frontend side. Final QA status is PASS, all demo-visible surfaces were reviewed, and screenshots, dark mode, mobile/tablet, edge states, and dry runs passed.
 
-## Frontend Implementation Details
+`/qa/edge-states` was hardened to be production-closed, Winoe vocabulary is enforced, and legacy terminology checks passed. Final QA covered Winoe AI Trial surfaces including Talent Partner flows, Winoe Report, Winoe Score, Evidence Trail, Project Brief, Calibration, Benchmarks, and Handoff + Demo.
 
-- Winoe Report Evidence Trail now renders backend report-level citation payloads.
-- Evidence empty-state only appears when citations are truly absent.
-- Frontend normalizers now support backend citation fields:
-  - `citations`
-  - `evidenceTrail`
-  - `artifact_type`
-  - `artifact_ref`
-  - `dimension`
-  - `excerpt`
-- Frontend state handling supports candidate finalized report fields returned by the backend.
-- UI visibility for internal AI/runtime controls is derived from `viewerCapabilities.canManageInternalAiControls`.
+Approved Iteration 16 frontend SHA: `4c7161b395c1f972f78a22ab06bb28bed53d9479`.
 
-## Talent Partner Report UX Changes
+## Scope
 
-- The Talent Partner report view renders persisted report-level citations in the Winoe Report Evidence Trail.
-- Citation rendering supports backend Evidence Trail payload shapes instead of relying only on older normalized frontend-only fields.
-- The Evidence Trail empty-state is reserved for reports where citations are truly absent.
-- Manual QA covered the Report Evidence Trail UX against deterministic backend data.
+- Final Winoe brand and terminology verification.
+- Settings, 404, 500, offline, invite states, and edge-state polish.
+- Candidate pre-day/current task and Day 1 draft browser-clean behavior from prior iterations.
+- Final screenshot audit.
+- Dark mode, mobile 375px, and tablet 768px validation.
+- Release-clean console and network validation.
+- Timed Talent Partner and candidate dry runs.
+- QA edge-state route production hardening.
 
-## Candidate Portal Changes
+## Frontend Implementation Changes
 
-- Candidate portal distinguishes:
-  - Pending report.
-  - Finalized/reviewed report.
-  - Report shared with Talent Partner.
-- Candidate copy does not imply Winoe makes hiring decisions.
-- Candidate copy says the Winoe Report and Evidence Trail were shared with the Talent Partner.
-- Manual QA covered candidate finalized state and invite persistence.
+- `src/app/qa/edge-states/page.tsx`
+  - Now uses a server-side production-closed gate.
+- `src/app/qa/edge-states/qaEdgeStatesGate.ts`
+  - New helper returns enabled only when `NODE_ENV !== 'production'`.
+- `tests/unit/app/qaEdgeStates.test.tsx`
+  - Covers local/test access, production not-found behavior, production closure even with public QA flag, branded 500, and toast behavior.
+- QA docs and evidence updates:
+  - `docs/qa/task-12-final-manual-qa.md`
+  - `docs/screenshots/v4-final/README.md`
+  - Iteration 16 console/network/dry-run logs and JSON evidence.
+- `pr.md`
 
-## Trial Detail / Internal Controls Gating
+## Frontend Validation
 
-- Talent Partner Trial detail gates internal AI/runtime controls behind `viewerCapabilities.canManageInternalAiControls`.
-- Regular Talent Partner users no longer see internal AI override/runtime controls.
-- Internal controls remain available only when the backend capability payload permits them.
+- `npx jest tests/unit/app/qaEdgeStates.test.tsx --runInBand` PASS.
+- `npm run lint` PASS.
+- `npm run typecheck` PASS.
+- `npm run check:legacy` PASS.
+- `npm run build` PASS.
+- `./precommit.sh` PASS: 539 suites / 1736 tests passed, build passed.
+- `git diff --check` PASS.
+- Requested Prettier check PASS.
 
-## Tests Run
+## Screenshot and Visual QA
 
-- Frontend precommit passed.
-- Backend precommit passed as part of the completed Task 11 verification.
-- Frontend tests were added or updated for:
-  - Winoe Report citation rendering.
-  - Evidence empty-state behavior.
-  - Candidate finalized/pending portal states.
-  - Internal AI controls visibility.
+- 50/50 required screenshots PASS.
+- 12/12 edge screenshots PASS.
+- Dark mode PASS.
+- Mobile 375px PASS.
+- Tablet 768px PASS.
+- No stale brand.
+- No retired terminology.
+- No raw Tailwind blue/indigo blockers.
+- No production emoji icons.
+- No default Next.js error pages.
+- No raw loading text on demo-visible surfaces.
 
-## Manual QA Evidence
+## Browser QA
 
-Iteration 5 QA reported full local manual QA passed with:
+- Talent Partner timed dry run PASS, 12 seconds.
+- Candidate timed dry run PASS, 34 seconds.
+- Candidate dry run covered portal, schedule/start, pre-day, Day 1, Day 2, Day 3, Day 4, Day 5, completion, and read-only review.
+- Release-clean browser console/network PASS.
+- Zero browser errors.
+- Zero non-aborted failed resources.
+- One navigation-induced `net::ERR_ABORTED` was documented and ignored because it was caused by deliberate route movement, with no visible product issue.
 
-- Backend API.
-- Backend worker.
-- Frontend.
-- Database.
-- Admin endpoints.
-- Notification audit.
-- Report Evidence Trail UX.
-- Candidate finalized state.
-- Invite persistence.
-- DLQ/retry.
-- Health/readiness.
+## Production Safety
 
-## Known Limitations / Accepted Tradeoffs
+- `/qa/edge-states` appears in production build route list but is server-side production-closed.
+- `NODE_ENV=production` returns not-found behavior.
+- `NEXT_PUBLIC_WINOE_ENABLE_QA_EDGE_STATES=1` does not expose the route in production.
+- Build passed with the hardened gate.
 
-- Local QA used deterministic demo backend data.
-- Live email/provider rendering was not exercised from frontend.
-- Operator-only admin UI was not added; Task 11 operator tooling is API-first.
+## Risks / Known Limitations
 
-## Risk Notes
+- Local Auth0 username/password submission was unavailable locally; dev QA login was used and documented with `winoetalentpartner@gmail.com` and `winoecandidate@gmail.com`.
+- `/qa/edge-states` remains in route list but is production-closed by tested server-side gate.
+- Final release tag must wait until both PRs are merged and CI is green.
 
-- Report Evidence Trail rendering depends on backend citation payloads remaining present and normalized across supported field names.
-- Candidate report state copy depends on finalized/shared state fields from the backend.
-- Internal AI/runtime controls must remain gated by `viewerCapabilities.canManageInternalAiControls` to avoid exposing operator-only controls to regular Talent Partner users.
+## Review Checklist
+
+- [x] `./precommit.sh` PASS.
+- [x] Legacy guard PASS.
+- [x] Production build PASS.
+- [x] QA edge route production-closed PASS.
+- [x] Screenshot audit PASS.
+- [x] Edge states PASS.
+- [x] Dark/mobile/tablet PASS.
+- [x] Timed dry runs PASS.
+- [x] Release-clean console/network PASS.
+- [x] Release tag not created yet.
+
+## Final Status
+
+Task 12 QA status: PASS
+
+Manual local QA verified both backend and frontend servers, browser flows for Talent Partner and candidate credentials, legacy terminology guards, security boundaries, production safety guards, branded edge states, media retention, and the v4-final screenshot audit. This PR is ready for final review and release-tag preparation.

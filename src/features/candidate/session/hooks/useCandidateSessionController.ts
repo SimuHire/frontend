@@ -94,8 +94,7 @@ export function useCandidateSessionController(token: string) {
       runtime.schedule.scheduleResponseWindows.length,
     clockNowMs: runtime.schedule.clockNowMs,
   });
-  const finalView =
-    started && resolvedView === 'locked' ? 'running' : resolvedView;
+  const finalView = resolvedView;
   return buildCandidateSessionControllerResult({
     finalView,
     state,

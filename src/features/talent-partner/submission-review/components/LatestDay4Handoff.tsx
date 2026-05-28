@@ -25,8 +25,13 @@ export function LatestDay4Handoff({
         {artifact ? (
           <LazyArtifactCard artifact={artifact} />
         ) : loading ? (
-          <div className="rounded border border-dashed border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
-            Loading Day 4 Handoff + Demo details...
+          <div
+            className="rounded border border-dashed border-strong bg-secondary/40 p-3"
+            role="status"
+            aria-label="Preparing Day 4 Handoff + Demo details"
+          >
+            <div className="h-4 w-56 animate-pulse rounded bg-secondary" />
+            <div className="mt-2 h-3 w-full animate-pulse rounded bg-secondary/80" />
           </div>
         ) : hasHandoffSubmission ? (
           <div className="rounded border border-dashed border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
