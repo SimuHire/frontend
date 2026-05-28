@@ -1,10 +1,22 @@
 {
   "name": "Winoe AI",
-  "short_name": "Winoe AI",
-  "description": "Real-work Trials and artifact-backed hiring evidence for Talent Partners.",
+  "short_name": "Winoe",
+  "description": "Winoe AI real-work Trials, Winoe Reports, Winoe Scores, and Evidence Trails for Talent Partners.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#111827",
-  "icons": []
+  "background_color": "#fbf7ee",
+  "theme_color": "#c9a66b",
+  "icons": [
+    {
+      "src": "/winoe-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    }
+  ]
 }

@@ -8,6 +8,7 @@ export type InviteInitParams = {
   setCandidateSessionId: (id: number | null) => void;
   setBootstrap: (b: CandidateSessionBootstrapResponse) => void;
   clearTaskError: () => void;
+  clearTaskData: () => void;
   setView: (v: ViewState) => void;
   setAuthMessage: (m: string | null) => void;
   setErrorMessage: (m: string | null) => void;

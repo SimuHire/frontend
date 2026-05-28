@@ -89,6 +89,7 @@ export function createInviteInit(params: InviteInitParams) {
         return;
       }
       if (isScheduleLocked(resp)) {
+        params.clearTaskData();
         params.setView('locked');
         params.markEnd('candidate:init', { status: 'locked' });
         return;

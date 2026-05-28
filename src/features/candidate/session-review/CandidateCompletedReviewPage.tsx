@@ -594,7 +594,7 @@ export default function CandidateCompletedReviewPage({ token }: Props) {
   if (reviewQuery.isLoading) {
     return (
       <ReviewShell
-        title="Loading completed Trial review"
+        title="Preparing completed Trial review"
         description="Fetching your completed Trial submissions."
       />
     );

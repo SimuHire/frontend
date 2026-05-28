@@ -1,5 +1,6 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/shared/ui/classnames';
+import LoadingDots from '@/shared/ui/LoadingDots';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'ghost';
@@ -46,7 +47,7 @@ export default function Button({
       {...rest}
     >
       {loading ? (
-        'Loading…'
+        <LoadingDots />
       ) : (
         <>
           {icon && iconPosition === 'left' ? (

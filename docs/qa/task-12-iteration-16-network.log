@@ -1,0 +1,19 @@
+## Talent Partner timed dry run
+requestFailures=0
+httpFailures=0
+ignoredAbortedRequests=0
+No non-aborted failed resources or HTTP 4xx/5xx browser resources recorded.
+
+## Candidate timed dry run
+requestFailures=0
+httpFailures=0
+ignoredAbortedRequests=1
+No non-aborted failed resources or HTTP 4xx/5xx browser resources recorded.
+ignoredAbort {"method":"GET","url":"http://localhost:3000/api/backend/candidate/session/2b8a38ad70c4cfc9464010c38743939d/review","resourceType":"fetch","failureText":"net::ERR_ABORTED","explanation":"Navigation-induced browser abort while moving between deliberate route states."}
+
+## Final release-clean route-family acceptance
+requestFailures=0
+httpFailures=0
+ignoredAbortedRequests=1
+No non-aborted failed resources or HTTP 4xx/5xx browser resources recorded.
+ignoredAbort {"method":"GET","url":"http://localhost:3000/api/backend/candidate/session/2b8a38ad70c4cfc9464010c38743939d/review","resourceType":"fetch","failureText":"net::ERR_ABORTED","explanation":"Navigation-induced browser abort while moving between deliberate route states."}

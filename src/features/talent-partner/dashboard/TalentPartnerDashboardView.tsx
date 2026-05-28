@@ -16,8 +16,13 @@ const InviteCandidateModal = dynamic(
     ssr: false,
     loading: () => (
       <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30">
-        <div className="rounded bg-elevated px-4 py-3 text-sm text-primary shadow">
-          Loading invite form…
+        <div
+          className="w-72 rounded bg-elevated px-4 py-3 shadow"
+          role="status"
+          aria-label="Preparing invite form"
+        >
+          <div className="h-4 w-36 animate-pulse rounded bg-secondary" />
+          <div className="mt-2 h-3 w-full animate-pulse rounded bg-secondary/80" />
         </div>
       </div>
     ),

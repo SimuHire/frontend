@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Button from '@/shared/ui/Button';
 import Input from '@/shared/ui/Input';
+import { WheatStalk } from '@/components/illustrations/WheatStalk';
 import { buildLoginHref } from '@/features/auth/authPaths';
 import { claimCandidateInvite } from '@/features/candidate/session/api/invitesApi';
 import { fetchInvitePublicSummary } from '@/features/candidate/invite/invitePublicApi';
@@ -51,21 +52,42 @@ function mapInviteQueryError(err: unknown): {
       err as {
         details?: {
           talentPartnerName?: string;
-          details?: { talentPartnerName?: string };
+          expiresAt?: string;
+          details?: { talentPartnerName?: string; expiresAt?: string };
         };
       }
     ).details;
     const talentPartnerName =
       details?.talentPartnerName ?? details?.details?.talentPartnerName ?? '';
+    const expiresAt =
+      typeof details?.expiresAt === 'string'
+        ? details.expiresAt
+        : typeof details?.details?.expiresAt === 'string'
+          ? details.details.expiresAt
+          : null;
     return {
       kind: 'expired',
-      message: inviteExpiredWithContact(talentPartnerName),
+      message: inviteExpiredWithContact(
+        talentPartnerName,
+        formatInviteDate(expiresAt),
+      ),
     };
   }
   if (status === 409) {
     return { kind: 'claimed', message: INVITE_ALREADY_CLAIMED_MESSAGE };
   }
   return { kind: 'invalid', message: INVITE_INVALID_MESSAGE };
+}
+
+function formatInviteDate(value: string | null): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
 }
 
 export function InviteClaimClient({ token, signedInEmail }: Props) {
@@ -163,30 +185,40 @@ export function InviteClaimClient({ token, signedInEmail }: Props) {
 
   if (summaryQuery.isPending) {
     return (
-      <div className="mx-auto max-w-md rounded-lg border border-gray-200 bg-white p-8 text-center text-gray-700 shadow-sm">
-        Checking your invite…
+      <div className="mx-auto max-w-md rounded-lg border border-strong bg-elevated p-8 shadow-sm">
+        <div className="mb-5 flex justify-center">
+          <WheatStalk className="h-12 w-12 text-wheat-600" />
+        </div>
+        <div className="space-y-3" aria-label="Checking invite" role="status">
+          <div className="h-4 w-40 rounded-full bg-secondary" />
+          <div className="h-3 w-full rounded-full bg-secondary" />
+          <div className="h-3 w-5/6 rounded-full bg-secondary" />
+        </div>
       </div>
     );
   }
 
   if (queryError) {
     return (
-      <div className="mx-auto max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="text-lg font-semibold text-gray-950">
+      <div className="mx-auto max-w-md rounded-lg border border-strong bg-elevated p-8 text-center shadow-sm">
+        <div className="mb-5 flex justify-center">
+          <WheatStalk className="h-14 w-14 text-wheat-600" />
+        </div>
+        <h1 className="text-xl font-semibold text-primary">
           {queryError.kind === 'expired'
             ? 'Invite expired'
             : queryError.kind === 'claimed'
               ? 'Already claimed'
               : 'Invite unavailable'}
         </h1>
-        <p className="mt-2 text-sm text-gray-700">{queryError.message}</p>
-        {queryError.kind === 'claimed' ? (
-          <div className="mt-6">
-            <a href={loginHref}>
-              <Button>Sign in to continue</Button>
-            </a>
-          </div>
-        ) : null}
+        <p className="mt-3 text-sm leading-6 text-secondary">
+          {queryError.message}
+        </p>
+        <div className="mt-6">
+          <a href={loginHref}>
+            <Button>Sign in →</Button>
+          </a>
+        </div>
       </div>
     );
   }
@@ -198,19 +230,22 @@ export function InviteClaimClient({ token, signedInEmail }: Props) {
   const role = summary.role?.trim() || 'your role';
 
   return (
-    <div className="mx-auto max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-      <h1 className="text-xl font-semibold text-gray-950">
-        Welcome to your Trial for {role} at {company}
+    <div className="mx-auto max-w-md rounded-lg border border-strong bg-elevated p-8 shadow-sm">
+      <div className="mb-5 flex justify-center">
+        <WheatStalk className="h-14 w-14 text-wheat-600" />
+      </div>
+      <h1 className="text-xl font-semibold text-primary">
+        Welcome to Winoe, your Trial for {role} at {company}
       </h1>
-      <p className="mt-2 text-sm text-gray-700">Let&apos;s set you up.</p>
+      <p className="mt-2 text-sm text-secondary">Let&apos;s set you up.</p>
       {!signedInEmail ? (
-        <p className="mt-4 text-sm text-gray-600">
+        <p className="mt-4 text-sm text-secondary">
           Continue will securely sign you in, then finish setup with the details
           below.
         </p>
       ) : null}
       <div className="mt-6 space-y-4">
-        <label className="block text-sm font-medium text-gray-800">
+        <label className="block text-sm font-medium text-primary">
           Full name
           <Input
             className="mt-1"
@@ -220,7 +255,7 @@ export function InviteClaimClient({ token, signedInEmail }: Props) {
             required
           />
         </label>
-        <label className="block text-sm font-medium text-gray-800">
+        <label className="block text-sm font-medium text-primary">
           Preferred display name (optional)
           <Input
             className="mt-1"
@@ -229,7 +264,7 @@ export function InviteClaimClient({ token, signedInEmail }: Props) {
             autoComplete="nickname"
           />
         </label>
-        <label className="block text-sm font-medium text-gray-800">
+        <label className="block text-sm font-medium text-primary">
           Timezone
           <Input
             className="mt-1"
@@ -240,14 +275,14 @@ export function InviteClaimClient({ token, signedInEmail }: Props) {
         </label>
       </div>
       {formError ? (
-        <p className="mt-4 text-sm text-red-700">{formError}</p>
+        <p className="mt-4 text-sm text-danger">{formError}</p>
       ) : null}
       <div className="mt-6">
         <Button onClick={onSubmit} disabled={claiming || !fullName.trim()}>
           {claiming ? 'Continuing…' : 'Continue'}
         </Button>
       </div>
-      <p className="mt-6 text-xs text-gray-500">
+      <p className="mt-6 text-xs text-tertiary">
         Your Trial is 5 days of focused work. You can start anytime in the next
         14 days.
       </p>

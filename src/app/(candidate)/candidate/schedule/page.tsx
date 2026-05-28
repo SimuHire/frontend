@@ -7,7 +7,14 @@ export default function CandidateSchedulePage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 text-center text-gray-600">Loading schedule…</div>
+        <div
+          className="mx-auto max-w-xl space-y-3 p-8"
+          role="status"
+          aria-label="Preparing schedule"
+        >
+          <div className="h-5 w-44 animate-pulse rounded bg-secondary" />
+          <div className="h-4 w-full animate-pulse rounded bg-secondary/80" />
+        </div>
       }
     >
       <CandidateScheduleRedirect />

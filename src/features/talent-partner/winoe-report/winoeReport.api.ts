@@ -11,7 +11,7 @@ export async function fetchCandidateWinoeReport(
 ): Promise<WinoeReportFetchOutcome> {
   const encodedId = encodeURIComponent(candidateSessionId);
   const payload = await talentPartnerBffClient.get<unknown>(
-    `/candidate_sessions/${encodedId}/winoe_report`,
+    `/candidate_trials/${encodedId}/winoe_report`,
     {
       cache: 'no-store',
       signal,
@@ -28,7 +28,7 @@ export async function generateCandidateWinoeReport(
 ): Promise<void> {
   const encodedId = encodeURIComponent(candidateSessionId);
   await talentPartnerBffClient.post<unknown>(
-    `/candidate_sessions/${encodedId}/winoe_report/generate`,
+    `/candidate_trials/${encodedId}/winoe_report/generate`,
     {},
     {
       cache: 'no-store',

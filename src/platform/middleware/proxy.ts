@@ -7,12 +7,14 @@ import {
   isNextResponse,
   normalizeAccessToken,
   redirectToLogin,
+  requiresProtectedAccess,
   shouldSkipAuth,
 } from '@/platform/auth/proxyUtils';
 import { modeForPath } from '@/platform/auth/routing';
 import { normalizeLogoutRedirect } from './redirects';
 import { buildResponder, startPerfTimer } from './perf';
 import { redirectSignedInHome, gateByRole } from './auth';
+import { authStartRateLimit } from './rateLimit';
 
 export const config = {
   matcher: [
@@ -45,6 +47,8 @@ export async function proxy(request: NextRequest) {
   const isApiPath = pathname === '/api' || pathname.startsWith('/api/');
   const logoutRedirect = normalizeLogoutRedirect(request);
   if (logoutRedirect) return logoutRedirect;
+  const authRateLimit = authStartRateLimit(request);
+  if (authRateLimit) return authRateLimit;
   const perfStart = startPerfTimer();
   const authResponse = await auth0.middleware(request);
   const responder = buildResponder({ authResponse, pathname, perfStart });
@@ -68,6 +72,9 @@ export async function proxy(request: NextRequest) {
   if (shouldSkipAuth(pathname)) {
     const homeRedirect = redirectSignedInHome(session, isRootOrLogin, request);
     if (homeRedirect) return responder(homeRedirect);
+    return responder(publicPassThrough());
+  }
+  if (!requiresProtectedAccess(pathname)) {
     return responder(publicPassThrough());
   }
   if (!session)

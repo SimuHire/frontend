@@ -14,8 +14,13 @@ const DeferredArtifactCard = dynamic<LazyArtifactCardProps>(
   {
     ssr: false,
     loading: () => (
-      <div className="rounded border border-gray-200 bg-white p-4 text-sm text-gray-600">
-        Loading submission artifact...
+      <div
+        className="rounded border border-strong bg-elevated p-4"
+        role="status"
+        aria-label="Preparing submission artifact"
+      >
+        <div className="h-4 w-44 animate-pulse rounded bg-secondary" />
+        <div className="mt-2 h-3 w-full animate-pulse rounded bg-secondary/80" />
       </div>
     ),
   },

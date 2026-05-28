@@ -1,14 +1,17 @@
 import dynamic from 'next/dynamic';
 import type { ComponentType } from 'react';
 import type { MarkdownPreviewProps } from '@/shared/ui/Markdown';
+import { LoadingSkeletonBlock } from '@/shared/ui/LoadingSkeletonBlock';
 
 const LazyMarkdownPreview = dynamic(
   () => import('@/shared/ui/Markdown').then((m) => m.MarkdownPreview),
   {
     loading: () => (
-      <div className="text-xs text-gray-500" aria-label="loading-markdown">
-        Loading preview…
-      </div>
+      <LoadingSkeletonBlock
+        label="Preparing markdown preview"
+        className="rounded-md border border-subtle bg-elevated p-3"
+        lines={2}
+      />
     ),
     ssr: false,
   },

@@ -91,6 +91,52 @@ describe('api utils helpers', () => {
     expect(resp.headers.get(BFF_HEADER)).toBe('dash');
   });
 
+  it('rejects cookie-authenticated state-changing BFF requests without same-origin evidence', async () => {
+    const { forwardBffWithAuth } = await importUtils();
+    const req = {
+      method: 'POST',
+      nextUrl: new URL('https://app.winoe.ai/api/submissions'),
+      headers: new Headers({ cookie: 'appSession=abc' }),
+    } as unknown as NextRequest;
+
+    const resp = await forwardBffWithAuth(
+      { path: '/api/submissions', method: 'POST' },
+      req,
+    );
+
+    expect(resp.status).toBe(403);
+    expect(resp.headers.get('x-request-id')).toBe('req-utils');
+    expect(mockRequireBffAuth).not.toHaveBeenCalled();
+  });
+
+  it('allows same-origin state-changing BFF requests to reach auth', async () => {
+    mockRequireBffAuth.mockResolvedValue({
+      ok: false,
+      response: NextResponse.json(
+        { message: 'auth required' },
+        { status: 401 },
+      ),
+      cookies: [],
+    });
+    const { forwardBffWithAuth } = await importUtils();
+    const req = {
+      method: 'POST',
+      nextUrl: new URL('https://app.winoe.ai/api/submissions'),
+      headers: new Headers({
+        cookie: 'appSession=abc',
+        origin: 'https://app.winoe.ai',
+      }),
+    } as unknown as NextRequest;
+
+    const resp = await forwardBffWithAuth(
+      { path: '/api/submissions', method: 'POST' },
+      req,
+    );
+
+    expect(resp.status).toBe(401);
+    expect(mockRequireBffAuth).toHaveBeenCalled();
+  });
+
   it('wraps upstream errors from forwardJson', async () => {
     mockRequireBffAuth.mockResolvedValue({
       ok: true,
@@ -121,6 +167,28 @@ describe('api utils helpers', () => {
     );
     expect(resp.status).toBe(403);
     expect(resp.headers.get('x-request-id')).toBe('req-utils');
+  });
+
+  it('rejects cookie-authenticated Winoe Report generation without same-origin evidence', async () => {
+    const { withTalentPartnerAuth } = await importUtils();
+    const req = {
+      method: 'POST',
+      nextUrl: new URL(
+        'https://app.winoe.ai/api/candidate_trials/2/winoe_report/generate',
+      ),
+      headers: new Headers({ cookie: 'appSession=abc' }),
+    } as unknown as NextRequest;
+
+    const handler = jest.fn();
+    const resp = await withTalentPartnerAuth(
+      req,
+      { tag: 'winoe-report-generate' },
+      handler,
+    );
+
+    expect(resp.status).toBe(403);
+    expect(handler).not.toHaveBeenCalled();
+    expect(mockRequireBffAuth).not.toHaveBeenCalled();
   });
 
   it('withTalentPartnerAuth merges cookies, tags success, and wraps handler errors', async () => {

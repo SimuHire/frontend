@@ -1,4 +1,5 @@
 import React from 'react';
+import { readFileSync } from 'fs';
 import { render } from '@testing-library/react';
 import { resetPageWrapperMocks } from './pageWrappers.testlib';
 
@@ -14,25 +15,25 @@ describe('route wrapper metadata', () => {
       default: RootLayout,
     } = await import('@/app/layout');
     expect(metadata?.title).toEqual({
-      default: 'Winoe AI | Real-work Trials for hiring',
-      template: '%s | Winoe AI',
+      default: 'Winoe AI - Real-work Trials for hiring',
+      template: 'Winoe AI - %s',
     });
     expect(metadata?.description).toBe(
-      'Winoe AI helps Talent Partners reveal the real hire through real-work Trials, Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
+      'Winoe AI helps Talent Partners run real-work Trials with Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
     );
     expect(metadata?.manifest).toBe('/manifest.json');
     expect(metadata?.openGraph).toMatchObject({
-      title: 'Winoe AI | Real-work Trials for hiring',
+      title: 'Winoe AI - Real-work Trials for hiring',
       description:
-        'Winoe AI helps Talent Partners reveal the real hire through real-work Trials, Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
+        'Winoe AI helps Talent Partners run real-work Trials with Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
       siteName: 'Winoe AI',
       type: 'website',
     });
     expect(metadata?.twitter).toMatchObject({
       card: 'summary_large_image',
-      title: 'Winoe AI | Real-work Trials for hiring',
+      title: 'Winoe AI - Real-work Trials for hiring',
       description:
-        'Winoe AI helps Talent Partners reveal the real hire through real-work Trials, Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
+        'Winoe AI helps Talent Partners run real-work Trials with Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
     });
     expect(viewport?.width).toBe('device-width');
 
@@ -70,13 +71,13 @@ describe('route wrapper metadata', () => {
       absolute: 'Winoe AI | Real-work Trials for hiring',
     });
     expect(marketingMeta?.description).toBe(
-      'Winoe AI helps Talent Partners reveal the real hire through real-work Trials, Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
+      'Winoe AI helps Talent Partners run real-work Trials with Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
     );
     expect(marketingMeta?.manifest).toBe('/manifest.json');
     expect(marketingMeta?.openGraph).toMatchObject({
       title: 'Winoe AI | Real-work Trials for hiring',
       description:
-        'Winoe AI helps Talent Partners reveal the real hire through real-work Trials, Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
+        'Winoe AI helps Talent Partners run real-work Trials with Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
       siteName: 'Winoe AI',
       type: 'website',
     });
@@ -84,7 +85,32 @@ describe('route wrapper metadata', () => {
       card: 'summary_large_image',
       title: 'Winoe AI | Real-work Trials for hiring',
       description:
-        'Winoe AI helps Talent Partners reveal the real hire through real-work Trials, Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
+        'Winoe AI helps Talent Partners run real-work Trials with Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
     });
+  });
+
+  it('keeps package and app manifest branding on Winoe AI assets', () => {
+    const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
+      name: string;
+      description: string;
+    };
+    const manifest = JSON.parse(
+      readFileSync('public/manifest.json', 'utf8'),
+    ) as {
+      name: string;
+      short_name: string;
+      description: string;
+      icons: Array<{ src: string; type: string }>;
+    };
+
+    expect(pkg.name).toBe('winoe-ai-frontend');
+    expect(pkg.description).toContain('Winoe AI');
+    expect(manifest.name).toBe('Winoe AI');
+    expect(manifest.short_name).toBe('Winoe');
+    expect(manifest.description).toContain('Winoe Reports');
+    expect(manifest.description).toContain('Evidence Trails');
+    expect(manifest.icons.some((icon) => icon.src === '/winoe-icon.svg')).toBe(
+      true,
+    );
   });
 });

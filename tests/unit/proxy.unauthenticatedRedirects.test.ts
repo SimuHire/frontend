@@ -34,6 +34,17 @@ describe('proxy - unauthenticated redirects', () => {
     );
   });
 
+  it('redirects unauthenticated canonical Talent Partner routes to login with mode', async () => {
+    getSessionNormalizedMock.mockResolvedValue(null);
+    const res = await proxy(
+      new NextRequest(new URL('http://localhost/talent-partner/trials')),
+    );
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('location')).toBe(
+      'http://localhost/auth/login?mode=talent_partner&returnTo=%2Ftalent-partner%2Ftrials',
+    );
+  });
+
   it('allows logged-out access to /invite/{token} without talent partner login redirect', async () => {
     getSessionNormalizedMock.mockResolvedValue(null);
     const res = await proxy(
@@ -62,6 +73,75 @@ describe('proxy - unauthenticated redirects', () => {
       'https://auth.example.com/authorize',
     );
     expect(getSessionNormalizedMock).not.toHaveBeenCalled();
+  });
+
+  it('rate limits repeated auth starts by login mode and connection', async () => {
+    getSessionNormalizedMock.mockResolvedValue(null);
+    for (let idx = 0; idx < 5; idx += 1) {
+      const allowed = await proxy(
+        new NextRequest(
+          new URL(
+            'http://localhost/auth/start?mode=talent_partner&connection=Winoe-TalentPartners',
+          ),
+        ),
+      );
+      expect(allowed?.status).toBe(200);
+    }
+
+    const blocked = await proxy(
+      new NextRequest(
+        new URL(
+          'http://localhost/auth/start?mode=talent_partner&connection=Winoe-TalentPartners',
+        ),
+      ),
+    );
+    expect(blocked?.status).toBe(429);
+
+    const separateMode = await proxy(
+      new NextRequest(
+        new URL(
+          'http://localhost/auth/start?mode=candidate&connection=Winoe-Candidates',
+        ),
+      ),
+    );
+    expect(separateMode?.status).toBe(200);
+  });
+
+  it('keys auth start rate limits by forwarded client IP', async () => {
+    getSessionNormalizedMock.mockResolvedValue(null);
+    for (let idx = 0; idx < 5; idx += 1) {
+      const req = new NextRequest(
+        new URL('http://localhost/auth/start?mode=candidate'),
+      );
+      req.headers.set('x-forwarded-for', '203.0.113.10, 10.0.0.5');
+      const allowed = await proxy(req);
+      expect(allowed?.status).toBe(200);
+    }
+
+    const blockedReq = new NextRequest(
+      new URL('http://localhost/auth/start?mode=candidate'),
+    );
+    blockedReq.headers.set('x-forwarded-for', '203.0.113.10, 10.0.0.5');
+    const blocked = await proxy(blockedReq);
+    expect(blocked?.status).toBe(429);
+
+    const separateIpReq = new NextRequest(
+      new URL('http://localhost/auth/start?mode=candidate'),
+    );
+    separateIpReq.headers.set('x-forwarded-for', '203.0.113.11, 10.0.0.5');
+    const separateIp = await proxy(separateIpReq);
+    expect(separateIp?.status).toBe(200);
+  });
+
+  it('does not start Auth0 login from the public login page itself', async () => {
+    getSessionNormalizedMock.mockResolvedValue(null);
+    const res = await proxy(
+      new NextRequest(new URL('http://localhost/auth/login?mode=candidate')),
+    );
+
+    expect(res?.status).toBe(200);
+    expect(mockAuth0.middleware).toHaveBeenCalled();
+    expect(getSessionNormalizedMock).toHaveBeenCalled();
   });
 
   it('ignores Auth0 middleware login redirect for public /invite/{token}', async () => {

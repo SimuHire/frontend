@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { MarkdownRenderer } from '@/shared/ui/MarkdownRenderer';
 import { Card } from '@/shared/ui/Card';
+import { LoadingSkeletonBlock } from '@/shared/ui/LoadingSkeletonBlock';
 import { InlineBadge } from '@/shared/ui/InlineBadge';
 import { StatusPill } from '@/shared/ui/StatusPill';
 import type { StatusPillTone } from '@/shared/status/types';
@@ -513,7 +514,7 @@ export default function SubmissionReviewPage({
     <div className="mx-auto w-full max-w-[1200px] px-4 py-8 md:px-6 lg:px-8">
       {state.status === 'loading' ? (
         <Card>
-          <p className="text-sm text-secondary">Loading submission review…</p>
+          <LoadingSkeletonBlock label="Preparing submission review" />
         </Card>
       ) : submissionError ? (
         submissionError

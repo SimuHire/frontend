@@ -20,7 +20,7 @@ describe('WinoeReportPage polling and generate flow', () => {
     jest.useFakeTimers();
     let getCalls = 0;
     setFetchForWinoeReport(async (url) => {
-      if (url !== '/api/candidate_sessions/2/winoe_report')
+      if (url !== '/api/candidate_trials/2/winoe_report')
         return textResponse('Not found', 404);
       getCalls += 1;
       return getCalls === 1
@@ -44,7 +44,7 @@ describe('WinoeReportPage polling and generate flow', () => {
     let getCalls = 0;
     const fetchMock = setFetchForWinoeReport(async (url, init) => {
       if (
-        url === '/api/candidate_sessions/2/winoe_report' &&
+        url === '/api/candidate_trials/2/winoe_report' &&
         (!init?.method || init.method === 'GET')
       ) {
         getCalls += 1;
@@ -53,7 +53,7 @@ describe('WinoeReportPage polling and generate flow', () => {
         return jsonResponse(READY_PAYLOAD);
       }
       if (
-        url === '/api/candidate_sessions/2/winoe_report/generate' &&
+        url === '/api/candidate_trials/2/winoe_report/generate' &&
         init?.method === 'POST'
       )
         return jsonResponse({ jobId: 'job-1', status: 'queued' }, 202);
@@ -85,7 +85,7 @@ describe('WinoeReportPage polling and generate flow', () => {
     let getCalls = 0;
     setFetchForWinoeReport(async (url, init) => {
       if (
-        url === '/api/candidate_sessions/2/winoe_report' &&
+        url === '/api/candidate_trials/2/winoe_report' &&
         (!init?.method || init.method === 'GET')
       ) {
         getCalls += 1;
@@ -94,7 +94,7 @@ describe('WinoeReportPage polling and generate flow', () => {
         return jsonResponse(READY_PAYLOAD);
       }
       if (
-        url === '/api/candidate_sessions/2/winoe_report/generate' &&
+        url === '/api/candidate_trials/2/winoe_report/generate' &&
         init?.method === 'POST'
       )
         return textResponse('Already running', 409);
@@ -119,7 +119,7 @@ describe('WinoeReportPage polling and generate flow', () => {
   it('cleans up polling timer on unmount', async () => {
     jest.useFakeTimers();
     const fetchMock = setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? jsonResponse({ message: 'still generating' }, 409)
         : textResponse('Not found', 404),
     );

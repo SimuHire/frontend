@@ -32,7 +32,9 @@ describe('LazyMarkdownPreview', () => {
     ).loading;
     if (!Loading) throw new Error('Loading component missing');
     render(<Loading />);
-    expect(screen.getByText(/Loading preview/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('status', { name: /Preparing markdown preview/i }),
+    ).toBeInTheDocument();
 
     const preload = (
       LazyMarkdownPreview as {

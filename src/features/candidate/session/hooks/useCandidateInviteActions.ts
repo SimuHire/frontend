@@ -29,6 +29,13 @@ export function useCandidateInviteActions(params: Params) {
     setCandidateSessionId: params.session.setCandidateSessionId,
     setBootstrap: params.session.setBootstrap,
     clearTaskError: params.session.clearTaskError,
+    clearTaskData: () =>
+      params.session.setTaskLoaded({
+        isComplete: false,
+        completedAt: null,
+        completedTaskIds: [],
+        currentTask: null,
+      }),
     redirectToLogin: params.redirectToLogin,
     setView: params.setView,
     setAuthMessage: params.setAuthMessage,

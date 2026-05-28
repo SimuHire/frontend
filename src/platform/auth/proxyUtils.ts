@@ -26,7 +26,7 @@ export const AUTH0_HANDLER_PREFIXES = [
 ];
 export const PUBLIC_PREFIXES = ['/invite'];
 export const CANDIDATE_PREFIXES = ['/candidate'];
-export const TALENT_PARTNER_PREFIXES = ['/dashboard'];
+export const TALENT_PARTNER_PREFIXES = ['/dashboard', '/talent-partner'];
 
 export const isPublicPath = (pathname: string) =>
   PUBLIC_PATHS.has(pathname) ||
@@ -67,6 +67,8 @@ export const requiresCandidateAccess = (pathname: string) =>
   CANDIDATE_PREFIXES.some((p) => pathnameMatchesPrefix(pathname, p));
 export const requiresTalentPartnerAccess = (pathname: string) =>
   TALENT_PARTNER_PREFIXES.some((p) => pathname.startsWith(p));
+export const requiresProtectedAccess = (pathname: string) =>
+  requiresCandidateAccess(pathname) || requiresTalentPartnerAccess(pathname);
 
 export function normalizeAccessToken(raw: unknown): string | null {
   if (typeof raw === 'string') return raw;

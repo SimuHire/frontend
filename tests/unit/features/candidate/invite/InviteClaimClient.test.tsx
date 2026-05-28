@@ -152,7 +152,7 @@ describe('InviteClaimClient', () => {
       await screen.findByText(INVITE_ALREADY_CLAIMED_MESSAGE),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /sign in to continue/i }),
+      screen.getByRole('button', { name: /sign in/i }),
     ).toBeInTheDocument();
   });
 

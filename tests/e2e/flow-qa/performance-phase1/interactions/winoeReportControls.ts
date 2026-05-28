@@ -52,7 +52,7 @@ export async function runWinoeReportControls(context: InteractionContext) {
         await Promise.all([
           page.waitForResponse(
             (response) =>
-              response.url().includes('/api/candidate_sessions/') &&
+              response.url().includes('/api/candidate_trials/') &&
               response.url().includes('/winoe_report') &&
               response.request().method() === 'GET',
             { timeout: 12_000 },

@@ -1,0 +1,16 @@
+Talent Partner dry run step dashboard: /talent-partner/trials
+Talent Partner dry run step create: /talent-partner/trials/new
+Talent Partner dry run step trial detail: /talent-partner/trials/2
+Talent Partner dry run step submission: /talent-partner/trials/2/candidates/3/submission
+Talent Partner dry run step winoe report: /talent-partner/trials/2/candidates/3/winoe-report
+Talent Partner dry run step benchmarks: /talent-partner/benchmarks
+Talent Partner dry run step settings: /talent-partner/settings
+Talent Partner dry run step return dashboard: /talent-partner/trials
+Talent Partner dry run start=2026-05-28T00:56:43.433Z end=2026-05-28T00:57:25.463Z durationSeconds=42 consoleErrors=2 requestFailures=1
+Talent Partner dry run errors: create missing text Tell us about the role | submission missing text Submission Review
+Talent Partner dry run failures: GET http://localhost:3000/api/trials/2/candidates/compare net::ERR_ABORTED
+Candidate dry run step portal: /candidate/portal
+Candidate dry run step session: /candidate/session/2b8a38ad70c4cfc9464010c38743939d
+Candidate dry run step review: /candidate/session/2b8a38ad70c4cfc9464010c38743939d/review
+Candidate dry run start=2026-05-28T00:57:25.719Z end=2026-05-28T00:57:29.639Z durationSeconds=3.9 consoleErrors=0 requestFailures=1
+Candidate dry run failures: GET http://localhost:3000/api/backend/candidate/session/2b8a38ad70c4cfc9464010c38743939d/review net::ERR_ABORTED

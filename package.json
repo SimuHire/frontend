@@ -2,7 +2,7 @@
   "name": "winoe-ai-frontend",
   "version": "0.1.0",
   "private": true,
-  "description": "Winoe AI frontend for real-work Trials, Talent Partner workflows, candidate sessions, and artifact-backed hiring evidence.",
+  "description": "Winoe AI frontend for real-work Trials, Talent Partner workflows, Winoe Reports, Winoe Scores, and Evidence Trails.",
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
@@ -11,6 +11,7 @@
     "lint": "npm run lint:eslint && npm run lint:prettier",
     "lint:eslint": "eslint . --max-warnings=0",
     "lint:prettier": "prettier . --check",
+    "check:legacy": "bash scripts/check-no-legacy-active-refs.sh",
     "typecheck": "rimraf .next && tsc --noEmit -p tsconfig.typecheck.json",
     "test": "jest",
     "test:coverage": "jest --coverage --runInBand",

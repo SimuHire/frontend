@@ -20,7 +20,7 @@ test('candidate Day 4 handoff upload flow hydrates and reaches transcript ready'
         .includes(`/api/backend/candidate/session/${QA_INVITE_TOKEN}`) &&
       resp.status() === 200,
   );
-  await page.goto(`/candidate-sessions/${QA_INVITE_TOKEN}`);
+  await page.goto(`/candidate/session/${QA_INVITE_TOKEN}`);
   const bootstrapResponse = await bootstrapResponsePromise;
   expect(bootstrapResponse.status()).toBe(200);
   await expect(page).toHaveURL(`/candidate/session/${QA_INVITE_TOKEN}`);

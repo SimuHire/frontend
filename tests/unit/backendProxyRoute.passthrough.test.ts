@@ -46,6 +46,56 @@ describe('/api/backend proxy - passthrough responses', () => {
     expect(res.headers.get('x-winoe-request-id')).toBe('req-test');
   });
 
+  it('normalizes missing candidate task drafts to an empty successful response', async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(
+        JSON.stringify({
+          detail: 'Draft not found',
+          errorCode: 'DRAFT_NOT_FOUND',
+          retryable: false,
+          details: {},
+        }),
+        {
+          status: 404,
+          headers: { 'content-type': 'application/json' },
+        },
+      ),
+    );
+    const res = await GET(
+      new NextRequest('http://localhost/api/backend/tasks/236/draft') as never,
+      { params: Promise.resolve({ path: ['tasks', '236', 'draft'] }) },
+    );
+
+    expect(res.status).toBe(200);
+    expect((res as FakeResponseShape).body).toBeNull();
+    expect(res.headers.get('x-winoe-upstream-status')).toBe('404');
+  });
+
+  it('passes through task draft 404s that are not missing-draft empty states', async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(
+        JSON.stringify({
+          detail: 'Task not found',
+          errorCode: 'TASK_NOT_FOUND',
+        }),
+        {
+          status: 404,
+          headers: { 'content-type': 'application/json' },
+        },
+      ),
+    );
+    const res = await GET(
+      new NextRequest('http://localhost/api/backend/tasks/999/draft') as never,
+      { params: Promise.resolve({ path: ['tasks', '999', 'draft'] }) },
+    );
+
+    expect(res.status).toBe(404);
+    expect((res as FakeResponseShape).body).toEqual({
+      detail: 'Task not found',
+      errorCode: 'TASK_NOT_FOUND',
+    });
+  });
+
   it('threads request signal to upstream call', async () => {
     fetchMock.mockResolvedValueOnce(
       mockResponse(JSON.stringify({ ok: true }), {

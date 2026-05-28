@@ -15,7 +15,7 @@ describe('WinoeReportPage error states', () => {
 
   it('maps 404 to not-generated panel', async () => {
     setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? textResponse('Not found', 404)
         : textResponse('Not found', 404),
     );
@@ -30,7 +30,7 @@ describe('WinoeReportPage error states', () => {
 
   it('maps 403 to access denied panel', async () => {
     setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? textResponse('Forbidden', 403)
         : textResponse('Not found', 404),
     );
@@ -44,7 +44,7 @@ describe('WinoeReportPage error states', () => {
 
   it('maps generic request failures to error panel', async () => {
     setFetchForWinoeReport(async (url) =>
-      url === '/api/candidate_sessions/2/winoe_report'
+      url === '/api/candidate_trials/2/winoe_report'
         ? textResponse('Internal Server Error', 500)
         : textResponse('Not found', 404),
     );

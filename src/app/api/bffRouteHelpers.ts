@@ -5,6 +5,7 @@ import {
   resolveRequestId,
 } from '@/platform/server/bff';
 import { BRAND_SLUG } from '@/platform/config/brand';
+import { enforceMutationSameOrigin } from '@/platform/server/backendProxy/requestSecurity';
 import {
   mergeResponseCookies,
   requireBffAuth,
@@ -27,8 +28,12 @@ export async function forwardBffWithAuth(
   { tag, requirePermission, ...args }: ForwardArgs,
   req: NextRequest,
 ): Promise<NextResponse> {
-  const auth = await requireBffAuth(req, { requirePermission });
   const requestId = resolveRequestId(req.headers);
+  const method = args.method ?? req.method ?? 'GET';
+  const originError = enforceMutationSameOrigin(req, method, requestId);
+  if (originError) return originError;
+
+  const auth = await requireBffAuth(req, { requirePermission });
   if (!auth.ok) {
     const resp = auth.response;
     mergeResponseCookies(auth.cookies, resp);
@@ -72,6 +77,13 @@ export async function withTalentPartnerAuth(
   handler: TalentPartnerAuthHandler,
 ): Promise<NextResponse> {
   const requestId = resolveRequestId(req.headers);
+  const originError = enforceMutationSameOrigin(
+    req,
+    req.method ?? 'GET',
+    requestId,
+  );
+  if (originError) return originError;
+
   const auth = await requireBffAuth(req, {
     requirePermission: options.requirePermission ?? 'talent_partner:access',
   });

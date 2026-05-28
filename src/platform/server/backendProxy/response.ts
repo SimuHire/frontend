@@ -26,6 +26,7 @@ export async function buildProxyResponse(
   upstream: Response,
   upstreamHeaders: Headers,
   requestId: string,
+  options?: { backendPath?: string; method?: string },
 ) {
   const upstreamStatus = upstream.status;
   const blockedRedirect = upstreamStatus >= 300 && upstreamStatus < 400;
@@ -62,6 +63,22 @@ export async function buildProxyResponse(
     } else {
       parsed = await parseUpstreamBody(upstream);
     }
+    const normalizedDraftEmptyState = normalizeMissingDraftResponse({
+      parsed,
+      status: upstreamStatus,
+      backendPath: options?.backendPath,
+      method: options?.method,
+    });
+    if (normalizedDraftEmptyState) {
+      return NextResponse.json(null, {
+        status: 200,
+        headers: {
+          [UPSTREAM_HEADER]: String(upstreamStatus),
+          [REQUEST_ID_HEADER]: requestId,
+        },
+      });
+    }
+
     return NextResponse.json(parsed ?? null, {
       status: upstreamStatus,
       headers: {
@@ -90,4 +107,28 @@ export async function buildProxyResponse(
     status: upstreamStatus,
     headers: upstreamHeaders,
   });
+}
+
+function normalizeMissingDraftResponse({
+  parsed,
+  status,
+  backendPath,
+  method,
+}: {
+  parsed: unknown;
+  status: number;
+  backendPath?: string;
+  method?: string;
+}) {
+  if (status !== 404 || method?.toUpperCase() !== 'GET') return false;
+  if (
+    !backendPath ||
+    !/^\/api\/tasks\/[1-9]\d*\/draft(?:\?|$)/.test(backendPath)
+  ) {
+    return false;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return false;
+  }
+  return (parsed as { errorCode?: unknown }).errorCode === 'DRAFT_NOT_FOUND';
 }

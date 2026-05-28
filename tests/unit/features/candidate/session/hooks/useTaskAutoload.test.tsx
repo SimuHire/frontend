@@ -107,7 +107,7 @@ describe('useTaskAutoload', () => {
     expect(setErrorMessage).not.toHaveBeenCalled();
   });
 
-  it('still autoloads a started session when the schedule is locked', async () => {
+  it('does not autoload current task while the schedule is locked', () => {
     const setView = jest.fn();
     const setErrorMessage = jest.fn();
     fetchCurrentTaskMock.mockResolvedValue(undefined);
@@ -130,8 +130,109 @@ describe('useTaskAutoload', () => {
       />,
     );
 
-    await waitFor(() => expect(fetchCurrentTaskMock).toHaveBeenCalledTimes(1));
-    expect(setView).toHaveBeenCalledWith(expect.any(Function));
+    expect(fetchCurrentTaskMock).not.toHaveBeenCalled();
+    expect(setView).not.toHaveBeenCalled();
+    expect(setErrorMessage).not.toHaveBeenCalled();
+  });
+
+  it('does not autoload during bootstrap when backend reports an upcoming schedule', () => {
+    const setView = jest.fn();
+    const setErrorMessage = jest.fn();
+    fetchCurrentTaskMock.mockResolvedValue(undefined);
+    render(
+      <HookHarness
+        view="loading"
+        state={baseState({
+          bootstrap: {
+            status: 'in_progress',
+            scheduledStartAt: '2099-01-01T14:00:00Z',
+            candidateTimezone: 'America/New_York',
+            dayWindows: [
+              {
+                dayIndex: 1,
+                windowStartAt: '2099-01-01T14:00:00Z',
+                windowEndAt: '2099-01-01T22:00:00Z',
+              },
+            ],
+            currentDayWindow: {
+              dayIndex: 1,
+              windowStartAt: '2099-01-01T14:00:00Z',
+              windowEndAt: '2099-01-01T22:00:00Z',
+              state: 'upcoming',
+            },
+          },
+          taskState: {
+            loading: false,
+            error: null,
+            isComplete: false,
+            completedAt: null,
+            completedTaskIds: [],
+            currentTask: null,
+          },
+        })}
+        fetchCurrentTask={fetchCurrentTaskMock}
+        setErrorMessage={setErrorMessage}
+        setView={setView}
+      />,
+    );
+
+    expect(fetchCurrentTaskMock).not.toHaveBeenCalled();
+    expect(setView).not.toHaveBeenCalled();
+    expect(setErrorMessage).not.toHaveBeenCalled();
+  });
+
+  it('does not autoload a stale persisted task before the scheduled start', () => {
+    const setView = jest.fn();
+    const setErrorMessage = jest.fn();
+    fetchCurrentTaskMock.mockResolvedValue(undefined);
+    render(
+      <HookHarness
+        view="running"
+        state={baseState({
+          bootstrap: {
+            status: 'in_progress',
+            scheduledStartAt: '2099-01-01T14:00:00Z',
+            candidateTimezone: 'America/New_York',
+            dayWindows: [
+              {
+                dayIndex: 1,
+                windowStartAt: '2099-01-01T14:00:00Z',
+                windowEndAt: '2099-01-01T22:00:00Z',
+              },
+            ],
+            currentDayWindow: {
+              dayIndex: 1,
+              windowStartAt: '2099-01-01T14:00:00Z',
+              windowEndAt: '2099-01-01T22:00:00Z',
+              state: 'upcoming',
+            },
+          },
+          taskState: {
+            loading: false,
+            error: null,
+            isComplete: false,
+            completedAt: null,
+            completedTaskIds: [],
+            currentTask: {
+              id: 10,
+              dayIndex: 1,
+              title: 'Stale Day 1 task',
+              type: 'design',
+              description: 'Persisted from an earlier local run',
+              recordedSubmission: null,
+              cutoffCommitSha: null,
+              cutoffAt: null,
+            },
+          },
+        })}
+        fetchCurrentTask={fetchCurrentTaskMock}
+        setErrorMessage={setErrorMessage}
+        setView={setView}
+      />,
+    );
+
+    expect(fetchCurrentTaskMock).not.toHaveBeenCalled();
+    expect(setView).not.toHaveBeenCalled();
     expect(setErrorMessage).not.toHaveBeenCalled();
   });
 });

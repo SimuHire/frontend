@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useMemo } from 'react';
+import OfflineBanner from '@/shared/offline/OfflineBanner';
 import { ToastContainer } from './components/ToastContainer';
 import { useToastQueue } from './hooks/useToastQueue';
 import type { NotificationsContextValue } from './types';
@@ -29,6 +30,7 @@ export function NotificationsProvider({
   return (
     <NotificationsContext.Provider value={contextValue}>
       {children}
+      <OfflineBanner />
       <ToastContainer toasts={toasts} dismiss={dismiss} />
     </NotificationsContext.Provider>
   );

@@ -32,7 +32,9 @@ describe('LatestDay4Handoff', () => {
     );
 
     expect(
-      screen.getByText(/Loading Day 4 Handoff \+ Demo details/i),
+      screen.getByRole('status', {
+        name: /Preparing Day 4 Handoff \+ Demo details/i,
+      }),
     ).toBeInTheDocument();
 
     rerender(

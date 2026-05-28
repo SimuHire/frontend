@@ -1,4 +1,5 @@
 import type { TrialDetailViewProps } from './types';
+import { LoadingSkeletonBlock } from '@/shared/ui/LoadingSkeletonBlock';
 import { ScenarioControlsSectionComponent } from './TrialScenarioControlsComponent';
 
 type TrialDetailScenarioControlsProps = {
@@ -13,9 +14,7 @@ export function TrialDetailScenarioControls({
   if (!showScenarioControls) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="text-sm text-gray-600">
-          Preparing scenario controls...
-        </div>
+        <LoadingSkeletonBlock label="Preparing Trial controls" lines={2} />
       </div>
     );
   }

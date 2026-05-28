@@ -32,9 +32,11 @@ jest.mock('next/server', () => {
     NextRequest: class {
       url: string;
       nextUrl: URL;
+      headers: Headers;
       constructor(url: URL | string) {
         this.url = url.toString();
         this.nextUrl = new URL(this.url);
+        this.headers = new Headers();
       }
     },
   };
@@ -68,9 +70,15 @@ export const actualRouting = jest.requireActual('@/platform/auth/routing');
 export const { proxy } = jest.requireActual('@/platform/middleware/proxy') as {
   proxy: (req: InstanceType<typeof NextRequest>) => Promise<unknown>;
 };
+const { __resetMiddlewareRateLimitsForTests } = jest.requireActual(
+  '@/platform/middleware/rateLimit',
+) as {
+  __resetMiddlewareRateLimitsForTests: () => void;
+};
 
 export const resetProxyTestMocks = () => {
   jest.clearAllMocks();
+  __resetMiddlewareRateLimitsForTests();
   getSessionNormalizedMock.mockReset();
   modeForPathMock.mockImplementation(actualRouting.modeForPath);
   mockAuth0.getAccessToken.mockResolvedValue({ token: 'auth' });

@@ -12,7 +12,7 @@ export function HandoffUploadProgress({ controller }: Props) {
         role="status"
         aria-live="polite"
       >
-        <div className="font-medium">Checking video metadata...</div>
+        <div className="font-medium">Checking video metadata…</div>
         <div className="mt-1 text-xs">
           Upload starts after this browser confirms the demo video is 15 minutes
           or shorter.
@@ -27,7 +27,7 @@ export function HandoffUploadProgress({ controller }: Props) {
       role="status"
       aria-live="polite"
     >
-      <div className="font-medium">Uploading video...</div>
+      <div className="font-medium">Uploading video…</div>
       <div
         className="mt-2 h-2 w-full overflow-hidden rounded bg-wheat-500"
         role="progressbar"

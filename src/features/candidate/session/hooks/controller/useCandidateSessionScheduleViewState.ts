@@ -58,7 +58,9 @@ export function useCandidateSessionScheduleViewState({
 
   useEffect(() => {
     if (view !== 'locked') {
-      unlockRefreshRef.current = null;
+      if (view !== 'loading' && view !== 'starting') {
+        unlockRefreshRef.current = null;
+      }
       return;
     }
     if (!scheduleCountdown.complete) return;

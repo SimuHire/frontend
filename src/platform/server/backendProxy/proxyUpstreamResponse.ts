@@ -27,6 +27,7 @@ export async function buildBackendProxySuccessResponse({
     upstream,
     upstreamHeaders,
     requestId,
+    { backendPath, method },
   );
   mergeAuthCookies(authCookies, response);
   response.headers.delete('location');
