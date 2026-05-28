@@ -1,5 +1,0 @@
-35. [GET] http://localhost:3000/api/backend/candidate/session/2b8a38ad70c4cfc9464010c38743939d => [200] OK
-46. [GET] http://localhost:3000/api/backend/candidate/session/63/current_task => [200] OK
-47. [GET] http://localhost:3000/api/backend/tasks/221/draft => [404] Not Found
-
-Note: 44 static requests not shown, run with "static" option to see them.
