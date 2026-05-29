@@ -949,7 +949,7 @@ async function runTalentPartnerFreshFlow() {
       process.env.CONTRACT_LIVE_CANDIDATE_NAME?.trim() || 'Robie Candidate';
     const candidateEmail =
       process.env.CONTRACT_LIVE_CANDIDATE_EMAIL?.trim() ||
-      'robiemelaku@gmail.com';
+      'winoecandidate@gmail.com';
 
     const createPayload = {
       title,
