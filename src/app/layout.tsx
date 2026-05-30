@@ -7,6 +7,7 @@ import './globals.css';
 import '@/styles/print.css';
 import { NotificationsProvider } from '@/shared/notifications';
 import { QueryProvider } from '@/shared/query';
+import { PUBLIC_THEME_COLOR } from '../../public-theme-color';
 
 const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
@@ -41,20 +42,23 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     type: 'website',
     images: [
-      { url: '/og-image.svg', width: 1200, height: 630, alt: SITE_NAME },
+      { url: '/opengraph-image', width: 1200, height: 630, alt: SITE_NAME },
     ],
   },
   twitter: {
     card: 'summary_large_image',
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
+    images: [
+      { url: '/twitter-image', width: 1200, height: 630, alt: SITE_NAME },
+    ],
   },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: 'var(--wheat-500)',
+  themeColor: PUBLIC_THEME_COLOR,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

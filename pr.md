@@ -1,101 +1,128 @@
-# Task 12: Final YC Demo Polish, Winoe Brand Sweep, QA Evidence, and Production-Safe Edge States
+# Task 0 — Same-Day Quick Wins: Public Metadata + Debug Note
 
 ## Summary
 
-This frontend PR finalizes Task 12 from the frontend side. Final QA status is PASS, all demo-visible surfaces were reviewed, and screenshots, dark mode, mobile/tablet, edge states, and dry runs passed.
+This PR removes the public debug note from the signed-out homepage, fixes public document metadata, replaces SVG social previews with PNG-generating Next image routes, and adds an automated metadata guardrail.
 
-`/qa/edge-states` was hardened to be production-closed, Winoe vocabulary is enforced, and legacy terminology checks passed. Final QA covered Winoe AI Trial surfaces including Talent Partner flows, Winoe Report, Winoe Score, Evidence Trail, Project Brief, Calibration, Benchmarks, and Handoff + Demo.
+This is intentionally not the full landing-page rebuild.
 
-Approved Iteration 16 frontend SHA: `4c7161b395c1f972f78a22ab06bb28bed53d9479`.
+## Why
 
-## Scope
+- The public homepage exposed scaffold/debug copy about `/invite/<invite-token>`.
+- `theme-color` used `var(--wheat-500)`, which is invalid in metadata.
+- OG/Twitter previews referenced SVG, which social platforms often do not render.
+- Existing design-token guardrails did not cover document metadata.
 
-- Final Winoe brand and terminology verification.
-- Settings, 404, 500, offline, invite states, and edge-state polish.
-- Candidate pre-day/current task and Day 1 draft browser-clean behavior from prior iterations.
-- Final screenshot audit.
-- Dark mode, mobile 375px, and tablet 768px validation.
-- Release-clean console and network validation.
-- Timed Talent Partner and candidate dry runs.
-- QA edge-state route production hardening.
+## Changes
 
-## Frontend Implementation Changes
+- Public homepage cleanup
+  - Removed the rendered debug paragraph from the signed-out marketing home.
 
-- `src/app/qa/edge-states/page.tsx`
-  - Now uses a server-side production-closed gate.
-- `src/app/qa/edge-states/qaEdgeStatesGate.ts`
-  - New helper returns enabled only when `NODE_ENV !== 'production'`.
-- `tests/unit/app/qaEdgeStates.test.tsx`
-  - Covers local/test access, production not-found behavior, production closure even with public QA flag, branded 500, and toast behavior.
-- QA docs and evidence updates:
-  - `docs/qa/task-12-final-manual-qa.md`
-  - `docs/screenshots/v4-final/README.md`
-  - Iteration 16 console/network/dry-run logs and JSON evidence.
+- Public metadata
+  - `theme-color` now resolves to literal `#C9A66B`.
+  - Public root has canonical metadata.
+  - Open Graph metadata points to the PNG-producing preview route.
+  - Twitter metadata points to the PNG-producing preview route.
+
+- Social preview images
+  - Added `src/app/opengraph-image.tsx`.
+  - Added `src/app/twitter-image.tsx`.
+  - Both use `next/og`.
+  - Both export `1200x630`.
+  - Both export `image/png`.
+  - Templates use inline, Satori-safe styles only.
+  - No CSS variables, no grid, no zIndex/z-index.
+
+- Metadata guardrail
+  - Added `scripts/check-public-metadata.mjs`.
+  - Added `lint:metadata`.
+  - Wired the metadata guardrail into `npm run lint`.
+  - The guardrail blocks:
+    - CSS-var `theme-color` regression.
+    - non-PNG/SVG/WebP/GIF OG/Twitter metadata regressions.
+    - missing canonical metadata.
+    - unsupported Satori CSS regressions such as grid or zIndex.
+
+- QA documentation
+  - Added/updated `qa_verifications/task-0-public-metadata-debug-note-qa.md`.
+  - Documents local QA, guardrail failure tests, Auth0 hostname classification, and production verification pending deploy.
+
+## Files Changed
+
+- `package.json`
 - `pr.md`
+- `public-theme-color.ts`
+- `scripts/check-public-metadata.mjs`
+- `src/app/(marketing)/page.tsx`
+- `src/app/layout.tsx`
+- `src/app/opengraph-image.tsx`
+- `src/app/twitter-image.tsx`
+- `src/features/marketing/home/MarketingHomeSignedOut.tsx`
+- `qa_verifications/task-0-public-metadata-debug-note-qa.md`
 
-## Frontend Validation
+`src/app/globals.css` is not part of the final diff. Backend has no code changes.
 
-- `npx jest tests/unit/app/qaEdgeStates.test.tsx --runInBand` PASS.
-- `npm run lint` PASS.
-- `npm run typecheck` PASS.
-- `npm run check:legacy` PASS.
-- `npm run build` PASS.
-- `./precommit.sh` PASS: 539 suites / 1736 tests passed, build passed.
-- `git diff --check` PASS.
-- Requested Prettier check PASS.
+## Verification
 
-## Screenshot and Visual QA
+| Command                                                       | Result                                                         |
+| ------------------------------------------------------------- | -------------------------------------------------------------- | ----- | -------------------- | --------- |
+| `npm run lint:metadata`                                       | PASS                                                           |
+| `npm run lint`                                                | PASS                                                           |
+| `npm run typecheck`                                           | PASS                                                           |
+| `npm run build`                                               | PASS                                                           |
+| `./precommit.sh`                                              | PASS                                                           |
+| `grep -R "In production, candidates will receive" src public  |                                                                | true` | No output            |
+| `grep -R "invite-token" src/features/marketing src/app public |                                                                | true` | No public debug copy |
+| `grep -R "themeColor.\*var(" src/app public-theme-color.ts    |                                                                | true` | No output            |
+| `grep -R "og-image.svg" src public                            |                                                                | true` | No output            |
+| `grep -R "zIndex\\                                            | z-index" src/app/opengraph-image.tsx src/app/twitter-image.tsx |       | true`                | No output |
 
-- 50/50 required screenshots PASS.
-- 12/12 edge screenshots PASS.
-- Dark mode PASS.
-- Mobile 375px PASS.
-- Tablet 768px PASS.
-- No stale brand.
-- No retired terminology.
-- No raw Tailwind blue/indigo blockers.
-- No production emoji icons.
-- No default Next.js error pages.
-- No raw loading text on demo-visible surfaces.
+Local runtime verification:
 
-## Browser QA
+- Local root rendered `theme-color` as `#C9A66B`.
+- Local root rendered canonical metadata.
+- Local root rendered OG/Twitter PNG image routes.
+- `/opengraph-image` returned `image/png`, `1200x630`, about `59,716` bytes.
+- `/twitter-image` returned `image/png`, `1200x630`, about `59,716` bytes.
+- Public root visually showed no debug note.
+- Login links remained visible.
 
-- Talent Partner timed dry run PASS, 12 seconds.
-- Candidate timed dry run PASS, 34 seconds.
-- Candidate dry run covered portal, schedule/start, pre-day, Day 1, Day 2, Day 3, Day 4, Day 5, completion, and read-only review.
-- Release-clean browser console/network PASS.
-- Zero browser errors.
-- Zero non-aborted failed resources.
-- One navigation-induced `net::ERR_ABORTED` was documented and ignored because it was caused by deliberate route movement, with no visible product issue.
+## Guardrail Failure Tests
 
-## Production Safety
+- Temporarily changed theme color to `var(--wheat-500)`:
+  - `npm run lint:metadata` failed as expected.
+- Temporarily changed OG/Twitter image URL to `/bad-preview.svg`:
+  - `npm run lint:metadata` failed as expected.
+- Temporarily removed canonical metadata:
+  - `npm run lint:metadata` failed as expected.
+- Reverted each temporary change and confirmed `npm run lint:metadata` passed.
 
-- `/qa/edge-states` appears in production build route list but is server-side production-closed.
-- `NODE_ENV=production` returns not-found behavior.
-- `NEXT_PUBLIC_WINOE_ENABLE_QA_EDGE_STATES=1` does not expose the route in production.
-- Build passed with the hardened gate.
+## QA Status
 
-## Risks / Known Limitations
+`✅ TASK 0 LOCAL QA PASS — Authenticated smoke blocked by unrelated Auth0 local environment issue; production verification pending deploy.`
 
-- Local Auth0 username/password submission was unavailable locally; dev QA login was used and documented with `winoetalentpartner@gmail.com` and `winoecandidate@gmail.com`.
-- `/qa/edge-states` remains in route list but is production-closed by tested server-side gate.
-- Final release tag must wait until both PRs are merged and CI is green.
+- Talent Partner and Candidate authenticated smoke passed on `http://localhost:3000`.
+- `http://127.0.0.1:3000` reproduced `callback_failed` / `invalid_state`.
+- The redirect URI always used `http://localhost:3000/auth/callback`.
+- This is classified as a local Auth0 hostname/config issue, not a Task 0 regression.
 
-## Review Checklist
+## Production Status
 
-- [x] `./precommit.sh` PASS.
-- [x] Legacy guard PASS.
-- [x] Production build PASS.
-- [x] QA edge route production-closed PASS.
-- [x] Screenshot audit PASS.
-- [x] Edge states PASS.
-- [x] Dark/mobile/tablet PASS.
-- [x] Timed dry runs PASS.
-- [x] Release-clean console/network PASS.
-- [x] Release tag not created yet.
+- Production `https://winoe.ai` is still stale.
+- Production still showed old metadata/debug note during QA.
+- This is expected until this PR is merged and deployed.
+- Production verification must be rerun after deploy.
 
-## Final Status
+## Risk / Rollback
 
-Task 12 QA status: PASS
+- Risk is low; changes are public metadata and homepage debug-copy removal only.
+- The metadata guardrail reduces regression risk.
+- Rollback is straightforward by reverting this PR.
+- No backend changes.
+- No landing-page rebuild included.
 
-Manual local QA verified both backend and frontend servers, browser flows for Talent Partner and candidate credentials, legacy terminology guards, security boundaries, production safety guards, branded edge states, media retention, and the v4-final screenshot audit. This PR is ready for final review and release-tag preparation.
+## Reviewer Notes
+
+- This PR intentionally does not build the new landing page.
+- This PR intentionally does not change authenticated Talent Partner or Candidate product flows.
+- Backend orchestrated precommit failure, if seen externally, is unrelated to this frontend-only Task 0 and backend has no diff.

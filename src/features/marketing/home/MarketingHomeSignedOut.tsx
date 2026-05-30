@@ -33,14 +33,6 @@ export function MarketingHomeSignedOut() {
           Candidate portal
         </AuthStartLink>
       </ActionRow>
-
-      <p className="mt-4 text-xs text-slate-500">
-        In production, candidates will receive a unique trial link like{' '}
-        <code className="rounded bg-slate-100 px-1 py-0.5 text-[0.7rem]">
-          /invite/&lt;invite-token&gt;
-        </code>
-        .
-      </p>
     </div>
   );
 }
