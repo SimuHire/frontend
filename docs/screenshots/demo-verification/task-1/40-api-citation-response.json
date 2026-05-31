@@ -1,0 +1,101 @@
+{
+  "dimension": null,
+  "citations": [
+    {
+      "artifact_type": "design_doc",
+      "artifact_ref": "day1-design-doc.md:L1-L20",
+      "excerpt": "Use a small FastAPI service with one core domain module and a service layer.",
+      "view_url": "/api/submissions/1/view?range=1-20"
+    },
+    {
+      "artifact_type": "commit",
+      "artifact_ref": "192f9f103cd8cfb815241c75f7d6bd338fe3a017:README.md:L1-L24",
+      "excerpt": "Bootstrap commit created the empty repository, devcontainer, and README.",
+      "view_url": null
+    },
+    {
+      "artifact_type": "diff",
+      "artifact_ref": "d4802bf3a28d6aeb43cd0967a5c2a5a969d045d0:src/services/reporting.py:L12-L76",
+      "excerpt": "The code stays readable, compact, and easy to audit.",
+      "view_url": null
+    },
+    {
+      "artifact_type": "submission",
+      "artifact_ref": "day3-wrap-up.md:L8-L20",
+      "excerpt": "Documentation tracks the implementation and the remaining gaps are explicit.",
+      "view_url": null
+    },
+    {
+      "artifact_type": "transcript",
+      "artifact_ref": "handoff-demo-transcript.txt:02:14-02:48",
+      "excerpt": "Demo transcript with architecture, tradeoffs, and next steps.",
+      "view_url": null
+    },
+    {
+      "artifact_type": "submission",
+      "artifact_ref": "day4-handoff-summary.md:L4-L15",
+      "excerpt": "The handoff summary keeps the story tight and evidence-backed.",
+      "view_url": null
+    },
+    {
+      "artifact_type": "commit",
+      "artifact_ref": "192f9f103cd8cfb815241c75f7d6bd338fe3a017:README.md:L1-L24",
+      "excerpt": "Bootstrap commit created the empty repository, devcontainer, and README.",
+      "view_url": null
+    },
+    {
+      "artifact_type": "commit",
+      "artifact_ref": "678ad1f0fb107dad90dc353fee611afadc1e1679:src/api/trials.ts:L40-L88",
+      "excerpt": "Implementation moved in a disciplined, reviewable sequence.",
+      "view_url": null
+    },
+    {
+      "artifact_type": "commit",
+      "artifact_ref": "678ad1f0fb107dad90dc353fee611afadc1e1679:src/api/trials.ts:L40-L88",
+      "excerpt": "Initial implementation kickoff commit.",
+      "view_url": null
+    },
+    {
+      "artifact_type": "diff",
+      "artifact_ref": "d4802bf3a28d6aeb43cd0967a5c2a5a969d045d0:src/services/reporting.py:L12-L76",
+      "excerpt": "Wrap-up commit completed the core workflow and docs.",
+      "view_url": null
+    },
+    {
+      "artifact_type": "brief",
+      "artifact_ref": "project-brief.md:L1-L20",
+      "excerpt": "Build a from-scratch work Trial experience that keeps every step evidence-backed.",
+      "view_url": null
+    },
+    {
+      "artifact_type": "submission",
+      "artifact_ref": "day1-design-doc.md:L21-L36",
+      "excerpt": "The design doc spells out the constraints, deliverables, and risks clearly.",
+      "view_url": "/api/submissions/1/view?range=21-36"
+    },
+    {
+      "artifact_type": "submission",
+      "artifact_ref": "day5-reflection.md:L8-L22",
+      "excerpt": "Reflection essay covering what went well, what was hard, and what changed.",
+      "view_url": "/api/submissions/5/view?range=8-22"
+    },
+    {
+      "artifact_type": "submission",
+      "artifact_ref": "day5-reflection.md:L23-L34",
+      "excerpt": "The next-step plan is concrete and honest about the remaining edges.",
+      "view_url": "/api/submissions/5/view?range=23-34"
+    },
+    {
+      "artifact_type": "tests",
+      "artifact_ref": "day2-tests.txt:L1-L4",
+      "excerpt": "Kickoff tests established the core workflow shape.",
+      "view_url": null
+    },
+    {
+      "artifact_type": "submission",
+      "artifact_ref": "day3-wrap-up.md:L21-L30",
+      "excerpt": "The final pass/fail balance shows the build was checked, not just described.",
+      "view_url": null
+    }
+  ]
+}

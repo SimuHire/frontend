@@ -1,0 +1,24 @@
+Winoe Report print/PDF inspection
+
+Artifact:
+- `docs/screenshots/demo-verification/task-1/25-winoe-report-print.pdf`
+
+Render path used for inspection:
+- Served the PDF over `http://127.0.0.1:8009/` and captured a browser screenshot of the built-in PDF viewer.
+- Saved screenshot: `docs/screenshots/demo-verification/task-1/25-winoe-report-print-page-1.png`
+
+Observed in the PDF viewer:
+- Single page: `1 / 1`
+- Title and sub-title are readable at the top of the page.
+- The print-ready layout is visible without browser page chrome inside the document itself.
+- The Winoe Report score area is visible in the same single-page export.
+- No obvious clipping was visible in the captured viewport.
+- Typography and palette match the report's warm-wheat / dark-navy styling.
+
+Limitations:
+- I did not diff the full page against the on-screen report line-by-line.
+- The screenshot confirms the export renders and reads cleanly, but it does not prove every lower-section detail from this single capture.
+
+Verdict:
+- `Partial` for full-document verification.
+- `Yes` for renderability and basic readability.

@@ -1,0 +1,21 @@
+evaluation_runs: 1
+jobs: 5
+job_events: 7
+winoe_reports: 1
+citations: 16
+STATE_MACHINE_PROBE
+Source: backend async session against local DEMO_MODE database
+
+Verified counts:
+evaluation_runs: 1
+jobs: 0
+job_events: 0
+winoe_reports: 1
+citations: 16
+
+Observed schema mismatch on direct probe:
+- `winoe_reports` does not expose `trial_id` in the current runtime schema.
+- Earlier direct queries against `candidate_sessions` also showed the runtime schema differs from older documentation assumptions.
+
+Implication:
+- The state machine exists in data, but a catalog entry should describe the current schema actually observed rather than the older task-plan shape.

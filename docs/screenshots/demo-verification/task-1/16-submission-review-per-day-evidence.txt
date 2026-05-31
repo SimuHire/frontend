@@ -1,0 +1,22 @@
+Submission Review per-day evidence
+
+Primary visual evidence:
+- `docs/screenshots/demo-verification/task-1/16-submission-review-main.png`
+- `docs/screenshots/demo-verification/task-1/50-candidate-read-only-submission-review-desktop-light.png`
+
+What the consolidated review page proves:
+- The Sarah Chen review surface renders with the correct submission identity and completed status.
+- Day tabs exist for Day 1 through Day 5.
+- Day 1 content is visible as a design document.
+- Day 2 and Day 3 are represented in the same consolidated review page as code sections.
+- Day 4 is represented as handoff/demo transcript content.
+- Day 5 is represented as reflection content.
+- The candidate read-only review surface is intentionally blocked when the trial is not complete.
+
+Limitation:
+- The current audit bundle does not contain independent day-specific screenshots that are visually distinct from the consolidated review view.
+- The separate `v4-final` day captures available in the repo are byte-identical for Days 1/2/4/5, so they are not strong enough to count as independent per-day proof.
+
+Practical verdict:
+- The review UI is present and usable as a consolidated artifact viewer.
+- The evidence is only partial for the claim that each day was independently inspected in a separate capture.

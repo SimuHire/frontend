@@ -1,0 +1,99 @@
+COMMAND: WINOE_ENV=local WINOE_DEMO_MODE=true WINOE_AI_RUNTIME_MODE=demo GITHUB_PROVIDER=fake DEMO_RESET_DB=1 ./scripts/seed_demo.sh --reset-db
+START_TS: 2026-05-30T11:45:17Z
+START_EPOCH: 1780141517
+PWD: /Users/robelmelaku/Desktop/Winoe-AI-I/winoe-ai-backend
+--- BEGIN OUTPUT ---
+Seeding Winoe demo data...
+INFO Context impl PostgresqlImpl.
+INFO Will assume transactional DDL.
+INFO Running upgrade  -> 20250101_0001
+INFO Running upgrade 20250101_0001 -> 229e1ede13cc, add focus to simulations
+INFO Running upgrade 229e1ede13cc -> 7dea06d20deb, add candidate_name to candidate_sessions
+INFO Running upgrade 7dea06d20deb -> 174928546828, add expires_at to candidate_sessions
+INFO Running upgrade 174928546828 -> b5e134bdb971, add-code_blob-unique-constraint-for-submissions
+INFO Running upgrade b5e134bdb971 -> fa61fe2e7edd, Add fit profiles
+INFO Running upgrade fa61fe2e7edd -> 3d7f8c5b6b8c, Add last_run_at to submissions
+INFO Running upgrade 3d7f8c5b6b8c -> c4f2c76e5c3a, Add GitHub workspaces and template repo mapping
+INFO Running upgrade 3d7f8c5b6b8c -> 81ad6f2bd717, Placeholder to satisfy missing revision 81ad6f2bd717.
+INFO Running upgrade 81ad6f2bd717, c4f2c76e5c3a -> 9e3c4e0d4a10, Merge heads 81ad6f2bd717 and c4f2c76e5c3a.
+INFO Running upgrade 9e3c4e0d4a10 -> abcd1234addb, Add base_template_sha to workspaces
+INFO Running upgrade abcd1234addb -> e1f4d2c7b9a0, Backfill template_repo for code/debug tasks
+INFO Running upgrade e1f4d2c7b9a0 -> f3c5e8c2d7ab, Backfill template_repo for code/debug tasks to GitHub templates
+INFO Running upgrade f3c5e8c2d7ab -> sg2893ihjsdfknqu, Fix template_repo bad values for code/debug tasks
+INFO Running upgrade sg2893ihjsdfknqu -> 202503200001, Add simulation.template_key and fix template_repo defaults
+INFO Running upgrade 202503200001 -> 202504050001, Remove unused code_blob column from submissions.
+INFO Running upgrade 202504050001 -> 202504160001, Add candidate access tokens for email verification.
+INFO Running upgrade 202504160001 -> 202504250001, Add Auth0 identity fields to candidate sessions.
+INFO Running upgrade 202504250001 -> 202505050001, add email delivery + verification fields
+INFO Running upgrade 202505050001 -> 202505050002, add invite_email_verified_at
+INFO Running upgrade 202505050002 -> 202505200001, Update template repos to tenon-hire-dev org
+INFO Running upgrade 202505050002 -> 202505050003, add candidate access token fields
+INFO Running upgrade 202505050003 -> 202505150001, add verification code attempts
+INFO Running upgrade 202505150001 -> 202505150002, add verification code send count
+INFO Running upgrade 202503200001 -> 202504010001, Rename execution profiles to fit profiles
+INFO Running upgrade 202504010001 -> 202504010002, Update template repos to Tenon naming
+INFO Running upgrade 202504010002, 202505150002, 202505200001 -> 202506010001, Enforce unique candidate sessions per simulation + invite email.
+INFO Running upgrade 202506010001 -> 202506150001, Remove candidate OTP fields and legacy access tokens.
+INFO Running upgrade 202506150001 -> 202506150002, Add candidate_auth0_email to candidate sessions.
+INFO Running upgrade 202506150002 -> 202507010001, Add case-insensitive unique invite index for candidate sessions.
+INFO Running upgrade 202507010001 -> 202507150001, Add codespace metadata to workspaces
+INFO Running upgrade 202507150001 -> 202507200001, Add indexes for submissions and tasks lookups
+INFO Running upgrade 202507200001 -> 202603030001, Add durable jobs table
+INFO Running upgrade 202603030001 -> 202603030002, Add simulation lifecycle state machine columns and backfill status.
+INFO Running upgrade 202603030002 -> 202603040001, Add recruiter context and AI toggle columns to simulations.
+INFO Running upgrade 202603040001 -> 202603040002, Add optional simulation termination metadata fields.
+INFO Running upgrade 202603040002 -> 202603050001, Add candidate scheduling fields and simulation day window config.
+INFO Running upgrade 202603050001 -> 202603050002, Add task drafts table for candidate autosave.
+INFO Running upgrade 202603050002 -> 202603050003, Add content_json column to submissions.
+INFO Running upgrade 202603050003 -> 202603080001, Add workspace_groups and workspace_group_id for unified coding repo.
+INFO Running upgrade 202603080001 -> 202603080002, Enforce one canonical workspace row per workspace_group_id.
+INFO Running upgrade 202603080002 -> 202603080003, Add checkpoint/final SHA evidence columns to submissions.
+INFO Running upgrade 202603080003 -> 202603080004, Add day cutoff audit table and candidate GitHub username.
+INFO Running upgrade 202603080004 -> 202603090001, Add scenario_versions persistence and simulation active scenario pointer.
+INFO Running upgrade 202603090001 -> 202603090002, Add simulation pending scenario pointer and generating scenario status.
+INFO Running upgrade 202603090002 -> 202603090003, Add scenario edit audit table.
+INFO Running upgrade 202603090003 -> 202603100001, Add precommit_bundles table and workspace precommit sha.
+INFO Running upgrade 202603100001 -> 202603100002, Add workspace precommit details JSON snapshot.
+INFO Running upgrade 202603100002 -> 202603100003, Add recording assets and transcripts tables.
+INFO Running upgrade 202603100003 -> 202603110001, Add submission recording pointer and transcript error details.
+INFO Running upgrade 202603110001 -> 202603110002, Add evaluation runs and day scores persistence tables.
+INFO Running upgrade 202603110002 -> 202603120001, Expand evaluation runs for fit-profile reporting.
+INFO Running upgrade 202603120001 -> 202603120002, Enforce unique non-null evaluation run job id.
+INFO Running upgrade 202603120002 -> 202603120003, Backfill simulation AI config defaults and enforce non-null columns.
+INFO Running upgrade 202603120003 -> 202603130001, Add workflow completion columns to submissions.
+INFO Running upgrade 202603130001 -> 202603130002, Add workspace cleanup and access revocation state columns.
+INFO Running upgrade 202603130002 -> 202603130003, Add workspace group cleanup/access revocation lifecycle state columns.
+INFO Running upgrade 202603130003 -> 202603150001, Add admin action audit table for demo-ops endpoints.
+INFO Running upgrade 202603150001 -> 202603150002, Add media privacy controls for consent, deletion, and retention.
+INFO Running upgrade 202603150002 -> 202603190001, Reconcile schema drift for locally stamped databases.
+INFO Running upgrade 202603190001 -> 202603310001, Add AI runtime hookup columns and precommit bundle provenance.
+INFO Running upgrade 202603310001 -> 202604010001, Add frozen AI policy snapshots to scenario versions.
+INFO Running upgrade 202604010001 -> 202604010002, Backfill legacy scenario-version AI policy snapshots.
+INFO Running upgrade 202604010002 -> 202604090001, Rename legacy Tenon schema objects to Winoe names.
+INFO Running upgrade 202604090001 -> 202604130001, Unify schema on canonical trials table and repair child trial foreign keys.
+INFO Running upgrade 202604130001 -> 202604140001, Add worker heartbeats table.
+INFO Running upgrade 202604140001 -> 202604150001, Make workspace template repo columns nullable for from-scratch bootstrap.
+INFO Running upgrade 202604150001 -> 202604160001, Add recording asset kind and duration metadata.
+INFO Running upgrade 202604160001 -> 202604170001, Add notification delivery audit records.
+INFO Running upgrade 202604170001 -> 202604180001, Add structured reviewer sub-report persistence.
+INFO Running upgrade 202604180001 -> 202604190001, Add immutable Winoe rubric snapshots and trial rubric attachments.
+INFO Running upgrade 202604190001 -> 202604200001, Add media retention purge metadata and audits.
+INFO Running upgrade 202604200001 -> 202604290001, Mark precommit bundle storage as legacy only.
+INFO Running upgrade 202604290001 -> cc27f3eb200b, remove_v3_concepts
+INFO Running upgrade cc27f3eb200b -> 439821122cc4, rename_codespace_spec_json_to_project_brief_md
+INFO Running upgrade 439821122cc4 -> 5148b3a35f39, rename_tech_stack_to_preferred_language_framework
+INFO Running upgrade 5148b3a35f39 -> 202605060001, add trial status completed for finished cohorts
+INFO Running upgrade 202605060001 -> 202605130001, Add trial agent snapshots and Winoe report citations.
+INFO Running upgrade 202605060001 -> 202605120001, add workspace_provisioning_status to workspaces
+INFO Running upgrade 202605120001, 202605130001 -> 202605150001, Merge heads 202605120001 and 202605130001.
+INFO Running upgrade 202605150001 -> 202605150001_prefdisp, Add preferred_display_name to candidate_sessions.
+INFO Running upgrade 202605150001_prefdisp -> 202605240001_task11, Task 11 job hardening, evaluation state, and notification audit fields.
+YC demo seed: full database reset requested
+YC demo seed: using GitHub provider=fake
+YC demo seed: using AI runtime=demo
+YC demo seed verified: company_id=1, trial_id=2, candidate_session_ids=[1, 2, 3, 4], repos=['winoe-ai-demo/winoe-ws-sarah-chen']
+--- END OUTPUT ---
+END_TS: 2026-05-30T11:45:23Z
+END_EPOCH: 1780141523
+DURATION_SEC: 6
+EXIT_STATUS: 0
