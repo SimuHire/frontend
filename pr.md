@@ -1,91 +1,95 @@
-# Task 1: Add DEMO_MODE verification catalog and evidence baseline
+# Task 2 — Demo Seed + FakeGitHubProvider QA Support
 
 ## Summary
 
-This PR adds the accepted Task 1 verification catalog and evidence bundle for DEMO_MODE.
+This frontend PR body documents the final Task 2 QA evidence for the Winoe AI demo seed and fake GitHub hardening work. It does not add runtime product behavior.
 
-This is a QA/audit artifact PR. It does not fix product defects. It establishes the sprint triage baseline for Tasks 4–9 and records the real DEMO_MODE state of the product.
+## Scope
 
-## What changed
+- Document the final Task 2 verification status for the frontend repo.
+- Record the real browser QA that exercised the Talent Partner path, the candidate path, the completed Winoe Report, and the Evidence Trail.
+- Keep the frontend scope limited to QA/support documentation unless an actual product diff is present.
 
-- `WINOE_DEMO_VERIFICATION_CATALOG.md`
-- `docs/screenshots/demo-verification/task-1/*`
-- `docs/screenshots/demo-verification/task-1/40-api-citation-response.json`
-- Audit evidence text files created during the verification pass, including:
-  - `docs/screenshots/demo-verification/task-1/45-credential-map.txt`
-  - `docs/screenshots/demo-verification/task-1/44-state-machine-log.txt`
-  - `docs/screenshots/demo-verification/task-1/44-state-machine-log-v2.txt`
-  - `docs/screenshots/demo-verification/task-1/47-demo-mode-production-guard.txt`
-  - `docs/screenshots/demo-verification/task-1/25-winoe-report-print-inspection.txt`
-  - `docs/screenshots/demo-verification/task-1/16-submission-review-per-day-evidence.txt`
+## Frontend Changes
 
-## Verification performed
+- `pr.md` wording was cleaned up so the frontend terminology guard passes.
+- No frontend runtime product behavior changed.
+- No frontend UI implementation was added for queued/running states in this task.
+- Browser-visible queued/running polish remains deferred to Task 8 candidate UI polish.
 
-- DEMO_MODE boot verified.
-- Seed script ran successfully.
-- Correct demo credentials tested:
-  - Talent Partner: `winoetalentpartner@gmail.com`
-  - Candidate: `winoecandidate@gmail.com`
-- Talent Partner surfaces walked.
-- Candidate surfaces walked.
-- Winoe Report inspected.
-- Evidence Trail Drawer inspected.
-- Citation API inspected.
-- Print/PDF inspected.
-- Submission Review inspected.
-- Benchmarks/Compare inspected.
-- AI pipeline/infra spot checks recorded.
-- DEMO_MODE production guard checked.
-- Frontend precommit passed.
+## What Did Not Change
 
-```text
-./precommit.sh
-PASS
-```
+- No product code changed.
+- No frontend runtime behavior changed.
+- No candidate-facing queued/running affordance was implemented here.
+- No real GitHub or Codespace integration was added.
 
-## Accepted P0 findings
+## End-to-End QA Coverage
 
-- DEMO_MODE seed / credential / story reachability
-- Winoe Report citation artifact resolution
-- Day 1 editor unreachable from correct candidate credential
-- Day 2 Codespace / run-tests unreachable from correct candidate credential
-- Day 3 Codespace / run-tests unreachable from correct candidate credential
+### Talent Partner Flow
 
-## Known limitations intentionally preserved
+- Talent Partner login verified with `winoetalentpartner@gmail.com`
+- Dashboard verified with 3 Trials
+- Sarah Chen Winoe Report verified as ready
 
-- Invite modal submit/duplicate/copyable URL behavior was not exercised end-to-end.
-- Model endpoint reachability was not tested.
-- Submission Review evidence is consolidated rather than independent per-day screenshots.
-- Candidate Day 1–5 live workspaces are blocked by future-dated demo candidate story.
-- This PR does not fix any of the cataloged defects.
+### Completed Winoe Report Flow
 
-## Risk
+- Completed hero Trial verified
+- Winoe Report inspected successfully
+- Evidence-backed score and narrative content reviewed in browser
 
-Low implementation risk because this is documentation/evidence only.
+### Evidence Trail Flow
 
-High product planning value because it replaces optimistic readiness claims with evidence.
+- Evidence Trail walkthrough completed
+- Day 1 through Day 5 seeded artifacts were visible in the browser QA path
+- Citation resolution was part of the backend-backed QA evidence
 
-Do not merge this as a "product ready" signal; merge it as a triage baseline.
+### Candidate Day 2 Flow
 
-## Rollback
+- Candidate login verified with `winoecandidate@gmail.com`
+- Nina Alvarez Day 2 path verified
+- Active Trial state observed in the demo story
 
-Revert the documentation/evidence files if needed.
+### Fake Codespace / Run-tests Flow
 
-No runtime behavior changes.
+- Fake Codespace state was exercised during QA
+- `run-tests` dispatch reached terminal completion without real GitHub or Codespace calls
+- Backend fake-provider state progression was verified
 
-## QA checklist
+## Verification
 
-- [x] DEMO_MODE boot status recorded
-- [x] Seed status recorded
-- [x] TP surfaces cataloged
-- [x] Candidate surfaces cataloged
-- [x] Winoe Report cataloged
-- [x] Citation API spot-checked
-- [x] Evidence Trail validator spot-checked
-- [x] State machine evidence recorded
-- [x] AgentSnapshots evidence recorded
-- [x] DEMO_MODE production guard checked
-- [x] Frontend precommit passed
-- [x] No functional product code changed
+### Frontend Local Checks
 
-✅ Catalog Accepted — proceed to fix-tasks.
+- Frontend local checks: PASS
+
+### Frontend Terminology Guard
+
+- Frontend terminology guard: PASS
+
+### Backend Dependency
+
+- Backend seed and fake-provider hardening provided the deterministic demo data and workflow state used by the frontend QA path
+- Backend fake-provider state progression is verified
+- Browser-visible queued/running affordance is deferred to Task 8 candidate UI polish
+
+### QA Evidence
+
+- Real browser QA for Task 2: PASS
+- Backend QA evidence folder: `qa_artifacts/task2_demo_seed_fakegithub_qa/qa_report.md`
+- Final QA status: PASS
+
+## Known Limitations / Follow-ups
+
+- Browser-visible queued/running affordance is deferred to Task 8 candidate UI polish.
+- This task does not introduce frontend runtime product changes unless they are explicitly present in the diff.
+- The backend fake-provider and seeded demo data are the source of truth for the verified QA path.
+
+## Reviewer Checklist
+
+- [ ] Frontend local checks pass
+- [ ] Frontend terminology guard passes
+- [ ] Talent Partner browser flow verified
+- [ ] Candidate Day 2 browser flow verified
+- [ ] No real GitHub/Codespace calls observed in DEMO_MODE QA
+- [ ] No frontend runtime product changes unless explicitly present in diff
+- [ ] Browser-visible queued/running polish is tracked as Task 8 follow-up
