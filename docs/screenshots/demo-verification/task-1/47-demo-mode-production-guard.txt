@@ -1,0 +1,14 @@
+DEMO_MODE production guard probe
+
+Command:
+- `bash -lc 'source ./setEnvVar.sh >/dev/null 2>&1; WINOE_ENV=production WINOE_DEMO_MODE=true python3 - <<\"PY\"\nfrom app.config import settings\nprint(\"loaded\", settings.DEMO_MODE)\nPY'`
+
+Result:
+- Exit status: `1`
+- The settings object failed during initialization.
+- Error: `DEMO_MODE/WINOE_DEMO_MODE cannot be enabled in production.`
+
+Interpretation:
+- This is the correct DEMO_MODE guard, not the older DEV_AUTH_BYPASS guard.
+- The refusal happens at settings construction time before the app can boot.
+- This guard is enforced in backend configuration validation.

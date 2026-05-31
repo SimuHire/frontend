@@ -1,0 +1,75 @@
+STATE_MACHINE_PROBE_V2
+
+Command used:
+- `source ./setEnvVar.sh >/dev/null 2>&1; psql "$WINOE_DATABASE_URL_SYNC" ...`
+
+Database source:
+- Local Postgres from `WINOE_DATABASE_URL_SYNC` in `winoe-ai-backend/.env`
+
+Targeted identities:
+- `candidate_sessions.id = 3` -> Sarah Chen / Trial 2 / completed
+- `candidate_sessions.id = 4` -> Nina Alvarez / Trial 3 / future-dated / in_progress
+
+Candidate session mapping:
+```text
+ id | trial_id | candidate_name | candidate_email | status | scheduled_start_at
+ 3  | 2        | Sarah Chen     | sarah.chen.demo@winoe.ai | completed   | 2026-05-26 07:45:22-04
+ 4  | 3        | Nina Alvarez   | winoecandidate@gmail.com | in_progress | 2026-06-01 09:00:00-04
+```
+
+Evaluation run evidence:
+```text
+ id | candidate_session_id | scenario_version_id | status     | model_name       | model_version | prompt_version | rubric_version | day2_checkpoint_sha | day3_final_sha | cutoff_commit_sha | overall_winoe_score | recommendation | confidence | generated_at
+ 1  | 3                    | 2                   | completed  | demo-winoe-report| demo-1        | demo-1         | demo-1         | 678ad1f0fb107dad90dc353fee611afadc1e1679 | d4802bf3a28d6aeb43cd0967a5c2a5a969d045d0 | d4802bf3a28d6aeb43cd0967a5c2a5a969d045d0 | 0.78 | strong_hire | 0.86 | 2026-05-30 07:45:22-04
+```
+
+State table evidence:
+- `trial_evaluation_states`: `0` rows in the current runtime.
+
+Jobs table evidence:
+```text
+ id                                    | job_type                | status    | candidate_session_id | company_id | correlation_id
+ 2b1f3620-4212-4e8e-aa28-4638b967cf5e | scenario_generation      | succeeded | NULL                 | 1          | trial:4
+ 4d0219c2-5a05-4652-b033-360d46e7135c | day_close_enforcement    | queued    | 4                    | 1          | candidate_session:4:schedule
+ 64d20011-7d54-4f32-bb76-b5c1557b8c28 | day_close_finalize_text  | queued    | 4                    | 1          | candidate_session:4:schedule
+ ac113ae4-c4e9-48fe-b59f-c109e8719287 | day_close_finalize_text  | queued    | 4                    | 1          | candidate_session:4:schedule
+ b9d2cdec-9580-4074-b614-fb4c4deb6e52 | day_close_enforcement    | queued    | 4                    | 1          | candidate_session:4:schedule
+```
+
+Job events evidence:
+```text
+ id | job_id | job_type               | event_type | status    | correlation_id
+ 1  | 64d20011-7d54-4f32-bb76-b5c1557b8c28 | day_close_finalize_text | enqueued | queued    | candidate_session:4:schedule
+ 2  | ac113ae4-c4e9-48fe-b59f-c109e8719287 | day_close_finalize_text | enqueued | queued    | candidate_session:4:schedule
+ 3  | b9d2cdec-9580-4074-b614-fb4c4deb6e52 | day_close_enforcement   | enqueued | queued    | candidate_session:4:schedule
+ 4  | 4d0219c2-5a05-4652-b033-360d46e7135c | day_close_enforcement   | enqueued | queued    | candidate_session:4:schedule
+ 5  | 2b1f3620-4212-4e8e-aa28-4638b967cf5e | scenario_generation     | enqueued | queued    | trial:4
+ 6  | 2b1f3620-4212-4e8e-aa28-4638b967cf5e | scenario_generation     | started  | running   | trial:4
+ 7  | 2b1f3620-4212-4e8e-aa28-4638b967cf5e | scenario_generation     | completed| succeeded | trial:4
+```
+
+Notification audit evidence:
+```text
+ id | notification_type                    | candidate_session_id | trial_id | recipient_email          | recipient_role | status | provider
+ 1  | schedule_confirmation_candidate       | 4                    | 3        | winoecandidate@gmail.com  | candidate      | sent   | ResendEmailProvider
+ 2  | schedule_confirmation_talent_partner  | 4                    | 3        | demo@winoe.ai             | talent_partner | sent   | ResendEmailProvider
+```
+
+What this proves:
+- The database contains the final Sarah Chen evaluation artifact.
+- The database contains future-dated Nina scheduling jobs and schedule-confirmation notifications.
+- The database does not contain a populated `trial_evaluation_states` row in the current runtime.
+- The database does not expose a complete job/event chain for reviewer dispatch, reviewer barrier, Winoe synthesis, Evidence Trail validation, or report finalization.
+
+Checklist verdict:
+- Reviewer dispatch: not proven
+- Reviewer barrier: not proven
+- Winoe synthesis: not proven
+- Evidence Trail validation: not proven
+- Report finalization: partially proven by `evaluation_runs`, but not by a full state-machine trail
+- Notification: only schedule-confirmation notifications are proven, not the full report pipeline
+
+Verdict:
+- Final artifact existence is proven.
+- Full orchestration is not proven.
+- Severity remains `P1` for orchestration evidence, because the state machine story is still incomplete even though the final artifact exists.
