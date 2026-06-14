@@ -1,95 +1,95 @@
-# Task 2 — Demo Seed + FakeGitHubProvider QA Support
+# Task 3: Align frontend QA path with Talent Partner Trial routes and verify Winoe Report integrity
 
 ## Summary
 
-This frontend PR body documents the final Task 2 QA evidence for the Winoe AI demo seed and fake GitHub hardening work. It does not add runtime product behavior.
+This frontend PR updates the Task 3 browser QA helper so it exercises the canonical Talent Partner Trial route family used by the product. The actual source diff is focused on `scripts/task3-browser-qa.mjs`; it does not redesign product UI.
 
-## Scope
+The helper now returns Talent Partner QA login to `/talent-partner/trials`, accepts canonical `/talent-partner/trials/...` URLs while retaining compatibility with the dashboard route family where the app still redirects there, and points the Candidate boundary attempt at the Talent Partner route family. The existing `TASK3_QA_TALENT_PARTNER_EMAIL` override remains the QA mechanism used for `winoetalentpartner@gmail.com`.
 
-- Document the final Task 2 verification status for the frontend repo.
-- Record the real browser QA that exercised the Talent Partner path, the candidate path, the completed Winoe Report, and the Evidence Trail.
-- Keep the frontend scope limited to QA/support documentation unless an actual product diff is present.
+The branch diff also contains generated browser QA evidence under `qa_verifications/task3-focused-rerun/` and `qa_verifications/task3-rerun/`. Confirm whether those artifacts should be removed before opening the PR.
 
-## Frontend Changes
+## Why this matters
 
-- `pr.md` wording was cleaned up so the frontend terminology guard passes.
-- No frontend runtime product behavior changed.
-- No frontend UI implementation was added for queued/running states in this task.
-- Browser-visible queued/running polish remains deferred to Task 8 candidate UI polish.
+Task 3 QA must exercise the same Talent Partner route family used in the product. Stale `/dashboard/trials/...` assumptions caused false QA failures. Frontend QA also needs to prove the visible Winoe Report path, Candidate boundary, and evidence controls in the browser, not only backend tests.
 
-## What Did Not Change
+## Frontend changes
 
-- No product code changed.
-- No frontend runtime behavior changed.
-- No candidate-facing queued/running affordance was implemented here.
-- No real GitHub or Codespace integration was added.
+- Updates `scripts/task3-browser-qa.mjs`.
+- Changes Talent Partner QA login return targets from `/dashboard/trials` to `/talent-partner/trials`.
+- Accepts `/talent-partner/trials/...` and `/dashboard/trials/...` URLs where compatibility is intentional.
+- Keeps support for `TASK3_QA_TALENT_PARTNER_EMAIL=winoetalentpartner@gmail.com`.
+- Changes the Candidate boundary attempt to target `/talent-partner/trials`.
+- Changes the fallback default Talent Partner QA email from `talent_partner1@local.test` to `talent_partner1@example.com`.
+- Adds generated QA artifacts in `qa_verifications/task3-focused-rerun/` and `qa_verifications/task3-rerun/` in the current branch diff.
 
-## End-to-End QA Coverage
+## User-facing behavior
 
-### Talent Partner Flow
+- Talent Partner Winoe Report route renders after backend seed alignment.
+- Winoe Score and all dimensions render.
+- Evidence controls render.
+- Candidate is redirected/denied from the Talent Partner report route.
+- No forbidden legacy terminology was found in the focused QA scan.
 
-- Talent Partner login verified with `winoetalentpartner@gmail.com`
-- Dashboard verified with 3 Trials
-- Sarah Chen Winoe Report verified as ready
+## QA evidence
 
-### Completed Winoe Report Flow
+```text
+Frontend dev server: PASS at http://localhost:3000
+Talent Partner browser QA: PASS
+Candidate browser QA: PASS
+TASK3_QA_TALENT_PARTNER_EMAIL=winoetalentpartner@gmail.com npm run qa:task3: PASS
+Frontend precommit: PASS
+Test suites: 539 passed
+Tests: 1736 passed
+Coverage: 100%
+Typecheck: PASS
+Production build: PASS
+Final frontend git status after QA: clean
+```
 
-- Completed hero Trial verified
-- Winoe Report inspected successfully
-- Evidence-backed score and narrative content reviewed in browser
+## Test plan
 
-### Evidence Trail Flow
+Backend must be running locally for `qa:task3`.
 
-- Evidence Trail walkthrough completed
-- Day 1 through Day 5 seeded artifacts were visible in the browser QA path
-- Citation resolution was part of the backend-backed QA evidence
+```bash
+WINOE_BACKEND_BASE_URL=http://127.0.0.1:8000 NEXT_PUBLIC_WINOE_API_BASE_URL=/api/backend npm run dev
 
-### Candidate Day 2 Flow
+TASK3_QA_TALENT_PARTNER_EMAIL=winoetalentpartner@gmail.com npm run qa:task3
 
-- Candidate login verified with `winoecandidate@gmail.com`
-- Nina Alvarez Day 2 path verified
-- Active Trial state observed in the demo story
+bash precommit.sh
+```
 
-### Fake Codespace / Run-tests Flow
+## Manual QA
 
-- Fake Codespace state was exercised during QA
-- `run-tests` dispatch reached terminal completion without real GitHub or Codespace calls
-- Backend fake-provider state progression was verified
+Manual browser QA covered:
 
-## Verification
+- `/talent-partner/trials`
+- `/talent-partner/trials/{trialId}`
+- `/talent-partner/trials/{trialId}/candidates/{candidateSessionId}/winoe-report`
+- `/candidate/portal`
+- Candidate attempt to Talent Partner report route
 
-### Frontend Local Checks
+Required acceptance path passed:
 
-- Frontend local checks: PASS
+- Talent Partner completed dashboard -> Trial detail -> Winoe Report.
+- Winoe Report rendered Winoe Score, all 8 dimensions/sub-scores, and evidence controls.
+- Candidate portal rendered.
+- Candidate was blocked from Talent Partner-only report/citation/submission artifacts.
 
-### Frontend Terminology Guard
+## Risks / non-blocking notes
 
-- Frontend terminology guard: PASS
+- Local dev hydration mismatch warnings were observed.
+- Existing Jest console warnings for React key/fake timer cleanup were observed.
+- Warnings did not block the Task 3 trust path.
+- Generated QA artifacts must be removed or confirmed intentional before final PR status if the repository should not commit browser output files.
 
-### Backend Dependency
+## Rollback
 
-- Backend seed and fake-provider hardening provided the deterministic demo data and workflow state used by the frontend QA path
-- Backend fake-provider state progression is verified
-- Browser-visible queued/running affordance is deferred to Task 8 candidate UI polish
+Revert the frontend QA helper changes to restore the previous route expectation. No product-data rollback is required.
 
-### QA Evidence
+## Reviewer checklist
 
-- Real browser QA for Task 2: PASS
-- Backend QA evidence folder: `qa_artifacts/task2_demo_seed_fakegithub_qa/qa_report.md`
-- Final QA status: PASS
-
-## Known Limitations / Follow-ups
-
-- Browser-visible queued/running affordance is deferred to Task 8 candidate UI polish.
-- This task does not introduce frontend runtime product changes unless they are explicitly present in the diff.
-- The backend fake-provider and seeded demo data are the source of truth for the verified QA path.
-
-## Reviewer Checklist
-
-- [ ] Frontend local checks pass
-- [ ] Frontend terminology guard passes
-- [ ] Talent Partner browser flow verified
-- [ ] Candidate Day 2 browser flow verified
-- [ ] No real GitHub/Codespace calls observed in DEMO_MODE QA
-- [ ] No frontend runtime product changes unless explicitly present in diff
-- [ ] Browser-visible queued/running polish is tracked as Task 8 follow-up
+- [ ] QA helper uses the required Talent Partner email through `TASK3_QA_TALENT_PARTNER_EMAIL`.
+- [ ] Canonical Talent Partner route is accepted.
+- [ ] Candidate denial is still verified.
+- [ ] Generated artifacts are not committed unless intentionally retained.
+- [ ] Precommit is green.
