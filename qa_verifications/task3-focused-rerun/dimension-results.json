@@ -1,0 +1,68 @@
+{
+  "url": "http://localhost:3000/talent-partner/trials/1/candidates/1/winoe-report",
+  "initialContains": {
+    "WinoeReport": false,
+    "WINOESCORE": true,
+    "EvidenceTrail": false
+  },
+  "dimensions": [
+    {
+      "dimension": "Architecture & Design",
+      "buttonVisible": false,
+      "drilldown": false,
+      "viewButtons": 8,
+      "evidenceLinks": []
+    },
+    {
+      "dimension": "Problem Understanding",
+      "buttonVisible": false,
+      "drilldown": false,
+      "viewButtons": 8,
+      "evidenceLinks": []
+    },
+    {
+      "dimension": "Implementation Quality",
+      "buttonVisible": false,
+      "drilldown": false,
+      "viewButtons": 8,
+      "evidenceLinks": []
+    },
+    {
+      "dimension": "Code Quality",
+      "buttonVisible": false,
+      "drilldown": false,
+      "viewButtons": 8,
+      "evidenceLinks": []
+    },
+    {
+      "dimension": "Testing Discipline",
+      "buttonVisible": false,
+      "drilldown": false,
+      "viewButtons": 8,
+      "evidenceLinks": []
+    },
+    {
+      "dimension": "Development Process",
+      "buttonVisible": false,
+      "drilldown": false,
+      "viewButtons": 8,
+      "evidenceLinks": []
+    },
+    {
+      "dimension": "Communication",
+      "buttonVisible": false,
+      "drilldown": false,
+      "viewButtons": 8,
+      "evidenceLinks": []
+    },
+    {
+      "dimension": "Reflection & Ownership",
+      "buttonVisible": false,
+      "drilldown": false,
+      "viewButtons": 8,
+      "evidenceLinks": []
+    }
+  ],
+  "errors": [],
+  "failed": []
+}

@@ -1,0 +1,6 @@
+page.waitForURL: Timeout 20000ms exceeded.
+=========================== logs ===========================
+waiting for navigation until "load"
+  navigated to "http://localhost:3000/talent-partner/trials/4"
+============================================================
+    at run (/Users/robelmelaku/Desktop/Winoe-AI-I/winoe-ai-frontend/scripts/task3-browser-qa.mjs:289:20)

@@ -23,7 +23,7 @@ const qaRole = (process.env.QA_ROLE || 'talent_partner').trim();
 const qaTalentPartnerEmail = (
   process.env.TASK3_QA_TALENT_PARTNER_EMAIL ||
   process.env.QA_E2E_TALENT_PARTNER_EMAIL ||
-  'talent_partner1@local.test'
+  'talent_partner1@example.com'
 ).trim();
 
 const REQUIRED_TRIAL_TITLE = (
@@ -172,10 +172,12 @@ async function run() {
     }
 
     await page.goto(
-      `${baseUrl}/api/dev/qa-login?role=talent_partner&email=${encodeURIComponent(qaTalentPartnerEmail)}&returnTo=%2Fdashboard%2Ftrials`,
+      `${baseUrl}/api/dev/qa-login?role=talent_partner&email=${encodeURIComponent(qaTalentPartnerEmail)}&returnTo=%2Ftalent-partner%2Ftrials`,
       { waitUntil: 'domcontentloaded' },
     );
-    await page.waitForURL(/\/dashboard(\/trials)?/, { timeout: 30000 });
+    await page.waitForURL(/\/(talent-partner|dashboard)\/trials/, {
+      timeout: 30000,
+    });
     results.dashboard.tpReachable = true;
     results.urls.afterQaLogin = page.url();
 
@@ -286,10 +288,14 @@ async function run() {
       results.commandPalette.trialOptionVisible = optVisible;
       if (optVisible) {
         await opt.first().click();
-        await page.waitForURL(/\/dashboard\/trials\/.+/, { timeout: 20000 });
+        await page.waitForURL(/\/(talent-partner|dashboard)\/trials\/.+/, {
+          timeout: 20000,
+        });
         results.commandPalette.navigateToTrialDetail = true;
         await page.goBack();
-        await page.waitForURL(/\/dashboard(\/trials)?/, { timeout: 20000 });
+        await page.waitForURL(/\/(talent-partner|dashboard)\/trials/, {
+          timeout: 20000,
+        });
       } else {
         fail(
           'command palette: trial option not found after typing title prefix',
@@ -324,10 +330,12 @@ async function run() {
     await darkPage.goto(`${baseUrl}/login`, { waitUntil: 'domcontentloaded' });
     await screenshot(darkPage, 'dark-login');
     await darkPage.goto(
-      `${baseUrl}/api/dev/qa-login?role=talent_partner&email=${encodeURIComponent(qaTalentPartnerEmail)}&returnTo=%2Fdashboard%2Ftrials`,
+      `${baseUrl}/api/dev/qa-login?role=talent_partner&email=${encodeURIComponent(qaTalentPartnerEmail)}&returnTo=%2Ftalent-partner%2Ftrials`,
       { waitUntil: 'domcontentloaded' },
     );
-    await darkPage.waitForURL(/\/dashboard(\/trials)?/, { timeout: 30000 });
+    await darkPage.waitForURL(/\/(talent-partner|dashboard)\/trials/, {
+      timeout: 30000,
+    });
     await screenshot(darkPage, 'dark-dashboard');
     if (await tryOpenCommandPalette(darkPage)) {
       await screenshot(darkPage, 'dark-command-palette');
@@ -345,10 +353,12 @@ async function run() {
       });
       const p = await ctx.newPage();
       await p.goto(
-        `${baseUrl}/api/dev/qa-login?role=talent_partner&email=${encodeURIComponent(qaTalentPartnerEmail)}&returnTo=%2Fdashboard%2Ftrials`,
+        `${baseUrl}/api/dev/qa-login?role=talent_partner&email=${encodeURIComponent(qaTalentPartnerEmail)}&returnTo=%2Ftalent-partner%2Ftrials`,
         { waitUntil: 'domcontentloaded' },
       );
-      await p.waitForURL(/\/dashboard(\/trials)?/, { timeout: 30000 });
+      await p.waitForURL(/\/(talent-partner|dashboard)\/trials/, {
+        timeout: 30000,
+      });
       await screenshot(p, label);
       await ctx.close();
     }
@@ -359,7 +369,7 @@ async function run() {
     });
     const candidatePage = await candidateContext.newPage();
     await candidatePage.goto(
-      `${baseUrl}/api/dev/qa-login?role=candidate&returnTo=%2Fdashboard%2Ftrials`,
+      `${baseUrl}/api/dev/qa-login?role=candidate&returnTo=%2Ftalent-partner%2Ftrials`,
       { waitUntil: 'domcontentloaded' },
     );
     results.urls.candidateBoundary = candidatePage.url();
