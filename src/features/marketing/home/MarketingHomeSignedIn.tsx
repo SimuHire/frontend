@@ -1,35 +1,20 @@
-import Link from 'next/link';
-import LogoutLink from '@/features/auth/LogoutLink';
-import { ActionRow } from '../shared/ActionRow';
-import { primaryCtaClass, secondaryCtaClass } from '../shared/ctaClasses';
+import { marketingContainer } from '../shared/marketingLayout';
+import { MarketingLandingPage } from './MarketingLandingPage';
 
 export function MarketingHomeSignedIn({ name }: { name?: string | null }) {
+  const greeting =
+    typeof name === 'string' && name
+      ? `Welcome back, ${name}.`
+      : 'Welcome back.';
+
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-3xl font-semibold text-slate-900">
-          Welcome back{typeof name === 'string' && name ? `, ${name}` : ''}.
-        </h1>
-        <p className="mt-2 max-w-xl text-sm text-slate-600">
-          You’re signed in. Jump into the dashboard or continue a trial.
-        </p>
+    <>
+      <div className="border-b border-subtle bg-wheat-50">
+        <div className={`${marketingContainer} py-3`}>
+          <p className="text-sm text-secondary">{greeting}</p>
+        </div>
       </div>
-
-      <ActionRow>
-        <Link href="/dashboard" className={primaryCtaClass}>
-          Go to dashboard
-        </Link>
-
-        <Link href="/candidate/portal" className={secondaryCtaClass}>
-          Candidate portal
-        </Link>
-
-        <LogoutLink
-          className={`${secondaryCtaClass} cursor-pointer touch-manipulation`}
-        >
-          Logout
-        </LogoutLink>
-      </ActionRow>
-    </div>
+      <MarketingLandingPage showRequestAccessCta={false} />
+    </>
   );
 }

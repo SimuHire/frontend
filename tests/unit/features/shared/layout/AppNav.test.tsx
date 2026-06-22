@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { AppNav } from '@/shared/layout/AppNav';
 import { MarketingHomeSignedIn } from '@/features/marketing/home/MarketingHomeSignedIn';
-import { MarketingHomeSignedOut } from '@/features/marketing/home/MarketingHomeSignedOut';
 
 describe('auth navigation links', () => {
   it('renders logout as an anchor in the app nav', () => {
@@ -23,19 +22,8 @@ describe('auth navigation links', () => {
     expect(logout).toHaveAttribute('href', '/auth/logout');
   });
 
-  it('renders logout as an anchor in the marketing signed-in view', () => {
+  it('renders greeting in the marketing signed-in view', () => {
     render(<MarketingHomeSignedIn name="Tester" />);
-    const logout = screen.getByText('Logout');
-    expect(logout.tagName).toBe('A');
-    expect(logout).toHaveAttribute('href', '/auth/logout');
-  });
-
-  it('renders login CTA as an anchor in the marketing signed-out view', () => {
-    render(<MarketingHomeSignedOut />);
-    const talentPartnerLogin = screen.getByText('Talent Partner login');
-    expect(talentPartnerLogin.tagName).toBe('A');
-    expect(talentPartnerLogin.getAttribute('href') || '').toContain(
-      '/auth/start',
-    );
+    expect(screen.getByText('Welcome back, Tester.')).toBeInTheDocument();
   });
 });

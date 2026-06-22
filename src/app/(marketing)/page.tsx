@@ -3,9 +3,10 @@ import { getCachedSessionNormalized } from '@/platform/auth0';
 import MarketingHomePage from '@/features/marketing/home/MarketingHomePage';
 
 const SITE_NAME = 'Winoe AI';
-const SITE_TITLE = 'Winoe AI | Real-work Trials for hiring';
+const SITE_TITLE =
+  'Winoe AI — Real-work Trials, Winoe Reports, and Evidence Trails';
 const SITE_DESCRIPTION =
-  'Winoe AI helps Talent Partners run real-work Trials with Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.';
+  'Winoe AI helps Talent Partners replace interview guesswork with multi-day work Trials, Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://winoe.ai'),

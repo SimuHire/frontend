@@ -10,5 +10,5 @@ export const primaryCtaClass = cn(
 
 export const secondaryCtaClass = cn(
   baseButton,
-  'border-slate-300 text-slate-700 hover:bg-slate-100 focus-visible:outline-slate-400',
+  'border-strong bg-elevated text-primary hover:bg-secondary focus-visible:outline-wheat-500',
 );
