@@ -1,37 +1,39 @@
 import { render, screen } from '@testing-library/react';
 import MarketingHomePage from '@/features/marketing/home/MarketingHomePage';
-import { BRAND_NAME } from '@/platform/config/brand';
 
 describe('PublicHomeContent', () => {
-  it('shows signed-in state with user links', () => {
+  it('shows signed-in welcome band and landing content without request access CTA', () => {
     render(<MarketingHomePage user={{ name: 'Ada Lovelace' }} />);
 
     expect(screen.getByText('Welcome back, Ada Lovelace.')).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: 'Go to dashboard' }),
-    ).toHaveAttribute('href', '/dashboard');
+      screen.queryByRole('link', { name: 'Go to dashboard' }),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: 'Candidate portal' }),
-    ).toHaveAttribute('href', '/candidate/portal');
-    const logout = screen.getByRole('link', { name: 'Logout' });
-    expect(logout).toHaveAttribute('href', '/auth/logout');
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Reveal the real hire. Prove it with work.',
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Request access' }),
+    ).not.toBeInTheDocument();
   });
 
-  it('shows signed-out state with auth entry points', () => {
+  it('shows signed-out landing page content', () => {
     render(<MarketingHomePage />);
 
-    expect(screen.getByText(`Welcome to ${BRAND_NAME}`)).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: 'Talent Partner login' }),
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Reveal the real hire. Prove it with work.',
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Request access' }),
     ).toHaveAttribute(
       'href',
-      '/auth/start?returnTo=%2Fdashboard&mode=talent_partner',
-    );
-    expect(
-      screen.getByRole('link', { name: 'Candidate portal' }),
-    ).toHaveAttribute(
-      'href',
-      '/auth/start?returnTo=%2Fcandidate%2Fportal&mode=candidate',
+      expect.stringContaining('mailto:support@winoe.ai'),
     );
   });
 
@@ -39,8 +41,5 @@ describe('PublicHomeContent', () => {
     render(<MarketingHomePage user={{ name: null }} />);
 
     expect(screen.getByText('Welcome back.')).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: 'Go to dashboard' }),
-    ).toHaveAttribute('href', '/dashboard');
   });
 });

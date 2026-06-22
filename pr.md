@@ -1,95 +1,104 @@
-# Task 3: Align frontend QA path with Talent Partner Trial routes and verify Winoe Report integrity
+# Task 4: Public Landing Page
 
-## Summary
+# Summary
 
-This frontend PR updates the Task 3 browser QA helper so it exercises the canonical Talent Partner Trial route family used by the product. The actual source diff is focused on `scripts/task3-browser-qa.mjs`; it does not redesign product UI.
+- Replaces the old bare `/` launcher with a polished Winoe AI public landing page for signed-out visitors.
+- Adds a Winoe-branded marketing shell with top bar, footer, hero, Trial strip, evidence-first messaging, credibility band, and Winoe Report proof visual.
+- Preserves `/login` and existing auth entry points while making the public top bar auth-aware.
+- Updates marketing metadata, OG, and Twitter image behavior to use Winoe terminology and PNG image endpoints.
 
-The helper now returns Talent Partner QA login to `/talent-partner/trials`, accepts canonical `/talent-partner/trials/...` URLs while retaining compatibility with the dashboard route family where the app still redirects there, and points the Candidate boundary attempt at the Talent Partner route family. The existing `TASK3_QA_TALENT_PARTNER_EMAIL` override remains the QA mechanism used for `winoetalentpartner@gmail.com`.
+# Why
 
-The branch diff also contains generated browser QA evidence under `qa_verifications/task3-focused-rerun/` and `qa_verifications/task3-rerun/`. Confirm whether those artifacts should be removed before opening the PR.
+`/` previously behaved like a bare launcher instead of a credible public entry point. Task 4 makes the root route serve as a public marketing surface for Talent Partners while preserving the existing Talent Partner and Candidate auth paths.
 
-## Why this matters
+# What Changed
 
-Task 3 QA must exercise the same Talent Partner route family used in the product. Stale `/dashboard/trials/...` assumptions caused false QA failures. Frontend QA also needs to prove the visible Winoe Report path, Candidate boundary, and evidence controls in the browser, not only backend tests.
+## Public landing page
 
-## Frontend changes
+- Added a signed-out public landing page with Winoe wordmark, Talent Partner login, Candidate portal, and request-access CTA.
+- Added the hero promise: "Reveal the real hire. Prove it with work."
+- Added public sections for the 3-step Trial flow, evidence-first differentiation, truthful design-partner credibility, and a thin footer.
+- Positioned Winoe AI as real-work hiring using canonical Winoe terminology.
 
-- Updates `scripts/task3-browser-qa.mjs`.
-- Changes Talent Partner QA login return targets from `/dashboard/trials` to `/talent-partner/trials`.
-- Accepts `/talent-partner/trials/...` and `/dashboard/trials/...` URLs where compatibility is intentional.
-- Keeps support for `TASK3_QA_TALENT_PARTNER_EMAIL=winoetalentpartner@gmail.com`.
-- Changes the Candidate boundary attempt to target `/talent-partner/trials`.
-- Changes the fallback default Talent Partner QA email from `talent_partner1@local.test` to `talent_partner1@example.com`.
-- Adds generated QA artifacts in `qa_verifications/task3-focused-rerun/` and `qa_verifications/task3-rerun/` in the current branch diff.
+## Auth-aware navigation
 
-## User-facing behavior
+- Added auth-aware top bar behavior for the marketing surface.
+- Preserved `/login`.
+- Signed-in users are not shown misleading public login or request-access CTAs.
 
-- Talent Partner Winoe Report route renders after backend seed alignment.
-- Winoe Score and all dimensions render.
-- Evidence controls render.
-- Candidate is redirected/denied from the Talent Partner report route.
-- No forbidden legacy terminology was found in the focused QA scan.
+## Winoe Report proof visual
 
-## QA evidence
+- Added the public Winoe Report proof PNG at `public/marketing/winoe-report-preview.png`.
+- Added `scripts/generate-marketing-report-preview.mjs` for regenerating the proof visual.
+- Surfaced Winoe Reports, Winoe Scores, and Evidence Trails in the public story.
 
-```text
-Frontend dev server: PASS at http://localhost:3000
-Talent Partner browser QA: PASS
-Candidate browser QA: PASS
-TASK3_QA_TALENT_PARTNER_EMAIL=winoetalentpartner@gmail.com npm run qa:task3: PASS
-Frontend precommit: PASS
-Test suites: 539 passed
-Tests: 1736 passed
-Coverage: 100%
-Typecheck: PASS
-Production build: PASS
-Final frontend git status after QA: clean
-```
+## Metadata / OG / Twitter
 
-## Test plan
+- Updated marketing metadata to use Winoe AI, Trials, Winoe Reports, Winoe Scores, and Evidence Trails.
+- Ensured OG and Twitter images resolve through PNG endpoints.
+- Verified `/opengraph-image` and `/twitter-image` return PNG images at 1200x630.
+- Deleted the unused `public/og-image.svg`.
+- Verified theme color is the literal `#C9A66B`.
 
-Backend must be running locally for `qa:task3`.
+## QA artifact hygiene
 
-```bash
-WINOE_BACKEND_BASE_URL=http://127.0.0.1:8000 NEXT_PUBLIC_WINOE_API_BASE_URL=/api/backend npm run dev
+- Added `/qa_verifications/landing-page/` to `.gitignore`.
+- Kept locally captured QA screenshots and reports out of git.
+- Added `scripts/landing-page-qa.mjs` for focused landing page QA.
 
-TASK3_QA_TALENT_PARTNER_EMAIL=winoetalentpartner@gmail.com npm run qa:task3
+## Tests
 
-bash precommit.sh
-```
+- Added and updated unit coverage for marketing metadata, signed-out and signed-in marketing content, and `MarketingTopBar`.
+- Updated related app navigation test expectations for the new marketing behavior.
 
-## Manual QA
+# Product Notes
 
-Manual browser QA covered:
+- Brand promise: "Reveal the real hire. Prove it with work."
+- Winoe AI is positioned as real-work hiring.
+- Winoe Reports, Winoe Scores, and Evidence Trails are visible in the public story.
+- No fake logos, fake testimonials, or unsupported claims were added.
+- Signed-in users are not shown misleading public login or request-access CTAs.
 
-- `/talent-partner/trials`
-- `/talent-partner/trials/{trialId}`
-- `/talent-partner/trials/{trialId}/candidates/{candidateSessionId}/winoe-report`
-- `/candidate/portal`
-- Candidate attempt to Talent Partner report route
+# QA
 
-Required acceptance path passed:
+- `./precommit.sh` PASS.
+- Frontend tests PASS: 540 suites / 1737 tests.
+- Typecheck PASS.
+- Production build PASS.
+- Local production server QA PASS.
+- Signed-out `/` PASS.
+- `/login` PASS.
+- Talent Partner login PASS.
+- Candidate login PASS.
+- Responsive QA PASS at 1440 / 1280 / 375.
+- Metadata / OG / Twitter QA PASS.
+- Lighthouse Performance: 91.
+- Lighthouse Accessibility: 96.
+- Lighthouse Best Practices: 96.
+- Lighthouse SEO: 100.
+- Final git status clean during QA.
 
-- Talent Partner completed dashboard -> Trial detail -> Winoe Report.
-- Winoe Report rendered Winoe Score, all 8 dimensions/sub-scores, and evidence controls.
-- Candidate portal rendered.
-- Candidate was blocked from Talent Partner-only report/citation/submission artifacts.
+# Manual QA Details
 
-## Risks / non-blocking notes
+- Backend: local `http://localhost:8000`.
+- Frontend: local `http://localhost:3000`.
+- Backend commands used: `./runBackend.sh api`, `./runBackend.sh worker`.
+- Frontend commands used: `npm run build`, `npm run start`.
+- Backend `/health`: 200.
+- Backend `/ready`: 200 after worker start.
+- Frontend `/api/health`: upstream status 200.
 
-- Local dev hydration mismatch warnings were observed.
-- Existing Jest console warnings for React key/fake timer cleanup were observed.
-- Warnings did not block the Task 3 trust path.
-- Generated QA artifacts must be removed or confirmed intentional before final PR status if the repository should not commit browser output files.
+# Risk / Caveats
 
-## Rollback
+- QA was run on checked-out `main`; before PR creation, commit `bf6601ef1ae7231688e3d93105b0b59d4218345d` must be pushed or moved to the intended feature branch and must not be pushed directly to remote `main`.
+- Local ignored QA artifacts were generated under `qa_verifications/landing-page/...` and are intentionally not tracked.
+- Lighthouse noted non-blocking report-only CSP console noise and minor contrast notes, but Accessibility remained 96.
 
-Revert the frontend QA helper changes to restore the previous route expectation. No product-data rollback is required.
+# Screenshots / Artifacts
 
-## Reviewer checklist
+- Screenshots were captured locally under the ignored QA path and were not committed.
+- Do not embed local-only screenshots unless explicitly requested.
 
-- [ ] QA helper uses the required Talent Partner email through `TASK3_QA_TALENT_PARTNER_EMAIL`.
-- [ ] Canonical Talent Partner route is accepted.
-- [ ] Candidate denial is still verified.
-- [ ] Generated artifacts are not committed unless intentionally retained.
-- [ ] Precommit is green.
+# Rollback
+
+Revert the frontend PR to restore the previous marketing home behavior. No migration or backend rollback is required.

@@ -54,6 +54,9 @@ ai_flow_boot_script.sh
 # Component, Performance, Accessibility QA generated artifacts
 /qa_verifications/Component-Perf-A11y-QA/comp_perf_a11y_qa_latest
 
+# Landing page QA generated artifacts
+/qa_verifications/landing-page/
+
 # E2E Flow QA generated artifacts
 /qa_verifications/E2E-Flow-QA/e2e_flow_qa_latest
 

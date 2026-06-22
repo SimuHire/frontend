@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import AppShell from '@/shared/layout/AppShell';
+import MarketingShell from '@/features/marketing/components/MarketingShell';
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {
-  return <AppShell navScope="marketing">{children}</AppShell>;
+  return <MarketingShell>{children}</MarketingShell>;
 }

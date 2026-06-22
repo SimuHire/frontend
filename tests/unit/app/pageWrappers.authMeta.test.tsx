@@ -68,24 +68,25 @@ describe('route wrapper metadata', () => {
   it('exposes marketing route metadata for the root page', async () => {
     const { metadata: marketingMeta } = await import('@/app/(marketing)/page');
     expect(marketingMeta?.title).toEqual({
-      absolute: 'Winoe AI | Real-work Trials for hiring',
+      absolute:
+        'Winoe AI — Real-work Trials, Winoe Reports, and Evidence Trails',
     });
     expect(marketingMeta?.description).toBe(
-      'Winoe AI helps Talent Partners run real-work Trials with Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
+      'Winoe AI helps Talent Partners replace interview guesswork with multi-day work Trials, Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
     );
     expect(marketingMeta?.manifest).toBe('/manifest.json');
     expect(marketingMeta?.openGraph).toMatchObject({
-      title: 'Winoe AI | Real-work Trials for hiring',
+      title: 'Winoe AI — Real-work Trials, Winoe Reports, and Evidence Trails',
       description:
-        'Winoe AI helps Talent Partners run real-work Trials with Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
+        'Winoe AI helps Talent Partners replace interview guesswork with multi-day work Trials, Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
       siteName: 'Winoe AI',
       type: 'website',
     });
     expect(marketingMeta?.twitter).toMatchObject({
       card: 'summary_large_image',
-      title: 'Winoe AI | Real-work Trials for hiring',
+      title: 'Winoe AI — Real-work Trials, Winoe Reports, and Evidence Trails',
       description:
-        'Winoe AI helps Talent Partners run real-work Trials with Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
+        'Winoe AI helps Talent Partners replace interview guesswork with multi-day work Trials, Winoe Reports, Winoe Scores, and artifact-backed Evidence Trails.',
     });
   });
 
